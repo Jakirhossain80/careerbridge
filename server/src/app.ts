@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import env from "./config/env.js";
+import { successResponse } from "./utils/apiResponse.js";
 
 const app = express();
 
@@ -23,9 +24,7 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/api/v1/health", (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Server is healthy",
+  successResponse(res, "Server is healthy", {
     environment: env.nodeEnv,
   });
 });
