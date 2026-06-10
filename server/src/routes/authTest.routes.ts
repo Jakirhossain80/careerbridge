@@ -22,4 +22,26 @@ router.get(
   }
 );
 
+router.get(
+  "/employer",
+  verifyFirebaseToken,
+  allowRoles("employer"),
+  (req, res) => {
+    successResponse(res, "Employer route access granted", {
+      user: req.user,
+    });
+  }
+);
+
+router.get(
+  "/job-seeker",
+  verifyFirebaseToken,
+  allowRoles("job_seeker"),
+  (req, res) => {
+    successResponse(res, "Job seeker route access granted", {
+      user: req.user,
+    });
+  }
+);
+
 export default router;

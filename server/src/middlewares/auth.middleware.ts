@@ -1,6 +1,7 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import type { RequestHandler } from "express";
 import { adminAuth } from "../config/firebaseAdmin.js";
+import { errorResponse } from "../utils/apiResponse.js";
 
 declare global {
   namespace Express {
@@ -15,10 +16,7 @@ export const verifyFirebaseToken: RequestHandler = async (req, res, next) => {
   const [scheme, token] = authorization?.split(" ") ?? [];
 
   if (scheme !== "Bearer" || !token) {
-    res.status(401).json({
-      success: false,
-      message: "Unauthorized: missing bearer token",
-    });
+    errorResponse(res, "Unauthorized: missing bearer token", null, 401);
     return;
   }
 
@@ -26,9 +24,6 @@ export const verifyFirebaseToken: RequestHandler = async (req, res, next) => {
     req.user = await adminAuth.verifyIdToken(token);
     next();
   } catch {
-    res.status(401).json({
-      success: false,
-      message: "Unauthorized: invalid token",
-    });
+    errorResponse(res, "Unauthorized: invalid token", null, 401);
   }
 };
