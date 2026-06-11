@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { onAuthStateChanged, reload } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -22,6 +22,7 @@ export default function ProtectedRoute({
   const [canViewPage, setCanViewPage] = useState(false);
 
   useEffect(() => {
+    const auth = getFirebaseAuth();
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
         setCanViewPage(false);

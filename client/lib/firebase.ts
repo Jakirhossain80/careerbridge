@@ -1,12 +1,13 @@
 "use client";
 
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   getAuth,
   reload,
   sendEmailVerification,
   updateProfile,
+  type Auth,
   type User,
 } from "firebase/auth";
 
@@ -19,12 +20,32 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const firebaseApp =
-  getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+let firebaseApp: FirebaseApp | undefined;
+let firebaseAuth: Auth | undefined;
 
-export const auth = getAuth(firebaseApp);
+const getFirebaseApp = () => {
+  if (!firebaseApp) {
+    firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  }
 
-export const sendVerificationEmail = async (user = auth.currentUser) => {
+  return firebaseApp;
+};
+
+export const getFirebaseAuth = () => {
+  if (typeof window === "undefined") {
+    throw new Error("Firebase Auth is only available in the browser.");
+  }
+
+  if (!firebaseAuth) {
+    firebaseAuth = getAuth(getFirebaseApp());
+  }
+
+  return firebaseAuth;
+};
+
+export const sendVerificationEmail = async (
+  user = getFirebaseAuth().currentUser
+) => {
   if (!user) {
     throw new Error("No authenticated user found.");
   }
@@ -33,7 +54,7 @@ export const sendVerificationEmail = async (user = auth.currentUser) => {
 };
 
 export const reloadCurrentUserAndCheckEmailVerified = async () => {
-  const user = auth.currentUser;
+  const user = getFirebaseAuth().currentUser;
 
   if (!user) {
     throw new Error("No authenticated user found.");
@@ -54,6 +75,7 @@ export const registerWithEmailAndVerification = async ({
   password,
   name,
 }: RegisterWithVerificationInput): Promise<User> => {
+  const auth = getFirebaseAuth();
   const userCredential = await createUserWithEmailAndPassword(
     auth,
     email,

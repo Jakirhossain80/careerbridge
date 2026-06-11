@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Mail, RefreshCw } from "lucide-react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import {
-  auth,
+  getFirebaseAuth,
   reloadCurrentUserAndCheckEmailVerified,
   sendVerificationEmail,
 } from "@/lib/firebase";
@@ -26,6 +26,7 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const auth = getFirebaseAuth();
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsLoadingUser(false);
