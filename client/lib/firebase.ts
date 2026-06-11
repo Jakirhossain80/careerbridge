@@ -2,10 +2,14 @@
 
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import {
+  browserLocalPersistence,
   createUserWithEmailAndPassword,
   getAuth,
+  inMemoryPersistence,
   reload,
   sendEmailVerification,
+  setPersistence,
+  signInWithEmailAndPassword,
   updateProfile,
   type Auth,
   type User,
@@ -89,6 +93,32 @@ export const registerWithEmailAndVerification = async ({
   }
 
   await sendVerificationEmail(userCredential.user);
+
+  return userCredential.user;
+};
+
+type LoginWithEmailInput = {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+};
+
+export const loginWithEmailAndPassword = async ({
+  email,
+  password,
+  rememberMe = true,
+}: LoginWithEmailInput): Promise<User> => {
+  const auth = getFirebaseAuth();
+  await setPersistence(
+    auth,
+    rememberMe ? browserLocalPersistence : inMemoryPersistence
+  );
+
+  const userCredential = await signInWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
 
   return userCredential.user;
 };
