@@ -4,9 +4,11 @@ import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
+  confirmPasswordReset,
   getAuth,
   inMemoryPersistence,
   reload,
+  sendPasswordResetEmail,
   sendEmailVerification,
   setPersistence,
   signInWithEmailAndPassword,
@@ -121,4 +123,19 @@ export const loginWithEmailAndPassword = async ({
   );
 
   return userCredential.user;
+};
+
+export const sendPasswordResetLink = async (email: string) => {
+  const auth = getFirebaseAuth();
+
+  await sendPasswordResetEmail(auth, email);
+};
+
+export const confirmPasswordResetWithCode = async (
+  oobCode: string,
+  newPassword: string
+) => {
+  const auth = getFirebaseAuth();
+
+  await confirmPasswordReset(auth, oobCode, newPassword);
 };
