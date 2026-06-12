@@ -2,8 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { onAuthStateChanged, reload } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { reload } from "firebase/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -18,13 +18,17 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [canViewPage, setCanViewPage] = useState(false);
 
   useEffect(() => {
-    const auth = getFirebaseAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
+    if (loading) {
+      return;
+    }
+
+    const checkAccess = async () => {
+      if (!user) {
         setCanViewPage(false);
         setIsCheckingAuth(false);
         router.replace(`${loginPath}?redirect=${encodeURIComponent(pathname)}`);
@@ -32,7 +36,7 @@ export default function ProtectedRoute({
       }
 
       try {
-        await reload(currentUser);
+        await reload(user);
       } catch {
         setCanViewPage(false);
         setIsCheckingAuth(false);
@@ -40,7 +44,7 @@ export default function ProtectedRoute({
         return;
       }
 
-      if (!currentUser.emailVerified) {
+      if (!user.emailVerified) {
         setCanViewPage(false);
         setIsCheckingAuth(false);
         router.replace(verifyEmailPath);
@@ -49,10 +53,10 @@ export default function ProtectedRoute({
 
       setCanViewPage(true);
       setIsCheckingAuth(false);
-    });
+    };
 
-    return unsubscribe;
-  }, [loginPath, pathname, router, verifyEmailPath]);
+    void checkAccess();
+  }, [loading, loginPath, pathname, router, user, verifyEmailPath]);
 
   if (isCheckingAuth || !canViewPage) {
     return (

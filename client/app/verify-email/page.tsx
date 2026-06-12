@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Mail, RefreshCw } from "lucide-react";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import {
-  getFirebaseAuth,
   reloadCurrentUserAndCheckEmailVerified,
   sendVerificationEmail,
 } from "@/lib/firebase";
 import { getDashboardPathForRole } from "@/lib/authRedirects";
+import { useAuth } from "@/hooks/useAuth";
 
 const getDashboardRedirectPath = () => {
   // Replace this with the role-based dashboard path when dashboard routes exist.
@@ -18,26 +18,17 @@ const getDashboardRedirectPath = () => {
 
 export default function VerifyEmailPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const { user, loading } = useAuth();
   const [isSending, setIsSending] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const auth = getFirebaseAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsLoadingUser(false);
-
-      if (currentUser?.emailVerified) {
-        router.replace(getDashboardRedirectPath());
-      }
-    });
-
-    return unsubscribe;
-  }, [router]);
+    if (user?.emailVerified) {
+      router.replace(getDashboardRedirectPath());
+    }
+  }, [router, user]);
 
   const handleResendVerification = async () => {
     setError("");
@@ -48,11 +39,7 @@ export default function VerifyEmailPage() {
       await sendVerificationEmail(user);
       setMessage("Verification email sent. Please check your inbox.");
     } catch (sendError) {
-      setError(
-        sendError instanceof Error
-          ? sendError.message
-          : "Could not send verification email."
-      );
+      setError(getFriendlyAuthErrorMessage(sendError));
     } finally {
       setIsSending(false);
     }
@@ -74,17 +61,13 @@ export default function VerifyEmailPage() {
 
       setMessage("Email is not verified yet. Please check your inbox.");
     } catch (checkError) {
-      setError(
-        checkError instanceof Error
-          ? checkError.message
-          : "Could not check verification status."
-      );
+      setError(getFriendlyAuthErrorMessage(checkError));
     } finally {
       setIsChecking(false);
     }
   };
 
-  if (isLoadingUser) {
+  if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-6">
         <p className="text-sm font-medium text-zinc-600">Loading...</p>

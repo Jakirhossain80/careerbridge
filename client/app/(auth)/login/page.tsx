@@ -11,7 +11,8 @@ import {
   EyeOff,
   Loader2,
 } from "lucide-react";
-import { loginWithEmailAndPassword } from "@/lib/firebase";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
+import { loginWithEmailAndPassword, loginWithGooglePopup } from "@/lib/firebase";
 
 type LoginErrors = {
   email?: string;
@@ -52,6 +53,7 @@ function LoginPageContent() {
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSigningInWithGoogle, setIsSigningInWithGoogle] = useState(false);
   const [errors, setErrors] = useState<LoginErrors>({});
 
   const redirectPath = useMemo(() => {
@@ -100,20 +102,35 @@ function LoginPageContent() {
       }
 
       router.push(redirectPath);
-    } catch {
+    } catch (error) {
       setErrors({
-        form: "We could not sign you in with those credentials.",
+        form: getFriendlyAuthErrorMessage(error),
       });
     } finally {
       setIsSigningIn(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // TODO: Connect this button when a Google auth provider utility is added.
-    setErrors({
-      form: "Google sign-in is not configured yet.",
-    });
+  const handleGoogleSignIn = async () => {
+    setIsSigningInWithGoogle(true);
+    setErrors({});
+
+    try {
+      const user = await loginWithGooglePopup();
+
+      if (!user.emailVerified) {
+        router.push("/verify-email");
+        return;
+      }
+
+      router.push(redirectPath);
+    } catch (error) {
+      setErrors({
+        form: getFriendlyAuthErrorMessage(error),
+      });
+    } finally {
+      setIsSigningInWithGoogle(false);
+    }
   };
 
   return (
@@ -263,7 +280,7 @@ function LoginPageContent() {
 
               <button
                 type="submit"
-                disabled={isSigningIn}
+                disabled={isSigningIn || isSigningInWithGoogle}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-75"
               >
                 {isSigningIn ? (
@@ -291,15 +308,25 @@ function LoginPageContent() {
             <button
               type="button"
               onClick={handleGoogleSignIn}
+              disabled={isSigningIn || isSigningInWithGoogle}
               className="flex h-12 w-full items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <span
-                className="flex size-5 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-primary"
-                aria-hidden="true"
-              >
-                G
-              </span>
-              Sign in with Google
+              {isSigningInWithGoogle ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  Signing in with Google
+                </>
+              ) : (
+                <>
+                  <span
+                    className="flex size-5 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-primary"
+                    aria-hidden="true"
+                  >
+                    G
+                  </span>
+                  Sign in with Google
+                </>
+              )}
             </button>
           </div>
 

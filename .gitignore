@@ -50,3 +50,5 @@ uploads/
 
 # Turbo
 .turbo/
+
+*.txt

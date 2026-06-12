@@ -1,6 +1,5 @@
 "use client";
 
-import { FirebaseError } from "firebase/app";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import {
@@ -12,6 +11,7 @@ import {
   LockKeyhole,
   Mail,
 } from "lucide-react";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { sendPasswordResetLink } from "@/lib/firebase";
 
 type ForgotPasswordErrors = {
@@ -25,27 +25,6 @@ const footerLinks = [
   { href: "/help", label: "Help Center" },
   { href: "/support", label: "Contact Support" },
 ];
-
-const getPasswordResetErrorMessage = (error: unknown) => {
-  if (error instanceof FirebaseError) {
-    switch (error.code) {
-      case "auth/invalid-email":
-        return "Enter a valid email address.";
-      case "auth/missing-email":
-        return "Email is required.";
-      case "auth/user-disabled":
-        return "This account has been disabled. Contact support for help.";
-      case "auth/too-many-requests":
-        return "Too many reset attempts. Please wait a few minutes and try again.";
-      case "auth/network-request-failed":
-        return "Network error. Check your connection and try again.";
-      default:
-        return "We could not send a reset link right now. Please try again.";
-    }
-  }
-
-  return "We could not send a reset link right now. Please try again.";
-};
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -84,7 +63,7 @@ export default function ForgotPasswordPage() {
       setResetEmailSent(true);
     } catch (error) {
       setErrors({
-        form: getPasswordResetErrorMessage(error),
+        form: getFriendlyAuthErrorMessage(error),
       });
     } finally {
       setIsSendingResetLink(false);

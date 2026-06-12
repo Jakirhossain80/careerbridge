@@ -1,6 +1,5 @@
 "use client";
 
-import { FirebaseError } from "firebase/app";
 import Link from "next/link";
 import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -15,6 +14,7 @@ import {
   Loader2,
   RotateCcwKey,
 } from "lucide-react";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { confirmPasswordResetWithCode } from "@/lib/firebase";
 
 type ResetPasswordErrors = {
@@ -63,29 +63,6 @@ const getPasswordRules = (password: string): PasswordRule[] => [
     isValid: /[^A-Za-z0-9]/.test(password),
   },
 ];
-
-const getResetPasswordErrorMessage = (error: unknown) => {
-  if (error instanceof FirebaseError) {
-    switch (error.code) {
-      case "auth/expired-action-code":
-        return "This reset link has expired. Request a new password reset link to continue.";
-      case "auth/invalid-action-code":
-        return "This reset link is invalid or has already been used. Request a new password reset link.";
-      case "auth/missing-oob-code":
-        return "The reset link is missing required information. Request a new password reset link.";
-      case "auth/weak-password":
-        return "Choose a stronger password that meets all requirements.";
-      case "auth/network-request-failed":
-        return "Network error. Check your connection and try again.";
-      case "auth/too-many-requests":
-        return "Too many reset attempts. Please wait a few minutes and try again.";
-      default:
-        return "We could not reset your password right now. Please try again.";
-    }
-  }
-
-  return "We could not reset your password right now. Please try again.";
-};
 
 export default function ResetPasswordPage() {
   return (
@@ -169,7 +146,7 @@ function ResetPasswordPageContent() {
       setConfirmPassword("");
     } catch (error) {
       setErrors({
-        form: getResetPasswordErrorMessage(error),
+        form: getFriendlyAuthErrorMessage(error),
       });
     } finally {
       setIsResettingPassword(false);

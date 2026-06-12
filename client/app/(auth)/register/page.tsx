@@ -14,7 +14,11 @@ import {
   Loader2,
   UserRound,
 } from "lucide-react";
-import { registerWithEmailAndVerification } from "@/lib/firebase";
+import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
+import {
+  loginWithGooglePopup,
+  registerWithEmailAndVerification,
+} from "@/lib/firebase";
 
 type RegisterRole = "job_seeker" | "employer";
 
@@ -99,6 +103,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [isContinuingWithGoogle, setIsContinuingWithGoogle] = useState(false);
   const [errors, setErrors] = useState<RegisterErrors>({});
 
   const passwordRules = useMemo(() => getPasswordRules(password), [password]);
@@ -159,12 +164,36 @@ export default function RegisterPage() {
       // TODO: Persist selectedRole when a user profile API or Firestore profile
       // writer is added. The auth utility currently stores Firebase Auth data.
       router.push("/verify-email");
-    } catch {
+    } catch (error) {
       setErrors({
-        form: "We could not create your account. Try again with a different email address.",
+        form: getFriendlyAuthErrorMessage(error),
       });
     } finally {
       setIsCreatingAccount(false);
+    }
+  };
+
+  const handleGoogleRegistration = async () => {
+    setIsContinuingWithGoogle(true);
+    setErrors({});
+
+    try {
+      const user = await loginWithGooglePopup();
+
+      // TODO: Persist selectedRole when a user profile API or Firestore profile
+      // writer is added for Google registration.
+      if (!user.emailVerified) {
+        router.push("/verify-email");
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch (error) {
+      setErrors({
+        form: getFriendlyAuthErrorMessage(error),
+      });
+    } finally {
+      setIsContinuingWithGoogle(false);
     }
   };
 
@@ -510,7 +539,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={isCreatingAccount}
+                disabled={isCreatingAccount || isContinuingWithGoogle}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-75"
               >
                 {isCreatingAccount ? (
@@ -526,6 +555,38 @@ export default function RegisterPage() {
                 )}
               </button>
             </form>
+
+            <div className="my-6 flex items-center gap-3">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs font-semibold uppercase text-muted">
+                Or continue with
+              </span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleRegistration}
+              disabled={isCreatingAccount || isContinuingWithGoogle}
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-75"
+            >
+              {isContinuingWithGoogle ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  Continuing with Google
+                </>
+              ) : (
+                <>
+                  <span
+                    className="flex size-5 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-primary"
+                    aria-hidden="true"
+                  >
+                    G
+                  </span>
+                  Continue with Google
+                </>
+              )}
+            </button>
 
             <p className="mt-6 text-center text-sm text-muted">
               Already have an account?{" "}
