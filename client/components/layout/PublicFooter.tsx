@@ -68,21 +68,21 @@ const bottomLinks = [
 
 export default function PublicFooter() {
   return (
-    <footer className="border-t border-[#e4e1ee] bg-[#f7f5fb] text-[#1f2937]">
+    <footer className="border-t border-slate-200 bg-background text-foreground dark:border-slate-700">
       <div className="mx-auto w-full max-w-6xl px-6 py-12 sm:py-14 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.45fr_1fr_1fr_1fr] lg:gap-12">
           <div className="max-w-sm">
             <Link
               href="/"
-              className="inline-flex items-center gap-3 font-heading text-xl font-bold tracking-tight text-[#111827]"
+              className="inline-flex items-center gap-3 font-heading text-xl font-bold tracking-tight text-foreground"
               aria-label="CareerBridge home"
             >
-              <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-sm">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-sm shadow-blue-900/10">
                 CB
               </span>
               <span>CareerBridge</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-6 text-[#6b7280]">
+            <p className="mt-4 max-w-xs text-sm leading-6 text-muted">
               Connecting skills, goals, and career opportunities for job seekers
               and employers.
             </p>
@@ -91,7 +91,7 @@ export default function PublicFooter() {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="flex size-9 items-center justify-center rounded-full border border-[#d8d3e6] bg-white text-[#6b7280] transition hover:border-primary hover:text-primary"
+                  className="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-primary hover:bg-blue-50 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-primary dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
                   aria-label={link.label}
                   target="_blank"
                   rel="noreferrer"
@@ -104,7 +104,7 @@ export default function PublicFooter() {
 
           {linkColumns.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <h2 className="font-heading text-sm font-semibold text-[#111827]">
+              <h2 className="font-heading text-sm font-semibold text-foreground">
                 {column.title}
               </h2>
               <ul className="mt-4 space-y-3">
@@ -112,7 +112,7 @@ export default function PublicFooter() {
                   <li key={`${column.title}-${link.href}-${link.label}`}>
                     <Link
                       href={link.href}
-                      className="text-sm leading-6 text-[#6b7280] transition hover:text-primary"
+                      className="text-sm leading-6 text-muted transition hover:text-primary"
                     >
                       {link.label}
                     </Link>
@@ -123,7 +123,7 @@ export default function PublicFooter() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col gap-5 border-t border-[#e4e1ee] pt-6 text-sm text-[#6b7280] sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-5 border-t border-slate-200 pt-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between dark:border-slate-700">
           <p>Copyright 2026 CareerBridge</p>
 
           <nav
