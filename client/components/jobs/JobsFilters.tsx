@@ -1,6 +1,16 @@
-import { jobsFilterGroups } from "@/lib/jobs-data";
+import { jobsFilterGroups, type JobsFilterGroup } from "@/lib/jobs-data";
 
-export default function JobsFilters() {
+type JobsFiltersProps = {
+  groups?: JobsFilterGroup[];
+  salaryRangeLabel?: string;
+  defaultSalary?: number;
+};
+
+export default function JobsFilters({
+  groups = jobsFilterGroups,
+  salaryRangeLabel = "Showing jobs from $90K and above",
+  defaultSalary = 90000,
+}: JobsFiltersProps) {
   return (
     <aside
       className="rounded-lg border border-slate-200 bg-surface p-5 shadow-sm dark:border-slate-700"
@@ -35,17 +45,15 @@ export default function JobsFilters() {
                 name="salary"
                 min="30000"
                 max="150000"
-                defaultValue="90000"
+                defaultValue={defaultSalary}
                 className="w-full accent-primary"
               />
             </label>
-            <p className="mt-2 text-xs text-muted">
-              Showing jobs from $90K and above
-            </p>
+            <p className="mt-2 text-xs text-muted">{salaryRangeLabel}</p>
           </div>
         </fieldset>
 
-        {jobsFilterGroups.map((group) => (
+        {groups.map((group) => (
           <fieldset key={group.title}>
             <legend className="text-sm font-semibold text-foreground">
               {group.title}

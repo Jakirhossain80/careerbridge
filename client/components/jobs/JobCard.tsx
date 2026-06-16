@@ -81,7 +81,7 @@ export default function JobCard({ job, view = "grid" }: JobCardProps) {
               />
               <dt className="sr-only">Job type</dt>
               <dd>
-                {job.jobType} · {job.workMode}
+                {job.jobType} - {job.workMode}
               </dd>
             </div>
             <div className="inline-flex items-center gap-2">

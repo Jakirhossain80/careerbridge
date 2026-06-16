@@ -19,7 +19,7 @@ export default function CategoryCard({
   variant = "default",
 }: CategoryCardProps) {
   const Icon = categoryIcons[category.icon];
-  const href = `/jobs?category=${category.slug}`;
+  const href = `/categories/${category.slug}`;
 
   if (variant === "featured") {
     return (

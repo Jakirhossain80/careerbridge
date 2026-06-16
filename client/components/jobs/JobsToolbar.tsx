@@ -2,16 +2,24 @@ import { ArrowUpDown, LayoutGrid, List } from "lucide-react";
 
 import { sortOptions } from "@/lib/jobs-data";
 
-export default function JobsToolbar() {
+type JobsToolbarProps = {
+  count?: number;
+  summary?: string;
+  view?: "grid" | "list";
+};
+
+export default function JobsToolbar({
+  count = 6,
+  summary = "Matched from 18,000+ active openings",
+  view = "grid",
+}: JobsToolbarProps) {
   return (
     <div className="mb-5 flex flex-col gap-4 rounded-lg border border-slate-200 bg-surface p-4 shadow-sm dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-sm font-semibold text-foreground">
-          Showing 6 jobs
+          Showing {count} {count === 1 ? "job" : "jobs"}
         </p>
-        <p className="mt-1 text-sm text-muted">
-          Matched from 18,000+ active openings
-        </p>
+        <p className="mt-1 text-sm text-muted">{summary}</p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -38,16 +46,24 @@ export default function JobsToolbar() {
         >
           <button
             type="button"
-            className="inline-flex h-9 items-center justify-center gap-2 rounded bg-primary px-3 text-sm font-semibold text-white"
-            aria-pressed="true"
+            className={
+              view === "grid"
+                ? "inline-flex h-9 items-center justify-center gap-2 rounded bg-primary px-3 text-sm font-semibold text-white"
+                : "inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-semibold text-muted transition hover:bg-slate-100 dark:hover:bg-slate-800"
+            }
+            aria-pressed={view === "grid"}
           >
             <LayoutGrid className="size-4" aria-hidden="true" />
             Grid
           </button>
           <button
             type="button"
-            className="inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-semibold text-muted transition hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-pressed="false"
+            className={
+              view === "list"
+                ? "inline-flex h-9 items-center justify-center gap-2 rounded bg-primary px-3 text-sm font-semibold text-white"
+                : "inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-semibold text-muted transition hover:bg-slate-100 dark:hover:bg-slate-800"
+            }
+            aria-pressed={view === "list"}
           >
             <List className="size-4" aria-hidden="true" />
             List

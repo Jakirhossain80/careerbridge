@@ -1,11 +1,15 @@
 import JobCard from "@/components/jobs/JobCard";
-import { jobs } from "@/lib/jobs-data";
+import { jobs, type Job } from "@/lib/jobs-data";
 
 type JobsListProps = {
+  jobs?: Job[];
   view?: "grid" | "list";
 };
 
-export default function JobsList({ view = "grid" }: JobsListProps) {
+export default function JobsList({
+  jobs: jobResults = jobs,
+  view = "grid",
+}: JobsListProps) {
   return (
     <section aria-labelledby="jobs-results-heading">
       <h2 id="jobs-results-heading" className="sr-only">
@@ -18,7 +22,7 @@ export default function JobsList({ view = "grid" }: JobsListProps) {
             : "grid gap-5"
         }
       >
-        {jobs.map((job) => (
+        {jobResults.map((job) => (
           <JobCard key={job.id} job={job} view={view} />
         ))}
       </div>
