@@ -65,7 +65,8 @@ const socialLinks = [
 const bottomLinks = [
   { label: "About Us", href: "/about" },
   { label: "Careers", href: "/careers" },
-  { label: "Privacy", href: "/privacy" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms & Conditions", href: "/terms" },
 ];
 
 export default function PublicFooter() {

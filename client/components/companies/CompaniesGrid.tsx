@@ -25,6 +25,7 @@ export default function CompaniesGrid() {
             className="h-10 w-full appearance-none rounded-md border border-slate-300 bg-white px-3 pr-9 text-sm font-medium text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
           >
             <option value="recommended">Recommended</option>
+            
             <option value="open-jobs">Most open jobs</option>
             <option value="rating">Highest rated</option>
             <option value="newest">Newest</option>
