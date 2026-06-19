@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import ActiveFooterLink from "./ActiveFooterLink";
+
 const linkColumns = [
   {
     title: "For Job Seekers",
@@ -110,12 +112,12 @@ export default function PublicFooter() {
               <ul className="mt-4 space-y-3">
                 {column.links.map((link) => (
                   <li key={`${column.title}-${link.href}-${link.label}`}>
-                    <Link
+                    <ActiveFooterLink
                       href={link.href}
-                      className="text-sm leading-6 text-muted transition hover:text-primary"
+                      className="text-sm leading-6"
                     >
                       {link.label}
-                    </Link>
+                    </ActiveFooterLink>
                   </li>
                 ))}
               </ul>
@@ -131,13 +133,9 @@ export default function PublicFooter() {
             aria-label="Footer secondary navigation"
           >
             {bottomLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="transition hover:text-primary"
-              >
+              <ActiveFooterLink key={link.href} href={link.href}>
                 {link.label}
-              </Link>
+              </ActiveFooterLink>
             ))}
           </nav>
         </div>

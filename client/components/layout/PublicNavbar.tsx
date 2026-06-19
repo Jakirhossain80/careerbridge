@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import ActiveNavLink from "./ActiveNavLink";
+
 const navigationLinks = [
   { label: "Home", href: "/" },
   { label: "Jobs", href: "/jobs" },
@@ -24,13 +26,9 @@ export default function PublicNavbar() {
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-medium text-muted">
           {navigationLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="transition hover:text-primary"
-            >
+            <ActiveNavLink key={link.href} href={link.href}>
               {link.label}
-            </Link>
+            </ActiveNavLink>
           ))}
           <Link
             href="/login"
