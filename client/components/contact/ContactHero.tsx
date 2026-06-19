@@ -1,0 +1,73 @@
+import { BadgeCheck, Headphones, Mail } from "lucide-react";
+
+import { contactHeroStats } from "@/lib/contact-data";
+
+export default function ContactHero() {
+  return (
+    <section className="relative overflow-hidden bg-surface">
+      <div className="absolute inset-x-0 top-0 h-56 bg-blue-50 dark:bg-blue-950/30" />
+      <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-20">
+        <div>
+          <p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-primary shadow-sm dark:border-blue-900 dark:bg-slate-900">
+            <Headphones className="size-4" aria-hidden="true" />
+            Contact CareerBridge
+          </p>
+          <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            We are here to help you move work forward.
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
+            Reach our team for job seeker support, employer help, recruiter
+            partnerships, billing questions, and technical issues.
+          </p>
+          <ul className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted">
+            {[
+              "Human support team",
+              "Clear routing by inquiry type",
+              "Ready for CRM and ticketing",
+            ].map((highlight) => (
+              <li key={highlight} className="inline-flex items-center gap-2">
+                <BadgeCheck className="size-4 text-accent" aria-hidden="true" />
+                {highlight}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl shadow-blue-900/10 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5 dark:border-slate-800">
+            <div>
+              <p className="text-sm font-semibold text-primary">
+                Support snapshot
+              </p>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                One inbox for candidates, employers, and partners.
+              </h2>
+            </div>
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary dark:bg-blue-950">
+              <Mail className="size-6" aria-hidden="true" />
+            </div>
+          </div>
+          <dl className="grid gap-4 py-5 sm:grid-cols-3">
+            {contactHeroStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800"
+              >
+                <dt className="text-sm leading-6 text-muted">{stat.label}</dt>
+                <dd className="mt-2 text-2xl font-bold text-foreground">
+                  {stat.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className="rounded-lg bg-emerald-50 p-4 dark:bg-emerald-950/40">
+            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              Use the form below and we will route your message to the right
+              team.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
