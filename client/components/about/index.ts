@@ -1,0 +1,11 @@
+export { default as AboutCTA } from "./AboutCTA";
+export { default as AboutHero } from "./AboutHero";
+export { default as AboutIntroduction } from "./AboutIntroduction";
+export { default as AboutStats } from "./AboutStats";
+export { default as AboutTeam } from "./AboutTeam";
+export { default as AboutTestimonials } from "./AboutTestimonials";
+export { default as CoreValues } from "./CoreValues";
+export { default as HowCareerBridgeWorks } from "./HowCareerBridgeWorks";
+export { default as MissionVision } from "./MissionVision";
+export { default as PlatformOverview } from "./PlatformOverview";
+export { default as WhyChooseCareerBridge } from "./WhyChooseCareerBridge";
