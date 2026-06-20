@@ -18,19 +18,31 @@ export interface IJobSalary {
 
 export interface IJob {
   employerId: Types.ObjectId;
+  employerEmail?: string;
   companyId: Types.ObjectId;
+  companyName?: string;
   title: string;
+  slug?: string;
   description: string;
   responsibilities: string[];
+  requirements?: string[];
   skills: string[];
+  category?: string;
+  industry?: string;
   salary?: IJobSalary;
+  salaryMin?: number;
+  salaryMax?: number;
+  currency?: string;
   jobType: JobType;
   workMode: WorkMode;
+  workplaceType?: WorkMode;
   location?: string;
   deadline: Date;
+  experienceLevel?: string;
   vacancies: number;
   status: JobStatus;
   featured: boolean;
+  applicationsCount: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -43,16 +55,33 @@ const jobSchema = new Schema<IJob>(
       required: true,
       index: true,
     },
+    employerEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
     companyId: {
       type: Schema.Types.ObjectId,
       ref: "Company",
       required: true,
       index: true,
     },
+    companyName: {
+      type: String,
+      trim: true,
+      index: true,
+    },
     title: {
       type: String,
       required: true,
       trim: true,
+      index: true,
+    },
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
       index: true,
     },
     description: {
@@ -63,9 +92,23 @@ const jobSchema = new Schema<IJob>(
       type: [String],
       default: [],
     },
+    requirements: {
+      type: [String],
+      default: [],
+    },
     skills: {
       type: [String],
       default: [],
+      index: true,
+    },
+    category: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    industry: {
+      type: String,
+      trim: true,
       index: true,
     },
     salary: {
@@ -84,6 +127,16 @@ const jobSchema = new Schema<IJob>(
         default: false,
       },
     },
+    salaryMin: {
+      type: Number,
+    },
+    salaryMax: {
+      type: Number,
+    },
+    currency: {
+      type: String,
+      trim: true,
+    },
     jobType: {
       type: String,
       enum: Object.values(JOB_TYPE),
@@ -94,6 +147,10 @@ const jobSchema = new Schema<IJob>(
       enum: Object.values(WORK_MODE),
       required: true,
     },
+    workplaceType: {
+      type: String,
+      enum: Object.values(WORK_MODE),
+    },
     location: {
       type: String,
       index: true,
@@ -102,6 +159,10 @@ const jobSchema = new Schema<IJob>(
       type: Date,
       required: true,
       index: true,
+    },
+    experienceLevel: {
+      type: String,
+      trim: true,
     },
     vacancies: {
       type: Number,
@@ -119,6 +180,11 @@ const jobSchema = new Schema<IJob>(
       default: false,
       index: true,
     },
+    applicationsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,
@@ -129,6 +195,7 @@ jobSchema.index({ status: 1, deadline: 1 });
 jobSchema.index({ jobType: 1, workMode: 1 });
 jobSchema.index({ companyId: 1, status: 1 });
 jobSchema.index({ employerId: 1, status: 1 });
+jobSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 export const Job =
   (models.Job as Model<IJob> | undefined) ?? model<IJob>("Job", jobSchema);

@@ -15,6 +15,7 @@ export const COMPANY_VERIFICATION_STATUS = {
   PENDING: "pending",
   APPROVED: "approved",
   REJECTED: "rejected",
+  BLOCKED: "blocked",
 } as const;
 
 export const CATEGORY_STATUS = {
@@ -26,6 +27,8 @@ export const JOB_STATUS = {
   DRAFT: "draft",
   PENDING: "pending",
   ACTIVE: "active",
+  PUBLISHED: "published",
+  ARCHIVED: "archived",
   CLOSED: "closed",
   REJECTED: "rejected",
 } as const;
@@ -47,6 +50,7 @@ export const WORK_MODE = {
 export const APPLICATION_STATUS = {
   SUBMITTED: "submitted",
   IN_REVIEW: "in_review",
+  REVIEWING: "reviewing",
   SHORTLISTED: "shortlisted",
   REJECTED: "rejected",
   HIRED: "hired",

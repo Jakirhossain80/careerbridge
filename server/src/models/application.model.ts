@@ -14,9 +14,13 @@ export interface IApplicationTimeline {
 
 export interface IApplication {
   jobId: Types.ObjectId;
+  companyId?: Types.ObjectId;
   applicantId: Types.ObjectId;
+  applicantEmail?: string;
+  applicantName?: string;
   employerId: Types.ObjectId;
   resume: string;
+  resumeUrl?: string;
   coverLetter?: string;
   expectedSalary?: number;
   status: ApplicationStatus;
@@ -58,11 +62,26 @@ const applicationSchema = new Schema<IApplication>(
       required: true,
       index: true,
     },
+    companyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
     applicantId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
+    },
+    applicantEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    applicantName: {
+      type: String,
+      trim: true,
     },
     employerId: {
       type: Schema.Types.ObjectId,
@@ -73,6 +92,9 @@ const applicationSchema = new Schema<IApplication>(
     resume: {
       type: String,
       required: true,
+    },
+    resumeUrl: {
+      type: String,
     },
     coverLetter: {
       type: String,
@@ -97,6 +119,8 @@ const applicationSchema = new Schema<IApplication>(
 );
 
 applicationSchema.index({ jobId: 1, applicantId: 1 }, { unique: true });
+applicationSchema.index({ employerId: 1, status: 1 });
+applicationSchema.index({ companyId: 1, status: 1 });
 
 export const Application =
   (models.Application as Model<IApplication> | undefined) ??
