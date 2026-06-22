@@ -9,7 +9,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { Badge, Button } from "@/components/ui";
+import { Badge } from "@/components/ui";
 import type { CompanyProfile } from "@/lib/employer-company-profile-data";
 
 type CompanyProfileHeroProps = {
@@ -28,14 +28,14 @@ export default function CompanyProfileHero({ company }: CompanyProfileHeroProps)
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/95 via-blue-700/80 to-emerald-500/80" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(255,255,255,0.24),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.16),transparent_45%)]" />
         <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
-          <Button
-            variant="outline"
-            className="border-white/40 bg-white/95 text-slate-900 hover:bg-white"
-            leftIcon={<Edit3 className="size-4" aria-hidden="true" />}
+          <Link
+            href="/employer/dashboard/company-profile/edit"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/40 bg-white/95 px-4 text-sm font-semibold text-slate-900 shadow-sm shadow-blue-900/10 transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
             aria-label={`Edit ${company.companyName} profile`}
           >
+            <Edit3 className="size-4" aria-hidden="true" />
             Edit Profile
-          </Button>
+          </Link>
         </div>
       </div>
 

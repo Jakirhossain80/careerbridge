@@ -24,6 +24,7 @@ export type CompanyProfile = {
   headquarters: string;
   contactEmail: string;
   phone: string;
+  address: string;
   socialLinks: SocialLink[];
   openRolesCount: number;
   verified: boolean;
@@ -50,6 +51,7 @@ export const employerCompanyProfile: CompanyProfile = {
   headquarters: "Dhaka, Bangladesh",
   contactEmail: "hiring@brightpath.example.com",
   phone: "+880 1712-345678",
+  address: "House 42, Road 12, Banani, Dhaka 1213, Bangladesh",
   socialLinks: [
     { label: "LinkedIn", href: "https://www.linkedin.com" },
     { label: "X", href: "https://x.com" },

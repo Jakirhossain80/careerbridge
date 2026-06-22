@@ -95,7 +95,12 @@ export default function DashboardSidebar({
         <nav className="flex-1 space-y-1 px-3 py-5" aria-label="Dashboard">
           {navItems.map((link) => {
             const Icon = link.icon;
-            const isActive = link.href !== "#" && pathname === link.href;
+            const isDashboardRoot =
+              link.href === "/dashboard" || link.href === "/employer/dashboard";
+            const isActive =
+              link.href !== "#" &&
+              (pathname === link.href ||
+                (!isDashboardRoot && pathname.startsWith(`${link.href}/`)));
 
             return (
               <Link
