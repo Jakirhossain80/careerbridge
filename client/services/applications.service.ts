@@ -1,13 +1,17 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { mockApplicantDetails } from "@/data/mock-applicant-details";
 import { mockEmployerApplications } from "@/data/mock-applicants";
 import type {
+  ApplicantDetails,
+  ApplicationNote,
   ApplicationStatus,
   EmployerApplication,
   EmployerApplicationsQueryParams,
   EmployerApplicationsResponse,
 } from "@/types/application.types";
+import { applicationStatusLabels } from "@/types/application.types";
 
 type ApiEnvelope<T> = {
   success?: boolean;
@@ -16,6 +20,7 @@ type ApiEnvelope<T> = {
 };
 
 let mockApplications = [...mockEmployerApplications];
+let mockDetails = [...mockApplicantDetails];
 
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   const payload = response.data;
@@ -125,15 +130,46 @@ export async function getEmployerApplications(
   }
 }
 
+function mergeMockApplicationDetails(application: EmployerApplication): ApplicantDetails {
+  return {
+    ...application,
+    applicantPhone: "+1 (555) 013-4477",
+    location: "Remote",
+    education: "Candidate education details pending",
+    careerSummary:
+      "This applicant profile is using development fallback data until the application details endpoint returns a full profile.",
+    resumeFileName: application.resumeUrl?.split("/").pop(),
+    notes: [],
+    statusHistory: [
+      {
+        status: "applied",
+        label: "Applied",
+        createdAt: application.appliedAt,
+      },
+      {
+        status: application.status,
+        label: applicationStatusLabels[application.status],
+        createdAt: application.appliedAt,
+      },
+    ],
+  };
+}
+
 export async function getApplicationById(id: string) {
   try {
-    const response = await api.get<ApiEnvelope<EmployerApplication> | EmployerApplication>(
+    const response = await api.get<ApiEnvelope<ApplicantDetails> | ApplicantDetails>(
       `/applications/${id}`,
     );
-    return unwrap<EmployerApplication>(response);
+    return unwrap<ApplicantDetails>(response);
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
       throw error;
+    }
+
+    const details = mockDetails.find((item) => item._id === id);
+
+    if (details) {
+      return details;
     }
 
     const application = mockApplications.find((item) => item._id === id);
@@ -142,7 +178,7 @@ export async function getApplicationById(id: string) {
       throw error;
     }
 
-    return application;
+    return mergeMockApplicationDetails(application);
   }
 }
 
@@ -151,11 +187,11 @@ export async function updateApplicationStatus(
   status: ApplicationStatus,
 ) {
   try {
-    const response = await api.patch<ApiEnvelope<EmployerApplication> | EmployerApplication>(
+    const response = await api.patch<ApiEnvelope<ApplicantDetails> | ApplicantDetails>(
       `/applications/${id}/status`,
       { status },
     );
-    return unwrap<EmployerApplication>(response);
+    return unwrap<ApplicantDetails>(response);
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
       throw error;
@@ -170,7 +206,64 @@ export async function updateApplicationStatus(
     mockApplications = mockApplications.map((item) =>
       item._id === id ? { ...item, status } : item,
     );
+    const updatedDetails = mockDetails.find((item) => item._id === id);
+    const nextDetails = updatedDetails
+      ? {
+          ...updatedDetails,
+          status,
+          statusHistory: [
+            ...(updatedDetails.statusHistory ?? []),
+            {
+              status,
+              label: applicationStatusLabels[status],
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        }
+      : mergeMockApplicationDetails({ ...application, status });
 
-    return { ...application, status };
+    mockDetails = updatedDetails
+      ? mockDetails.map((item) => (item._id === id ? nextDetails : item))
+      : [...mockDetails, nextDetails];
+
+    return nextDetails;
+  }
+}
+
+export async function addApplicationNote(id: string, note: string) {
+  try {
+    const response = await api.post<ApiEnvelope<ApplicationNote> | ApplicationNote>(
+      `/applications/${id}/notes`,
+      { note },
+    );
+    return unwrap<ApplicationNote>(response);
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+
+    const details = mockDetails.find((item) => item._id === id);
+
+    if (!details) {
+      throw error;
+    }
+
+    const nextNote: ApplicationNote = {
+      _id: `note-${Date.now()}`,
+      authorName: "You",
+      message: note,
+      createdAt: new Date().toISOString(),
+    };
+
+    mockDetails = mockDetails.map((item) =>
+      item._id === id
+        ? {
+            ...item,
+            notes: [nextNote, ...(item.notes ?? [])],
+          }
+        : item,
+    );
+
+    return nextNote;
   }
 }
