@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   BriefcaseBusiness,
+  Building2,
   CalendarDays,
   FileText,
   LayoutDashboard,
@@ -32,6 +33,11 @@ const dashboardLinks: DashboardNavItem[] = [
 
 export const employerDashboardLinks: DashboardNavItem[] = [
   { label: "Overview", href: "/employer/dashboard", icon: LayoutDashboard },
+  {
+    label: "Company Profile",
+    href: "/employer/dashboard/company-profile",
+    icon: Building2,
+  },
   { label: "Post a Job", href: "#", icon: PlusCircle },
   { label: "Jobs", href: "#", icon: BriefcaseBusiness },
   { label: "Applications", href: "#", icon: FileText },

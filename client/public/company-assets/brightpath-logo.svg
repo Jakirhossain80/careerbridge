@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">BrightPath Labs logo</title>
+  <desc id="desc">A blue and emerald geometric mark with the initials BL.</desc>
+  <rect width="96" height="96" rx="18" fill="#eff6ff"/>
+  <path d="M18 66 46 18h20L38 66H18Z" fill="#2563eb"/>
+  <path d="M48 78h20l10-18H58L48 78Z" fill="#10b981"/>
+  <path d="M36 78 64 30h14L50 78H36Z" fill="#1d4ed8" opacity=".88"/>
+</svg>

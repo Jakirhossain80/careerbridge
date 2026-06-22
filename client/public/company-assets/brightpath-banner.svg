@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="title desc">
+  <title id="title">BrightPath Labs banner</title>
+  <desc id="desc">A blue and emerald abstract company banner with soft geometric paths.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#172554"/>
+      <stop offset=".52" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".2" cy=".25" r=".55">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".36"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1440" height="420" fill="url(#bg)"/>
+  <rect width="1440" height="420" fill="url(#glow)"/>
+  <path d="M0 300C166 202 274 226 424 276c181 60 306 58 472-42 170-102 318-128 544-56v242H0Z" fill="#0f172a" opacity=".18"/>
+  <path d="M96 88h240L188 340H-48Z" fill="#ffffff" opacity=".12"/>
+  <path d="M1012 54h244l-148 252H864Z" fill="#ffffff" opacity=".1"/>
+  <circle cx="1240" cy="108" r="92" fill="#ffffff" opacity=".1"/>
+</svg>
