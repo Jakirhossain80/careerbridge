@@ -38,7 +38,11 @@ export const employerDashboardLinks: DashboardNavItem[] = [
     href: "/employer/dashboard/company-profile",
     icon: Building2,
   },
-  { label: "Post a Job", href: "#", icon: PlusCircle },
+  {
+    label: "Post a Job",
+    href: "/employer/dashboard/jobs/new",
+    icon: PlusCircle,
+  },
   { label: "Jobs", href: "#", icon: BriefcaseBusiness },
   { label: "Applications", href: "#", icon: FileText },
   { label: "Interviews", href: "#", icon: CalendarDays },
