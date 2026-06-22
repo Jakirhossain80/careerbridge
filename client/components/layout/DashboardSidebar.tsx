@@ -5,14 +5,23 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   BriefcaseBusiness,
+  CalendarDays,
   FileText,
   LayoutDashboard,
+  MessageSquareText,
+  PlusCircle,
   Settings,
   UserRound,
   X,
 } from "lucide-react";
 
-const dashboardLinks = [
+export type DashboardNavItem = {
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+};
+
+const dashboardLinks: DashboardNavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Profile", href: "#", icon: UserRound },
   { label: "Jobs", href: "#", icon: BriefcaseBusiness },
@@ -21,14 +30,30 @@ const dashboardLinks = [
   { label: "Settings", href: "#", icon: Settings },
 ];
 
+export const employerDashboardLinks: DashboardNavItem[] = [
+  { label: "Overview", href: "/employer/dashboard", icon: LayoutDashboard },
+  { label: "Post a Job", href: "#", icon: PlusCircle },
+  { label: "Jobs", href: "#", icon: BriefcaseBusiness },
+  { label: "Applications", href: "#", icon: FileText },
+  { label: "Interviews", href: "#", icon: CalendarDays },
+  { label: "Messages", href: "#", icon: MessageSquareText },
+  { label: "Settings", href: "#", icon: Settings },
+];
+
 type DashboardSidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  navItems?: DashboardNavItem[];
+  roleLabel?: string;
+  workspaceLabel?: string;
 };
 
 export default function DashboardSidebar({
   isOpen,
   onClose,
+  navItems = dashboardLinks,
+  roleLabel,
+  workspaceLabel = "CareerBridge Dashboard",
 }: DashboardSidebarProps) {
   const pathname = usePathname();
 
@@ -62,7 +87,7 @@ export default function DashboardSidebar({
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-5" aria-label="Dashboard">
-          {dashboardLinks.map((link) => {
+          {navItems.map((link) => {
             const Icon = link.icon;
             const isActive = link.href !== "#" && pathname === link.href;
 
@@ -86,10 +111,10 @@ export default function DashboardSidebar({
 
         <div className="border-t border-slate-200 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-            Workspace
+            {roleLabel ?? "Workspace"}
           </p>
           <p className="mt-1 text-sm font-medium text-foreground">
-            CareerBridge Dashboard
+            {workspaceLabel}
           </p>
         </div>
       </aside>

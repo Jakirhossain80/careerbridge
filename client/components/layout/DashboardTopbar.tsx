@@ -2,9 +2,15 @@ import { Menu, Search } from "lucide-react";
 
 type DashboardTopbarProps = {
   onMenuClick: () => void;
+  title?: string;
+  searchPlaceholder?: string;
 };
 
-export default function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
+export default function DashboardTopbar({
+  onMenuClick,
+  title = "Overview",
+  searchPlaceholder = "Search placeholder",
+}: DashboardTopbarProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-surface/95 backdrop-blur">
       <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
@@ -19,13 +25,13 @@ export default function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
           </button>
           <div>
             <p className="text-sm text-muted">Dashboard</p>
-            <h1 className="text-lg font-semibold text-foreground">Overview</h1>
+            <h1 className="text-lg font-semibold text-foreground">{title}</h1>
           </div>
         </div>
 
         <div className="hidden h-10 w-full max-w-xs items-center gap-2 rounded-md border border-slate-200 bg-background px-3 text-muted sm:flex">
           <Search size={17} aria-hidden="true" />
-          <span className="text-sm">Search placeholder</span>
+          <span className="text-sm">{searchPlaceholder}</span>
         </div>
       </div>
     </header>
