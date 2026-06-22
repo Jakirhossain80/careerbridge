@@ -29,8 +29,17 @@ function formatDate(value: string) {
 }
 
 function buildApplicantsHref(searchParams: URLSearchParams) {
-  const params = searchParams.toString();
-  return params ? `/employer/applicants?${params}` : "/employer/applicants";
+  const nextParams = new URLSearchParams(searchParams);
+  const from = nextParams.get("from");
+  nextParams.delete("from");
+
+  const baseHref =
+    from === "shortlisted"
+      ? "/employer/applicants/shortlisted"
+      : "/employer/applicants";
+  const params = nextParams.toString();
+
+  return params ? `${baseHref}?${params}` : baseHref;
 }
 
 function ApplicantDetailsLoadingState() {
@@ -72,6 +81,7 @@ export default function ApplicantDetailsContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
+      queryClient.invalidateQueries({ queryKey: ["shortlisted-applicants"] });
     },
   });
 

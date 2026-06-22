@@ -53,6 +53,27 @@ function normalizeApplicationsResponse(
     totalPages:
       payload.totalPages ??
       Math.max(Math.ceil((payload.total ?? 0) / (payload.limit ?? 10)), 1),
+    meta: payload.meta,
+  };
+}
+
+function buildApplicationsMeta(applications: EmployerApplication[]) {
+  const shortlisted = applications.filter(
+    (application) => application.status === "shortlisted",
+  );
+  const experienceValues = shortlisted
+    .map((application) => application.experienceYears)
+    .filter((value): value is number => typeof value === "number");
+
+  return {
+    totalShortlisted: shortlisted.length,
+    interviewsSet: shortlisted.filter((application) => application.interviewScheduledAt)
+      .length,
+    averageExperience:
+      experienceValues.length > 0
+        ? experienceValues.reduce((sum, value) => sum + value, 0) /
+          experienceValues.length
+        : 0,
   };
 }
 
@@ -70,12 +91,35 @@ function filterMockApplications(
     filtered = filtered.filter((application) => application.status === params.status);
   }
 
+  if (params.jobId) {
+    filtered = filtered.filter((application) => application.jobId === params.jobId);
+  }
+
+  if (params.dateFrom) {
+    const fromTime = new Date(params.dateFrom).getTime();
+    filtered = filtered.filter(
+      (application) => new Date(application.appliedAt).getTime() >= fromTime,
+    );
+  }
+
+  if (params.dateTo) {
+    const toDate = new Date(params.dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    const toTime = toDate.getTime();
+    filtered = filtered.filter(
+      (application) => new Date(application.appliedAt).getTime() <= toTime,
+    );
+  }
+
   if (search) {
     filtered = filtered.filter((application) =>
       [
         application.applicantName,
         application.applicantEmail,
         application.jobTitle,
+        application.companyName ?? "",
+        application.location ?? "",
+        application.summary ?? "",
         ...(application.skills ?? []),
       ].some((value) => value.toLowerCase().includes(search)),
     );
@@ -104,6 +148,7 @@ function filterMockApplications(
     page: safePage,
     limit,
     totalPages,
+    meta: buildApplicationsMeta(applications),
   };
 }
 

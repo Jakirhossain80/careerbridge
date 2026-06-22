@@ -14,26 +14,44 @@ export type EmployerApplicationsStatusFilter = ApplicationStatus | "all";
 export type EmployerApplicationsQueryParams = {
   search?: string;
   status?: EmployerApplicationsStatusFilter;
+  jobId?: string;
+  dateFrom?: string;
+  dateTo?: string;
   sortBy?: EmployerApplicationsSortBy;
   page?: number;
   limit?: number;
 };
 
+export type EmployerApplicationsMeta = {
+  totalShortlisted?: number;
+  interviewsSet?: number;
+  averageExperience?: number;
+  diversityScore?: number;
+};
+
 export interface EmployerApplication {
   _id: string;
+  applicationId?: string;
   jobId: string;
   jobTitle: string;
+  companyName?: string;
   applicantId: string;
   applicantName: string;
   applicantEmail: string;
+  applicantPhone?: string;
   applicantAvatar?: string;
+  location?: string;
   resumeUrl?: string;
   coverLetter?: string;
   skills?: string[];
   experienceYears?: number;
+  summary?: string;
+  expectedSalaryMin?: number;
+  expectedSalaryMax?: number;
   matchScore?: number;
   status: ApplicationStatus;
   appliedAt: string;
+  interviewScheduledAt?: string;
 }
 
 export interface ApplicationNote {
@@ -69,6 +87,11 @@ export type EmployerApplicationsResponse = {
   page: number;
   limit: number;
   totalPages: number;
+  meta?: EmployerApplicationsMeta;
+};
+
+export type ShortlistedApplicant = EmployerApplication & {
+  status: "shortlisted" | ApplicationStatus;
 };
 
 export type UpdateApplicationStatusPayload = {
