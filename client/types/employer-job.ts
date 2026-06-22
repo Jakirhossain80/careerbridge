@@ -1,4 +1,19 @@
-export type EmployerJobStatus = "draft" | "published" | "closed" | "archived";
+export type EmployerJobStatus =
+  | "draft"
+  | "published"
+  | "active"
+  | "inactive"
+  | "closed"
+  | "archived";
+
+export type EmployerPostedJobStatus =
+  | "active"
+  | "inactive"
+  | "draft"
+  | "closed"
+  | "archived";
+
+export type EmployerJobVisibility = "public" | "private";
 
 export type EmployerJobFormData = {
   id: string;
@@ -35,4 +50,26 @@ export type EmployerJobCompany = {
   logoInitials: string;
   industry: string;
   location: string;
+};
+
+export type EmployerPostedJob = {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  jobType: string;
+  workMode: string;
+  location: string;
+  salaryMin: number;
+  salaryMax: number;
+  currency: string;
+  applicantsCount: number;
+  newApplicantsCount: number;
+  viewsCount: number;
+  postedDate: string | null;
+  expirationDate: string | null;
+  status: EmployerPostedJobStatus;
+  visibility: EmployerJobVisibility;
+  employerId: string;
+  companyId: string;
 };
