@@ -101,7 +101,7 @@ function JobActions({
         View
       </Link>
       <Link
-        href={`/employer/dashboard/jobs/${job.id}/edit`}
+        href={`/employer/jobs/${job.id}/edit`}
         className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary dark:border-slate-700"
       >
         <FilePenLine className="size-3.5" aria-hidden="true" />

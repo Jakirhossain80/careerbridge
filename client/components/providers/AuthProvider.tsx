@@ -7,8 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { createQueryClient } from "@/lib/queryClient";
 
 export type AuthContextValue = {
   user: User | null;
@@ -22,6 +24,7 @@ export const AuthContext = createContext<AuthContextValue | undefined>(
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [queryClient] = useState(() => createQueryClient());
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -42,5 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, loading]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    </QueryClientProvider>
+  );
 }
