@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
+  BarChart3,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -50,6 +51,7 @@ export const employerDashboardLinks: DashboardNavItem[] = [
   },
   { label: "Applications", href: "/employer/applicants", icon: FileText },
   { label: "Interviews", href: "/employer/interviews", icon: CalendarDays },
+  { label: "Analytics", href: "/employer/analytics", icon: BarChart3 },
   { label: "Messages", href: "#", icon: MessageSquareText },
   { label: "Settings", href: "#", icon: Settings },
 ];
