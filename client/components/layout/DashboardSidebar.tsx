@@ -49,7 +49,7 @@ export const employerDashboardLinks: DashboardNavItem[] = [
     icon: BriefcaseBusiness,
   },
   { label: "Applications", href: "/employer/applicants", icon: FileText },
-  { label: "Interviews", href: "#", icon: CalendarDays },
+  { label: "Interviews", href: "/employer/interviews", icon: CalendarDays },
   { label: "Messages", href: "#", icon: MessageSquareText },
   { label: "Settings", href: "#", icon: Settings },
 ];
