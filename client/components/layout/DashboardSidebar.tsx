@@ -53,7 +53,7 @@ export const employerDashboardLinks: DashboardNavItem[] = [
   { label: "Interviews", href: "/employer/interviews", icon: CalendarDays },
   { label: "Analytics", href: "/employer/analytics", icon: BarChart3 },
   { label: "Messages", href: "#", icon: MessageSquareText },
-  { label: "Settings", href: "#", icon: Settings },
+  { label: "Settings", href: "/employer/settings", icon: Settings },
 ];
 
 type DashboardSidebarProps = {
