@@ -4,12 +4,15 @@ import { api } from "@/lib/api";
 import { mockApplicantDetails } from "@/data/mock-applicant-details";
 import { mockEmployerApplications } from "@/data/mock-applicants";
 import type {
+  AppliedJobsResponse,
+  ApplyJobPayload,
   ApplicantDetails,
   ApplicationNote,
   ApplicationStatus,
   EmployerApplication,
   EmployerApplicationsQueryParams,
   EmployerApplicationsResponse,
+  JobSeekerApplication,
 } from "@/types/application.types";
 import { applicationStatusLabels } from "@/types/application.types";
 
@@ -311,4 +314,34 @@ export async function addApplicationNote(id: string, note: string) {
 
     return nextNote;
   }
+}
+
+export async function applyJob(payload: ApplyJobPayload) {
+  const response = await api.post<ApiEnvelope<JobSeekerApplication> | JobSeekerApplication>(
+    "/applications",
+    payload,
+  );
+  return unwrap<JobSeekerApplication>(response);
+}
+
+export async function getAppliedJobs(params: Record<string, unknown> = {}) {
+  const response = await api.get<ApiEnvelope<AppliedJobsResponse> | AppliedJobsResponse>(
+    "/applications/me",
+    { params },
+  );
+  return unwrap<AppliedJobsResponse>(response);
+}
+
+export async function getApplicationDetails(applicationId: string) {
+  const response = await api.get<ApiEnvelope<JobSeekerApplication> | JobSeekerApplication>(
+    `/applications/${applicationId}`,
+  );
+  return unwrap<JobSeekerApplication>(response);
+}
+
+export async function withdrawApplication(applicationId: string) {
+  const response = await api.patch<ApiEnvelope<JobSeekerApplication> | JobSeekerApplication>(
+    `/applications/${applicationId}/withdraw`,
+  );
+  return unwrap<JobSeekerApplication>(response);
 }

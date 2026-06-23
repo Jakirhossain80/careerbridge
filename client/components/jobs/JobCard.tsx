@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark,
   BriefcaseBusiness,
@@ -10,6 +13,7 @@ import {
 
 import { Badge, Button, Card } from "@/components/ui";
 import type { Job } from "@/lib/jobs-data";
+import { saveJob } from "@/services/saved-jobs.service";
 
 type JobCardProps = {
   job: Job;
@@ -21,6 +25,14 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 export default function JobCard({ job, view = "grid" }: JobCardProps) {
+  const queryClient = useQueryClient();
+  const saveMutation = useMutation({
+    mutationFn: saveJob,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+    },
+  });
+
   return (
     <Card
       className={cn(
@@ -118,6 +130,8 @@ export default function JobCard({ job, view = "grid" }: JobCardProps) {
                 size="sm"
                 className="size-9 p-0"
                 aria-label={`Save ${job.title}`}
+                isLoading={saveMutation.isPending}
+                onClick={() => saveMutation.mutate(job.id)}
               >
                 <Bookmark className="size-4" aria-hidden="true" />
               </Button>

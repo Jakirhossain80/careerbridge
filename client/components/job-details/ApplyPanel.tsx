@@ -1,13 +1,26 @@
-import { Bookmark, Send, Share2, ShieldCheck } from "lucide-react";
+"use client";
 
+import { Bookmark, Share2, ShieldCheck } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import ApplyJobModal from "@/components/job-seeker/ApplyJobModal";
 import { Button, Card } from "@/components/ui";
 import type { JobDetails } from "@/lib/job-details-data";
+import { saveJob } from "@/services/saved-jobs.service";
 
 type ApplyPanelProps = {
   job: JobDetails;
 };
 
 export default function ApplyPanel({ job }: ApplyPanelProps) {
+  const queryClient = useQueryClient();
+  const saveMutation = useMutation({
+    mutationFn: saveJob,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+    },
+  });
+
   return (
     <aside className="hidden lg:block" aria-label="Application actions">
       <Card className="sticky top-6" contentClassName="p-6">
@@ -23,15 +36,15 @@ export default function ApplyPanel({ job }: ApplyPanelProps) {
         </p>
 
         <div className="mt-6 grid gap-3">
-          <Button size="lg" className="w-full" leftIcon={<Send className="size-4" />}>
-            Apply Now
-          </Button>
+          <ApplyJobModal jobId={job.id} jobTitle={job.title} triggerClassName="w-full h-12" />
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
               className="w-full"
               leftIcon={<Bookmark className="size-4" />}
               aria-label={`Save ${job.title}`}
+              isLoading={saveMutation.isPending}
+              onClick={() => saveMutation.mutate(job.id)}
             >
               Save
             </Button>

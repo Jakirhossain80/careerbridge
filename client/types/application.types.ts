@@ -7,6 +7,13 @@ export type ApplicationStatus =
   | "hired"
   | "rejected";
 
+export type JobSeekerApplicationStatus =
+  | ApplicationStatus
+  | "submitted"
+  | "in_review"
+  | "reviewing"
+  | "withdrawn";
+
 export type EmployerApplicationsSortBy = "matchScore" | "dateApplied" | "name";
 
 export type EmployerApplicationsStatusFilter = ApplicationStatus | "all";
@@ -107,4 +114,74 @@ export const applicationStatusLabels: Record<ApplicationStatus, string> = {
   offered: "Offered",
   hired: "Hired",
   rejected: "Rejected",
+};
+
+export const jobSeekerApplicationStatusLabels: Record<
+  JobSeekerApplicationStatus,
+  string
+> = {
+  ...applicationStatusLabels,
+  submitted: "Submitted",
+  in_review: "In Review",
+  reviewing: "Reviewing",
+  withdrawn: "Withdrawn",
+};
+
+export type JobSeekerApplication = {
+  _id: string;
+  jobId:
+    | string
+    | {
+        _id: string;
+        title: string;
+        description?: string;
+        companyName?: string;
+        location?: string;
+        jobType?: string;
+        workMode?: string;
+        salaryMin?: number;
+        salaryMax?: number;
+        currency?: string;
+        deadline?: string;
+      };
+  companyId?:
+    | string
+    | {
+        _id: string;
+        name?: string;
+        companyName?: string;
+        logo?: string;
+        logoUrl?: string;
+        website?: string;
+        location?: string;
+      };
+  applicantId: string;
+  resume?: string;
+  resumeUrl?: string;
+  coverLetter?: string;
+  status: JobSeekerApplicationStatus;
+  timeline?: Array<{
+    status: JobSeekerApplicationStatus;
+    note?: string;
+    createdAt?: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ApplyJobPayload = {
+  jobId: string;
+  resumeId?: string;
+  resumeUrl?: string;
+  coverLetter?: string;
+};
+
+export type AppliedJobsResponse = {
+  applications: JobSeekerApplication[];
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };

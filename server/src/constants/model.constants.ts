@@ -48,10 +48,14 @@ export const WORK_MODE = {
 } as const;
 
 export const APPLICATION_STATUS = {
+  APPLIED: "applied",
   SUBMITTED: "submitted",
+  UNDER_REVIEW: "under_review",
   IN_REVIEW: "in_review",
   REVIEWING: "reviewing",
   SHORTLISTED: "shortlisted",
+  INTERVIEW: "interview",
+  OFFERED: "offered",
   REJECTED: "rejected",
   HIRED: "hired",
   WITHDRAWN: "withdrawn",
