@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { CalendarDays, CheckCircle2, Edit, Eye, RotateCcw, XCircle } from "lucide-react";
 
 import { Button, Table } from "@/components/ui";
@@ -34,6 +35,8 @@ export default function InterviewTable({
   onComplete,
   onReschedule,
 }: InterviewTableProps) {
+  const searchParams = useSearchParams();
+  const detailParams = searchParams.toString();
   const columns: Array<TableColumn<Interview>> = [
     {
       key: "candidate",
@@ -88,10 +91,16 @@ export default function InterviewTable({
       render: (interview) => (
         <div className="flex min-w-72 flex-wrap gap-2">
           <Link
-            href={`/employer/applicants/${interview.applicationId}`}
+            href={`/employer/interviews/${interview._id}${detailParams ? `?${detailParams}` : ""}`}
             className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-white dark:hover:bg-slate-800"
           >
             <Eye className="size-4" aria-hidden="true" />
+            Details
+          </Link>
+          <Link
+            href={`/employer/applicants/${interview.applicationId}`}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-white dark:hover:bg-slate-800"
+          >
             Applicant
           </Link>
           <Button

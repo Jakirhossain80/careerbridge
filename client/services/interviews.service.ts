@@ -1,12 +1,16 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { mockInterviewDetails } from "@/data/mock-interview-details";
 import { mockInterviews } from "@/data/mock-interviews";
 import type {
   EmployerInterviewsResponse,
   Interview,
+  InterviewDetails,
+  InterviewFeedbackPayload,
   InterviewFiltersParams,
   InterviewPayload,
+  InterviewStatus,
 } from "@/types/interview.types";
 
 type ApiEnvelope<T> = {
@@ -16,6 +20,7 @@ type ApiEnvelope<T> = {
 };
 
 let localMockInterviews = [...mockInterviews];
+let localMockInterviewDetails = [...mockInterviewDetails];
 
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   const payload = response.data;
@@ -195,22 +200,28 @@ export async function getEmployerInterviews(
 
 export async function getInterviewById(id: string) {
   try {
-    const response = await api.get<ApiEnvelope<Interview> | Interview>(
+    const response = await api.get<ApiEnvelope<InterviewDetails> | InterviewDetails>(
       `/interviews/${id}`,
     );
-    return unwrap<Interview>(response);
+    return unwrap<InterviewDetails>(response);
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
       throw error;
     }
 
-    const interview = localMockInterviews.find((item) => item._id === id);
+    const interview =
+      localMockInterviewDetails.find((item) => item._id === id) ??
+      localMockInterviews.find((item) => item._id === id);
 
     if (!interview) {
-      throw error;
+      return undefined;
     }
 
-    return interview;
+    return {
+      ...interview,
+      candidateName: interview.candidateName ?? "Unnamed candidate",
+      jobTitle: interview.jobTitle ?? "Untitled role",
+    };
   }
 }
 
@@ -267,7 +278,48 @@ export async function updateInterview(id: string, payload: Partial<InterviewPayl
     localMockInterviews = localMockInterviews.map((item) =>
       item._id === id ? updated : item,
     );
+    localMockInterviewDetails = localMockInterviewDetails.map((item) =>
+      item._id === id ? { ...item, ...payload, updatedAt: updated.updatedAt } : item,
+    );
     return updated;
+  }
+}
+
+export async function updateInterviewStatus(id: string, status: InterviewStatus) {
+  try {
+    const response = await api.patch<ApiEnvelope<InterviewDetails> | InterviewDetails>(
+      `/interviews/${id}/status`,
+      { status },
+    );
+    return unwrap<InterviewDetails>(response);
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+
+    return updateInterview(id, { status });
+  }
+}
+
+export async function submitInterviewFeedback(
+  id: string,
+  payload: InterviewFeedbackPayload,
+) {
+  try {
+    const response = await api.patch<ApiEnvelope<InterviewDetails> | InterviewDetails>(
+      `/interviews/${id}/feedback`,
+      payload,
+    );
+    return unwrap<InterviewDetails>(response);
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+
+    return updateInterview(id, {
+      notes: payload.notes,
+      status: "completed",
+    });
   }
 }
 
@@ -296,6 +348,9 @@ export async function deleteInterview(id: string) {
 
     localMockInterviews = localMockInterviews.map((item) =>
       item._id === id ? cancelled : item,
+    );
+    localMockInterviewDetails = localMockInterviewDetails.map((item) =>
+      item._id === id ? { ...item, status: "cancelled", updatedAt: cancelled.updatedAt } : item,
     );
     return cancelled;
   }

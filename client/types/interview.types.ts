@@ -46,6 +46,29 @@ export interface Interview {
   updatedAt: string;
 }
 
+export interface InterviewDetails extends Interview {
+  candidateName: string;
+  candidateEmail?: string;
+  candidatePhone?: string;
+  candidateAvatar?: string;
+  candidateLocation?: string;
+  candidateSkills?: string[];
+  candidateSummary?: string;
+  resumeUrl?: string;
+  portfolioUrl?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  jobTitle: string;
+  department?: string;
+  employmentType?: string;
+  jobLocation?: string;
+  hiringManager?: string;
+  applicationStatus?: string;
+  interviewerAvatar?: string;
+  interviewerTitle?: string;
+  duration?: number;
+}
+
 export type InterviewPayload = {
   applicationId: string;
   jobId: string;
@@ -62,6 +85,15 @@ export type InterviewPayload = {
   location?: string;
   notes?: string;
   status: InterviewStatus;
+};
+
+export type InterviewFeedbackPayload = {
+  technicalSkillsScore: number;
+  cultureFitScore: number;
+  communicationScore?: number;
+  problemSolvingScore?: number;
+  notes: string;
+  recommendation?: "strong_yes" | "yes" | "maybe" | "no" | "strong_no";
 };
 
 export type EmployerInterviewsMeta = {

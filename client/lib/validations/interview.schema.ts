@@ -48,3 +48,18 @@ export const interviewSchema = z
   });
 
 export type InterviewFormValues = z.infer<typeof interviewSchema>;
+
+export const interviewFeedbackSchema = z.object({
+  technicalSkillsScore: z.number().min(1).max(5),
+  cultureFitScore: z.number().min(1).max(5),
+  communicationScore: z.number().min(1).max(5).optional(),
+  problemSolvingScore: z.number().min(1).max(5).optional(),
+  notes: z.string().min(10, "Feedback notes must be at least 10 characters"),
+  recommendation: z
+    .enum(["strong_yes", "yes", "maybe", "no", "strong_no"])
+    .optional(),
+});
+
+export type InterviewFeedbackFormValues = z.infer<
+  typeof interviewFeedbackSchema
+>;
