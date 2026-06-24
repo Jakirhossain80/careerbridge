@@ -63,3 +63,14 @@ export const interviewFeedbackSchema = z.object({
 export type InterviewFeedbackFormValues = z.infer<
   typeof interviewFeedbackSchema
 >;
+
+export const interviewRescheduleSchema = z.object({
+  preferredDate: z.string().min(1, "Preferred date is required"),
+  preferredTime: z.string().min(1, "Preferred time is required"),
+  reason: z.string().min(8, "Reason must be at least 8 characters"),
+  note: z.string().optional(),
+});
+
+export type InterviewRescheduleFormValues = z.infer<
+  typeof interviewRescheduleSchema
+>;

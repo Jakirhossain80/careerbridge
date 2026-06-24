@@ -12,6 +12,13 @@ export type InterviewSortBy = "dateAsc" | "dateDesc" | "candidate" | "jobTitle";
 
 export type InterviewViewMode = "list" | "calendar";
 
+export type JobSeekerInterviewPeriod = "upcoming" | "past" | "all";
+
+export type JobSeekerInterviewSortBy =
+  | "upcoming_first"
+  | "newest_invitation"
+  | "oldest_invitation";
+
 export type InterviewFiltersParams = {
   search?: string;
   dateFrom?: string;
@@ -111,6 +118,70 @@ export type EmployerInterviewsResponse = {
   limit: number;
   totalPages: number;
   meta: EmployerInterviewsMeta;
+};
+
+export type JobSeekerInterview = Pick<
+  Interview,
+  | "_id"
+  | "applicationId"
+  | "jobId"
+  | "interviewerName"
+  | "interviewType"
+  | "interviewDate"
+  | "interviewTime"
+  | "meetingLink"
+  | "location"
+  | "notes"
+  | "status"
+  | "createdAt"
+  | "updatedAt"
+> & {
+  companyId?: string;
+  companyName: string;
+  companyLogo?: string;
+  jobTitle: string;
+  interviewEndTime?: string;
+  invitedAt?: string;
+  feedbackAvailable?: boolean;
+  feedbackSummary?: string;
+};
+
+export type JobSeekerInterviewFiltersParams = {
+  search?: string;
+  status?: InterviewStatus | "all";
+  interviewType?: InterviewType | "all";
+  period?: JobSeekerInterviewPeriod;
+  sortBy?: JobSeekerInterviewSortBy;
+  page?: number;
+  limit?: number;
+};
+
+export type JobSeekerInterviewsMeta = {
+  upcoming: number;
+  completed: number;
+  successRate: number;
+  rescheduleRequests: number;
+};
+
+export type JobSeekerInterviewsResponse = {
+  interviews: JobSeekerInterview[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  meta: JobSeekerInterviewsMeta;
+};
+
+export type InterviewConfirmationPayload = {
+  confirmed: boolean;
+  note?: string;
+};
+
+export type InterviewReschedulePayload = {
+  preferredDate: string;
+  preferredTime: string;
+  reason: string;
+  note?: string;
 };
 
 export const interviewTypeLabels: Record<InterviewType, string> = {
