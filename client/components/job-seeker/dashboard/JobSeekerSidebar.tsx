@@ -9,12 +9,14 @@ import {
   FileText,
   LayoutDashboard,
   Settings,
+  Sparkles,
   UserRound,
   X,
 } from "lucide-react";
 
 const jobSeekerNavItems = [
   { label: "Dashboard", href: "/job-seeker/dashboard", icon: LayoutDashboard },
+  { label: "Recommended Jobs", href: "/job-seeker/recommended-jobs", icon: Sparkles },
   { label: "My Profile", href: "/job-seeker/profile", icon: UserRound },
   { label: "Resume", href: "/job-seeker/resume-manager", icon: FileText },
   { label: "Applied Jobs", href: "/profile/applications", icon: BriefcaseBusiness },

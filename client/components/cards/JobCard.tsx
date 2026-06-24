@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Bookmark, BriefcaseBusiness, Clock3, MapPin } from "lucide-react";
 
 import { Badge, Button, Card } from "@/components/ui";
@@ -14,12 +15,18 @@ type JobCardProps = {
   workMode: string;
   salary?: string;
   skills?: string[];
+  description?: string;
   postedAt?: string;
+  deadline?: string;
   featured?: boolean;
+  matchScore?: number;
+  matchReasons?: string[];
   href: string;
   showSaveButton?: boolean;
   saved?: boolean;
+  saveDisabled?: boolean;
   onSave?: (id: string) => void;
+  primaryAction?: ReactNode;
   className?: string;
 };
 
@@ -37,12 +44,18 @@ export default function JobCard({
   workMode,
   salary,
   skills = [],
+  description,
   postedAt,
+  deadline,
   featured = false,
+  matchScore,
+  matchReasons = [],
   href,
   showSaveButton = false,
   saved = false,
+  saveDisabled = false,
   onSave,
+  primaryAction,
   className,
 }: JobCardProps) {
   return (
@@ -82,6 +95,11 @@ export default function JobCard({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              {typeof matchScore === "number" ? (
+                <Badge variant={matchScore >= 85 ? "primary" : "neutral"}>
+                  {matchScore}% Match
+                </Badge>
+              ) : null}
               {featured ? <Badge variant="primary">Featured</Badge> : null}
               {showSaveButton ? (
                 <Button
@@ -90,6 +108,7 @@ export default function JobCard({
                   size="sm"
                   className="size-9 p-0"
                   onClick={() => onSave?.(id)}
+                  disabled={saveDisabled}
                   aria-label={saved ? `Unsave ${title}` : `Save ${title}`}
                   aria-pressed={saved}
                 >
@@ -101,6 +120,12 @@ export default function JobCard({
               ) : null}
             </div>
           </div>
+
+          {description ? (
+            <p className="mt-4 line-clamp-3 text-sm leading-6 text-muted">
+              {description}
+            </p>
+          ) : null}
 
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
             <span className="inline-flex items-center gap-1.5">
@@ -118,6 +143,7 @@ export default function JobCard({
                 {postedAt}
               </span>
             ) : null}
+            {deadline ? <span>Apply by {deadline}</span> : null}
           </div>
 
           {salary ? (
@@ -133,6 +159,22 @@ export default function JobCard({
                   {skill}
                 </Badge>
               ))}
+            </div>
+          ) : null}
+
+          {matchReasons.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {matchReasons.slice(0, 4).map((reason) => (
+                <Badge key={reason} variant="success">
+                  {reason}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
+
+          {primaryAction ? (
+            <div className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-end">
+              {primaryAction}
             </div>
           ) : null}
         </div>

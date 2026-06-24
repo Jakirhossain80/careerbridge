@@ -19,13 +19,17 @@ import { getResumes } from "@/services/resumes.service";
 type ApplyJobModalProps = {
   jobId: string;
   jobTitle: string;
+  triggerLabel?: string;
   triggerClassName?: string;
+  onApplicationSubmitted?: () => void;
 };
 
 export default function ApplyJobModal({
   jobId,
   jobTitle,
+  triggerLabel = "Apply Now",
   triggerClassName,
+  onApplicationSubmitted,
 }: ApplyJobModalProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -47,6 +51,7 @@ export default function ApplyJobModal({
     mutationFn: applyJob,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
+      onApplicationSubmitted?.();
       setOpen(false);
       form.reset({ jobId, resumeId: "", coverLetter: "" });
     },
@@ -67,7 +72,7 @@ export default function ApplyJobModal({
   return (
     <>
       <Button className={triggerClassName} onClick={handleOpen}>
-        Apply Now
+        {triggerLabel}
       </Button>
       <Modal
         open={open}
