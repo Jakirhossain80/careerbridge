@@ -58,7 +58,7 @@ export default function JobSeekerTopbar({
               <Moon className="size-4" aria-hidden="true" />
             </button>
             <Link
-              href="/profile/resumes"
+              href="/job-seeker/resume-manager"
               className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-white shadow-sm shadow-blue-900/10 transition hover:bg-blue-700"
             >
               <Upload className="size-4" aria-hidden="true" />

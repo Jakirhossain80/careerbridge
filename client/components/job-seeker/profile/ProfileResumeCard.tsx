@@ -71,14 +71,14 @@ export default function ProfileResumeCard({ resume }: ProfileResumeCardProps) {
             </a>
           </div>
 
-          <Link href="/profile/resumes" className="inline-flex text-sm font-semibold text-primary">
+          <Link href="/job-seeker/resume-manager" className="inline-flex text-sm font-semibold text-primary">
             Manage Resume
           </Link>
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-muted">
           <p>No resume uploaded yet.</p>
-          <Link href="/profile/resumes" className="mt-3 inline-flex">
+          <Link href="/job-seeker/resume-manager" className="mt-3 inline-flex">
             <Button
               size="sm"
               leftIcon={<Upload className="size-4" aria-hidden="true" />}
