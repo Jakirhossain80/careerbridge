@@ -21,6 +21,7 @@ const jobSeekerNavItems = [
   { label: "My Profile", href: "/job-seeker/profile", icon: UserRound },
   { label: "Resume", href: "/job-seeker/resume-manager", icon: FileText },
   { label: "Interviews", href: "/job-seeker/interviews", icon: CalendarDays },
+  { label: "Notifications", href: "/job-seeker/notifications", icon: Bell },
   { label: "Applied Jobs", href: "/profile/applications", icon: BriefcaseBusiness },
   { label: "Saved Jobs", href: "/profile/saved-jobs", icon: Bookmark },
   { label: "Job Alerts", href: "/profile/job-alerts", icon: Bell },

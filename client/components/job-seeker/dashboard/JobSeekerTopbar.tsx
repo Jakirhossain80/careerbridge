@@ -43,13 +43,13 @@ export default function JobSeekerTopbar({
             className="w-full sm:w-80"
           />
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Link
+              href="/job-seeker/notifications"
               className="inline-flex size-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
               aria-label="View notifications"
             >
               <Bell className="size-4" aria-hidden="true" />
-            </button>
+            </Link>
             <button
               type="button"
               className="inline-flex size-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
