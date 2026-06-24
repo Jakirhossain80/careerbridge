@@ -11,7 +11,7 @@ const securityItems = [
     title: "Change password",
     description: "Use the authentication password flow when you need to update credentials.",
     action: "Change Password",
-    href: "/reset-password",
+    href: "/job-seeker/change-password",
     icon: KeyRound,
     enabled: true,
   },

@@ -72,9 +72,11 @@ export default function JobSeekerSidebar({
           {jobSeekerNavItems.map((item) => {
             const Icon = item.icon;
             const isDashboardRoot = item.href === "/job-seeker/dashboard";
+            const isSettingsItem = item.href === "/job-seeker/settings";
             const isActive =
               pathname === item.href ||
-              (!isDashboardRoot && pathname.startsWith(`${item.href}/`));
+              (!isDashboardRoot && pathname.startsWith(`${item.href}/`)) ||
+              (isSettingsItem && pathname === "/job-seeker/change-password");
 
             return (
               <Link

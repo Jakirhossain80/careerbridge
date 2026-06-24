@@ -5,16 +5,19 @@ import {
   browserLocalPersistence,
   confirmPasswordReset,
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
   getAuth,
   GoogleAuthProvider,
   inMemoryPersistence,
   reload,
+  reauthenticateWithCredential,
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updatePassword,
   updateProfile,
   type Auth,
   type User,
@@ -178,6 +181,37 @@ export const resetPasswordWithOobCode = async (
   newPassword: string
 ) => {
   await confirmPasswordReset(getFirebaseAuth(), oobCode, newPassword);
+};
+
+type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export const changePassword = async ({
+  currentPassword,
+  newPassword,
+}: ChangePasswordInput) => {
+  const user = getFirebaseAuth().currentUser;
+
+  if (!user || !user.email) {
+    throw new Error("You must be logged in to change your password.");
+  }
+
+  const hasPasswordProvider = user.providerData.some(
+    (provider) => provider.providerId === "password"
+  );
+
+  if (!hasPasswordProvider) {
+    throw new Error(
+      "Password changes are not available for accounts that only use Google sign-in."
+    );
+  }
+
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+  await reauthenticateWithCredential(user, credential);
+  await updatePassword(user, newPassword);
 };
 
 export const sendVerificationEmail = resendEmailVerification;

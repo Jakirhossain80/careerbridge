@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
@@ -17,17 +17,20 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function Input({
-  id,
-  label,
-  error,
-  helperText,
-  required,
-  disabled,
-  className,
-  wrapperClassName,
-  ...props
-}: InputProps) {
+const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    id,
+    label,
+    error,
+    helperText,
+    required,
+    disabled,
+    className,
+    wrapperClassName,
+    ...props
+  },
+  ref,
+) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const helperId = helperText ? `${inputId}-helper` : undefined;
@@ -44,6 +47,7 @@ export default function Input({
       ) : null}
 
       <input
+        ref={ref}
         id={inputId}
         className={cn(
           inputClasses,
@@ -70,6 +74,8 @@ export default function Input({
       ) : null}
     </div>
   );
-}
+});
+
+export default Input;
 
 export type { InputProps };
