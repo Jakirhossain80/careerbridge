@@ -31,7 +31,12 @@ export default function DashboardTopbar({
 
         <div className="hidden h-10 w-full max-w-xs items-center gap-2 rounded-md border border-slate-200 bg-background px-3 text-muted sm:flex">
           <Search size={17} aria-hidden="true" />
-          <span className="text-sm">{searchPlaceholder}</span>
+          <span className="min-w-0 flex-1 truncate text-sm">
+            {searchPlaceholder}
+          </span>
+          <kbd className="rounded border border-slate-200 bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted">
+            Ctrl K
+          </kbd>
         </div>
       </div>
     </header>

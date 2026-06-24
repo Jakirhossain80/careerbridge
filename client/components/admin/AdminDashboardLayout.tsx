@@ -40,6 +40,7 @@ export default function AdminDashboardLayout({ children }: { children: ReactNode
           title="Admin Console"
           searchPlaceholder="Search users, jobs, reports"
           workspaceLabel="Platform Operations"
+          sidebarVariant="admin"
         >
           {children}
         </DashboardShell>

@@ -13,6 +13,7 @@ type DashboardShellProps = {
   title?: string;
   searchPlaceholder?: string;
   workspaceLabel?: string;
+  sidebarVariant?: "default" | "admin";
 };
 
 export default function DashboardShell({
@@ -22,6 +23,7 @@ export default function DashboardShell({
   title,
   searchPlaceholder,
   workspaceLabel,
+  sidebarVariant = "default",
 }: DashboardShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -33,6 +35,7 @@ export default function DashboardShell({
         navItems={navItems}
         roleLabel={roleLabel}
         workspaceLabel={workspaceLabel}
+        variant={sidebarVariant}
       />
       <div className="min-w-0 flex-1">
         <DashboardTopbar

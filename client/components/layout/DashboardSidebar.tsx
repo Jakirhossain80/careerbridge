@@ -62,6 +62,7 @@ type DashboardSidebarProps = {
   navItems?: DashboardNavItem[];
   roleLabel?: string;
   workspaceLabel?: string;
+  variant?: "default" | "admin";
 };
 
 export default function DashboardSidebar({
@@ -70,8 +71,10 @@ export default function DashboardSidebar({
   navItems = dashboardLinks,
   roleLabel,
   workspaceLabel = "CareerBridge Dashboard",
+  variant = "default",
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const isAdmin = variant === "admin";
 
   return (
     <>
@@ -84,7 +87,9 @@ export default function DashboardSidebar({
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-surface transition-transform lg:static lg:z-auto lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 transition-transform lg:static lg:z-auto lg:translate-x-0 ${
+          isAdmin ? "bg-blue-50" : "bg-surface"
+        } ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -120,7 +125,9 @@ export default function DashboardSidebar({
                 className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition ${
                   isActive
                     ? "bg-primary text-white"
-                    : "text-muted hover:bg-background hover:text-foreground"
+                    : isAdmin
+                      ? "text-slate-600 hover:bg-white hover:text-slate-950"
+                      : "text-muted hover:bg-background hover:text-foreground"
                 }`}
               >
                 <Icon size={18} aria-hidden="true" />
