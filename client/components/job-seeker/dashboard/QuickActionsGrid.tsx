@@ -21,7 +21,7 @@ type QuickAction = {
 };
 
 const quickActions: QuickAction[] = [
-  { label: "Complete Profile", href: "/profile/edit", icon: UserRoundCheck },
+  { label: "Complete Profile", href: "/job-seeker/profile/edit", icon: UserRoundCheck },
   { label: "Upload Resume", href: "/profile/resumes", icon: FileText },
   { label: "Browse Jobs", href: "/jobs", icon: Search },
   { label: "View Saved Jobs", href: "/profile/saved-jobs", icon: Bookmark },

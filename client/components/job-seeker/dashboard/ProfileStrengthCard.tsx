@@ -46,7 +46,7 @@ export default function ProfileStrengthCard({ profile }: ProfileStrengthCardProp
 
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/profile/edit"
+            href="/job-seeker/profile/edit"
             className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             <CheckCircle2 className="size-4" aria-hidden="true" />
