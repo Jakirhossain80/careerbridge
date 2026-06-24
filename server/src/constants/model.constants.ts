@@ -2,6 +2,7 @@ export const USER_ROLES = {
   JOB_SEEKER: "job_seeker",
   EMPLOYER: "employer",
   ADMIN: "admin",
+  SUPER_ADMIN: "super_admin",
   HR_MEMBER: "hr_member",
 } as const;
 
@@ -81,6 +82,13 @@ export const BLOG_STATUS = {
   ARCHIVED: "archived",
 } as const;
 
+export const REPORT_STATUS = {
+  PENDING: "pending",
+  REVIEWED: "reviewed",
+  RESOLVED: "resolved",
+  DISMISSED: "dismissed",
+} as const;
+
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 export type UserStatus = (typeof USER_STATUS)[keyof typeof USER_STATUS];
 export type CompanyVerificationStatus =
@@ -97,3 +105,4 @@ export type InterviewStatus =
 export type NotificationType =
   (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
 export type BlogStatus = (typeof BLOG_STATUS)[keyof typeof BLOG_STATUS];
+export type ReportStatus = (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];

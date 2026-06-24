@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authTestRoutes from "./authTest.routes.js";
+import adminRoutes from "./admin.routes.js";
 import applicationRoutes from "./application.routes.js";
 import employerRoutes from "./employer.routes.js";
 import healthRoutes from "./health.routes.js";
@@ -11,6 +12,7 @@ import userRoutes from "./user.routes.js";
 const router = Router();
 
 router.use("/auth-test", authTestRoutes);
+router.use("/admin", adminRoutes);
 router.use("/applications", applicationRoutes);
 router.use("/employer", employerRoutes);
 router.use("/health", healthRoutes);
