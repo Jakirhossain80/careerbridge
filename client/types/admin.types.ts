@@ -1,5 +1,5 @@
 export type AdminRole = "job_seeker" | "employer" | "admin" | "super_admin";
-export type AdminUserStatus = "active" | "pending" | "blocked";
+export type AdminUserStatus = "active" | "pending" | "suspended" | "blocked";
 export type AdminApprovalStatus = "pending" | "approved" | "rejected" | "blocked";
 export type AdminJobStatus =
   | "draft"
@@ -24,6 +24,8 @@ export type AdminListParams = {
   search?: string;
   role?: string;
   status?: string;
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -31,13 +33,17 @@ export type AdminListParams = {
 
 export type AdminUser = {
   _id: string;
+  firebaseUid?: string;
   name: string;
   email: string;
   photoURL?: string;
+  avatar?: string;
   role: AdminRole;
   status: AdminUserStatus;
   profileCompleted?: boolean;
   createdAt?: string;
+  updatedAt?: string;
+  lastActivityAt?: string;
 };
 
 export type AdminEmployer = {

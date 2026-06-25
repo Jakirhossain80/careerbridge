@@ -1,5 +1,5 @@
-import AdminListPage from "@/components/admin/AdminListPage";
+import ManageUsersContent from "@/components/admin/users/ManageUsersContent";
 
 export default function AdminUsersPage() {
-  return <AdminListPage resource="users" />;
+  return <ManageUsersContent />;
 }

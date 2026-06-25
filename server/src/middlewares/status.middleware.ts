@@ -20,5 +20,10 @@ export const checkUserStatus: RequestHandler = (req, res, next) => {
     return;
   }
 
+  if (status === USER_STATUS.SUSPENDED) {
+    errorResponse(res, "Forbidden: account is suspended", null, 403);
+    return;
+  }
+
   errorResponse(res, "Forbidden: invalid account status", null, 403);
 };

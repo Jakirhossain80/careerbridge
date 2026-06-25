@@ -93,6 +93,13 @@ export async function changeAdminUserRole(userId: string, role: AdminUser["role"
   return unwrap<AdminUser>(response);
 }
 
+export async function updateAdminUserStatus(
+  userId: string,
+  status: AdminUser["status"],
+) {
+  return updateAdminUser(userId, { status });
+}
+
 export async function blockAdminUser(userId: string) {
   const response = await api.patch<ApiEnvelope<AdminUser> | AdminUser>(
     `/admin/users/${userId}/block`,
@@ -106,6 +113,12 @@ export async function unblockAdminUser(userId: string) {
   );
   return unwrap<AdminUser>(response);
 }
+
+export const getAdminUserById = getAdminUser;
+export const updateUserRole = changeAdminUserRole;
+export const updateUserStatus = updateAdminUserStatus;
+export const blockUser = blockAdminUser;
+export const unblockUser = unblockAdminUser;
 
 export async function getAdminEmployers(params: AdminListParams = {}) {
   const response = await api.get("/admin/employers", { params });

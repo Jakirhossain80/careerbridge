@@ -23,8 +23,13 @@ export const objectIdSchema = requiredString.refine(
 
 export const paginationQuerySchema = z.object({
   search: trimmedString.optional(),
-  role: z.enum(Object.values(USER_ROLES) as [string, ...string[]]).optional(),
+  role: z
+    .enum(Object.values(USER_ROLES) as [string, ...string[]])
+    .or(z.literal("admins"))
+    .optional(),
   status: trimmedString.optional(),
+  dateFrom: trimmedString.optional(),
+  dateTo: trimmedString.optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
   sortBy: z

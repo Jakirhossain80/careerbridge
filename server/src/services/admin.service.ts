@@ -30,6 +30,8 @@ type PaginationQuery = {
   search?: string;
   role?: string;
   status?: string;
+  dateFrom?: string;
+  dateTo?: string;
   page: number;
   limit: number;
   sortBy: string;
@@ -228,9 +230,36 @@ export const listAdminUsers = async (query: PaginationQuery) => {
   const filter: Record<string, unknown> = {};
   const regex = buildSearchRegex(query.search);
 
-  if (query.role) filter.role = query.role;
+  if (query.role === "admins") {
+    filter.role = { $in: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN] };
+  } else if (query.role) {
+    filter.role = query.role;
+  }
+
   if (query.status) filter.status = query.status;
-  if (regex) filter.$or = [{ name: regex }, { email: regex }];
+  if (query.dateFrom || query.dateTo) {
+    const dateTo = query.dateTo ? new Date(query.dateTo) : undefined;
+    if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+    filter.createdAt = {
+      ...(query.dateFrom ? { $gte: new Date(query.dateFrom) } : {}),
+      ...(dateTo ? { $lte: dateTo } : {}),
+    };
+  }
+
+  if (regex) {
+    const searchConditions: Record<string, unknown>[] = [
+      { name: regex },
+      { email: regex },
+      { firebaseUid: regex },
+    ];
+
+    if (query.search && Types.ObjectId.isValid(query.search)) {
+      searchConditions.push({ _id: new Types.ObjectId(query.search) });
+    }
+
+    filter.$or = searchConditions;
+  }
 
   const skip = (query.page - 1) * query.limit;
   const [users, total] = await Promise.all([
