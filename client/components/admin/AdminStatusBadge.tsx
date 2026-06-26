@@ -15,6 +15,7 @@ const statusVariant: Record<string, "primary" | "success" | "warning" | "danger"
   pending: "warning",
   pending_review: "warning",
   pending_verification: "warning",
+  paused: "warning",
   draft: "warning",
   suspended: "warning",
   inactive: "neutral",

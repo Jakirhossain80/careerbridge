@@ -29,6 +29,7 @@ export const adminDashboardLinks: DashboardNavItem[] = [
   { label: "Pending Employers", href: "/admin/employers/pending", icon: ShieldCheck },
   { label: "Jobs", href: "/admin/jobs", icon: BriefcaseBusiness },
   { label: "Pending Jobs", href: "/admin/jobs/pending", icon: ShieldCheck },
+  { label: "Featured Jobs", href: "/admin/jobs/featured", icon: BriefcaseBusiness },
   { label: "Applications", href: "/admin/applications", icon: FileText },
   { label: "Categories", href: "/admin/categories", icon: FolderTree },
   { label: "Blogs", href: "/admin/blogs", icon: Newspaper },
