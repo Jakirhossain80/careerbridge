@@ -10,6 +10,9 @@ import {
   blogs,
   categories,
   changeRole,
+  companies,
+  companyDetails,
+  companyStats,
   createBlog,
   createCategory,
   employerDetails,
@@ -35,6 +38,9 @@ import {
   updateApplication,
   updateBlog,
   updateCategory,
+  updateCompany,
+  updateCompanyStatus,
+  updateCompanyVerification,
   updateEmployer,
   updateJob,
   updateJobSeeker,
@@ -79,6 +85,13 @@ router.get("/employers/:employerId", employerDetails);
 router.patch("/employers/:employerId", updateEmployer);
 router.patch("/employers/:employerId/approve", approveEmployer);
 router.patch("/employers/:employerId/reject", rejectEmployer);
+
+router.get("/companies", companies);
+router.get("/companies/stats", companyStats);
+router.get("/companies/:companyId", companyDetails);
+router.patch("/companies/:companyId", updateCompany);
+router.patch("/companies/:companyId/status", updateCompanyStatus);
+router.patch("/companies/:companyId/verification", updateCompanyVerification);
 
 router.get("/jobs", jobs);
 router.get("/jobs/:jobId", jobDetails);

@@ -7,6 +7,7 @@ import RoleBadge from "@/components/admin/RoleBadge";
 import Card from "@/components/ui/Card";
 import ErrorState from "@/components/ui/ErrorState";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
+import { adminCompanyQueryKeys, getAdminCompanyDetails } from "@/services/admin-companies.service";
 import {
   adminQueryKeys,
   getAdminApplication,
@@ -17,7 +18,7 @@ import {
 } from "@/services/admin.service";
 
 type AdminDetailPageProps = {
-  resource: "user" | "employer" | "job" | "application" | "report";
+  resource: "user" | "employer" | "company" | "job" | "application" | "report";
   id: string;
 };
 
@@ -43,14 +44,17 @@ export default function AdminDetailPage({ resource, id }: AdminDetailPageProps) 
         ? adminQueryKeys.user(id)
         : resource === "employer"
           ? adminQueryKeys.employer(id)
-          : resource === "job"
-            ? adminQueryKeys.job(id)
-            : resource === "application"
-              ? adminQueryKeys.application(id)
-              : adminQueryKeys.report(id),
+          : resource === "company"
+            ? adminCompanyQueryKeys.detail(id)
+            : resource === "job"
+              ? adminQueryKeys.job(id)
+              : resource === "application"
+                ? adminQueryKeys.application(id)
+                : adminQueryKeys.report(id),
     queryFn: async () => {
       if (resource === "user") return getAdminUser(id) as Promise<Record<string, unknown>>;
       if (resource === "employer") return getAdminEmployer(id) as Promise<Record<string, unknown>>;
+      if (resource === "company") return getAdminCompanyDetails(id) as Promise<Record<string, unknown>>;
       if (resource === "job") return getAdminJob(id) as Promise<Record<string, unknown>>;
       if (resource === "application") return getAdminApplication(id) as Promise<Record<string, unknown>>;
       return getAdminReport(id) as Promise<Record<string, unknown>>;

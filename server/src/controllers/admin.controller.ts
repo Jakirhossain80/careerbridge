@@ -2,12 +2,15 @@ import type { RequestHandler } from "express";
 
 import {
   applicationUpdateSchema,
+  adminCompanyQuerySchema,
   adminPendingEmployerQuerySchema,
   adminJobSeekerQuerySchema,
   blogCreateSchema,
   blogUpdateSchema,
   categoryCreateSchema,
   categoryUpdateSchema,
+  companyStatusUpdateSchema,
+  companyVerificationUpdateSchema,
   employerUpdateSchema,
   idParamSchema,
   jobUpdateSchema,
@@ -34,6 +37,8 @@ import {
   deleteAdminUser,
   getAdminApplication,
   getAdminBlog,
+  getAdminCompany,
+  getAdminCompanyStats,
   getAdminEmployer,
   getAdminJob,
   getAdminJobSeeker,
@@ -46,6 +51,7 @@ import {
   listAdminApplications,
   listAdminBlogs,
   listAdminCategories,
+  listAdminCompanies,
   listAdminEmployers,
   listAdminJobs,
   listAdminJobSeekers,
@@ -59,6 +65,9 @@ import {
   updateAdminApplication,
   updateAdminBlog,
   updateAdminCategory,
+  updateAdminCompany,
+  updateAdminCompanyStatus,
+  updateAdminCompanyVerification,
   updateAdminEmployer,
   updateAdminJob,
   updateAdminJobSeeker,
@@ -264,6 +273,85 @@ export const pendingEmployers: RequestHandler = async (req, res, next) => {
       res,
       "Pending employers fetched successfully",
       await getAdminPendingEmployers(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const companyStats: RequestHandler = async (_req, res, next) => {
+  try {
+    successResponse(
+      res,
+      "Company stats fetched successfully",
+      await getAdminCompanyStats()
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const companies: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminCompanyQuerySchema.parse(req.query);
+    successResponse(res, "Companies fetched successfully", await listAdminCompanies(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const companyDetails: RequestHandler = async (req, res, next) => {
+  try {
+    const companyId = getRequiredParam(idParamSchema.parse(req.params));
+    successResponse(res, "Company fetched successfully", await getAdminCompany(companyId));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateCompany: RequestHandler = async (req, res, next) => {
+  try {
+    const companyId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = employerUpdateSchema.parse(req.body);
+    successResponse(
+      res,
+      "Company updated successfully",
+      await updateAdminCompany(companyId, {
+        ...payload,
+        verificationStatus:
+          payload.verificationStatus as CompanyVerificationStatus | undefined,
+      })
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateCompanyVerification: RequestHandler = async (req, res, next) => {
+  try {
+    const companyId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = companyVerificationUpdateSchema.parse(req.body);
+    successResponse(
+      res,
+      "Company verification updated successfully",
+      await updateAdminCompanyVerification(
+        companyId,
+        payload.verificationStatus as CompanyVerificationStatus
+      )
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateCompanyStatus: RequestHandler = async (req, res, next) => {
+  try {
+    const companyId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = companyStatusUpdateSchema.parse(req.body);
+    successResponse(
+      res,
+      "Company status updated successfully",
+      await updateAdminCompanyStatus(companyId, payload.status as UserStatus)
     );
   } catch (error) {
     handleControllerError(error, res, next);

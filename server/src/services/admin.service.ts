@@ -73,6 +73,19 @@ type AdminPendingEmployerQuery = {
   sortBy: string;
 };
 
+type AdminCompanyQuery = {
+  search?: string;
+  verificationStatus?: string;
+  companyStatus?: string;
+  industry?: string;
+  companySize?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page: number;
+  limit: number;
+  sortBy: string;
+};
+
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const slugify = (value: string) =>
@@ -764,6 +777,251 @@ export const listAdminEmployers = async (query: PaginationQuery) => {
   ]);
 
   return { employers, meta: getPaginationMeta(query.page, query.limit, total) };
+};
+
+const buildAdminCompanyPipeline = (query: AdminCompanyQuery): PipelineStage[] => {
+  const baseMatch: Record<string, unknown> = {};
+  const searchRegex = buildSearchRegex(query.search);
+
+  if (query.verificationStatus) {
+    baseMatch.$or = [
+      { status: query.verificationStatus },
+      { verificationStatus: query.verificationStatus },
+    ];
+  }
+
+  if (query.industry) {
+    baseMatch.industry = buildSearchRegex(query.industry);
+  }
+
+  if (query.companySize) {
+    baseMatch.$and = [
+      ...(baseMatch.$and as Record<string, unknown>[] | undefined ?? []),
+      {
+        $or: [
+          { size: buildSearchRegex(query.companySize) },
+          { companySize: buildSearchRegex(query.companySize) },
+        ],
+      },
+    ];
+  }
+
+  if (query.dateFrom || query.dateTo) {
+    const dateTo = query.dateTo ? new Date(query.dateTo) : undefined;
+    if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+    baseMatch.createdAt = {
+      ...(query.dateFrom ? { $gte: new Date(query.dateFrom) } : {}),
+      ...(dateTo ? { $lte: dateTo } : {}),
+    };
+  }
+
+  const postLookupMatch: Record<string, unknown> = {};
+
+  if (query.companyStatus) {
+    postLookupMatch["owner.status"] = query.companyStatus;
+  }
+
+  if (searchRegex) {
+    postLookupMatch.$or = [
+      { name: searchRegex },
+      { companyName: searchRegex },
+      { slug: searchRegex },
+      { ownerEmail: searchRegex },
+      { email: searchRegex },
+      { website: searchRegex },
+      { industry: searchRegex },
+      { location: searchRegex },
+      { headquarters: searchRegex },
+      { "owner.name": searchRegex },
+      { "owner.email": searchRegex },
+    ];
+
+    if (query.search && Types.ObjectId.isValid(query.search)) {
+      (postLookupMatch.$or as Record<string, unknown>[]).push({
+        _id: new Types.ObjectId(query.search),
+      });
+    }
+  }
+
+  return [
+    { $match: baseMatch },
+    {
+      $lookup: {
+        from: "users",
+        localField: "ownerId",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: {
+        path: "$owner",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "jobs",
+        let: { companyId: "$_id", companyName: "$name" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $or: [
+                  { $eq: ["$companyId", "$$companyId"] },
+                  { $eq: ["$companyName", "$$companyName"] },
+                ],
+              },
+              status: { $in: [JOB_STATUS.ACTIVE, JOB_STATUS.PUBLISHED] },
+            },
+          },
+        ],
+        as: "activeJobs",
+      },
+    },
+    {
+      $addFields: {
+        ownerId: "$owner",
+        companyStatus: "$owner.status",
+        activeJobsCount: { $size: "$activeJobs" },
+      },
+    },
+    ...(Object.keys(postLookupMatch).length > 0 ? [{ $match: postLookupMatch }] : []),
+    { $project: { owner: 0, activeJobs: 0 } },
+  ];
+};
+
+export const listAdminCompanies = async (query: AdminCompanyQuery) => {
+  const skip = (query.page - 1) * query.limit;
+
+  const [result] = await Company.aggregate<{
+    companies: unknown[];
+    total: Array<{ count: number }>;
+  }>([
+    ...buildAdminCompanyPipeline(query),
+    {
+      $facet: {
+        companies: [
+          { $sort: buildAggregationSort(query.sortBy) },
+          { $skip: skip },
+          { $limit: query.limit },
+        ],
+        total: [{ $count: "count" }],
+      },
+    },
+  ]);
+
+  const total = result?.total[0]?.count ?? 0;
+
+  return {
+    companies: result?.companies ?? [],
+    meta: getPaginationMeta(query.page, query.limit, total),
+  };
+};
+
+export const getAdminCompanyStats = async () => {
+  const pendingCompanyFilter: Record<string, unknown> = {
+    $or: [
+      {
+        status: {
+          $in: [
+            COMPANY_VERIFICATION_STATUS.PENDING,
+            "pending_verification",
+            "under_review",
+          ],
+        },
+      },
+      {
+        verificationStatus: {
+          $in: [
+            COMPANY_VERIFICATION_STATUS.PENDING,
+            "pending_verification",
+            "under_review",
+          ],
+        },
+      },
+    ],
+  };
+  const flaggedCompanyFilter: Record<string, unknown> = {
+    $or: [
+      {
+        status: {
+          $in: [
+            COMPANY_VERIFICATION_STATUS.REJECTED,
+            COMPANY_VERIFICATION_STATUS.BLOCKED,
+          ],
+        },
+      },
+      {
+        verificationStatus: {
+          $in: [
+            COMPANY_VERIFICATION_STATUS.REJECTED,
+            COMPANY_VERIFICATION_STATUS.BLOCKED,
+          ],
+        },
+      },
+    ],
+  };
+
+  const [totalCompanies, pendingVerification, activeJobListings, flaggedProfiles] =
+    await Promise.all([
+      Company.countDocuments(),
+      Company.countDocuments(pendingCompanyFilter),
+      Job.countDocuments({ status: { $in: [JOB_STATUS.ACTIVE, JOB_STATUS.PUBLISHED] } }),
+      Company.countDocuments(flaggedCompanyFilter),
+    ]);
+
+  return {
+    totalCompanies,
+    pendingVerification,
+    activeJobListings,
+    flaggedProfiles,
+  };
+};
+
+export const getAdminCompany = async (companyId: string) => {
+  const result = await listAdminCompanies({
+    search: companyId,
+    page: 1,
+    limit: 1,
+    sortBy: "-createdAt",
+  });
+
+  const company = result.companies[0];
+  if (!company) throw new AppError("Company not found", 404);
+
+  return company;
+};
+
+export const updateAdminCompany = async (
+  companyId: string,
+  input: Partial<ICompany>
+) => {
+  await updateAdminEmployer(companyId, input);
+  return getAdminCompany(companyId);
+};
+
+export const updateAdminCompanyVerification = async (
+  companyId: string,
+  verificationStatus: CompanyVerificationStatus
+) => {
+  await updateAdminCompany(companyId, {
+    status: verificationStatus,
+    verificationStatus,
+  });
+  return getAdminCompany(companyId);
+};
+
+export const updateAdminCompanyStatus = async (
+  companyId: string,
+  status: UserStatus
+) => {
+  const company = await Company.findById(companyId).select("ownerId");
+  if (!company) throw new AppError("Company not found", 404);
+
+  await User.findByIdAndUpdate(company.ownerId, { $set: { status } }, { new: true });
+  return getAdminCompany(companyId);
 };
 
 const pendingCompanyStatuses = [

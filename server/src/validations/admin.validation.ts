@@ -94,10 +94,35 @@ export const adminPendingEmployerQuerySchema = z.object({
     .default("-createdAt"),
 });
 
+export const adminCompanyQuerySchema = z.object({
+  search: trimmedString.optional(),
+  verificationStatus: trimmedString.optional(),
+  companyStatus: z.enum(Object.values(USER_STATUS) as [string, ...string[]]).optional(),
+  industry: trimmedString.optional(),
+  companySize: trimmedString.optional(),
+  dateFrom: trimmedString.optional(),
+  dateTo: trimmedString.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  sortBy: z
+    .enum(["createdAt", "-createdAt", "updatedAt", "-updatedAt", "name", "-name", "activeJobsCount", "-activeJobsCount"])
+    .default("-createdAt"),
+});
+
+export const companyStatusUpdateSchema = z.object({
+  status: z.enum(Object.values(USER_STATUS) as [string, ...string[]]),
+});
+
+export const companyVerificationUpdateSchema = z.object({
+  verificationStatus: z
+    .enum(Object.values(COMPANY_VERIFICATION_STATUS) as [string, ...string[]]),
+});
+
 export const idParamSchema = z.object({
   userId: objectIdSchema.optional(),
   jobSeekerId: objectIdSchema.optional(),
   employerId: objectIdSchema.optional(),
+  companyId: objectIdSchema.optional(),
   jobId: objectIdSchema.optional(),
   applicationId: objectIdSchema.optional(),
   categoryId: objectIdSchema.optional(),
