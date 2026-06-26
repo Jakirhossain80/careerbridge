@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Newspaper,
   Settings,
+  UserRoundSearch,
   Users,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ import AdminRouteGuard from "@/components/admin/AdminRouteGuard";
 export const adminDashboardLinks: DashboardNavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Job Seekers", href: "/admin/job-seekers", icon: UserRoundSearch },
   { label: "Employers", href: "/admin/employers", icon: Building2 },
   { label: "Jobs", href: "/admin/jobs", icon: BriefcaseBusiness },
   { label: "Applications", href: "/admin/applications", icon: FileText },

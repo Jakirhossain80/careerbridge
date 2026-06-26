@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 
 import {
   applicationUpdateSchema,
+  adminJobSeekerQuerySchema,
   blogCreateSchema,
   blogUpdateSchema,
   categoryCreateSchema,
@@ -9,6 +10,8 @@ import {
   employerUpdateSchema,
   idParamSchema,
   jobUpdateSchema,
+  jobSeekerStatusUpdateSchema,
+  jobSeekerUpdateSchema,
   moderationReasonSchema,
   paginationQuerySchema,
   reportStatusUpdateSchema,
@@ -32,6 +35,8 @@ import {
   getAdminBlog,
   getAdminEmployer,
   getAdminJob,
+  getAdminJobSeeker,
+  getAdminJobSeekerStats,
   getAdminReport,
   getAdminStats,
   getAdminUser,
@@ -41,6 +46,7 @@ import {
   listAdminCategories,
   listAdminEmployers,
   listAdminJobs,
+  listAdminJobSeekers,
   listAdminReports,
   listAdminUsers,
   publishAdminBlog,
@@ -53,6 +59,8 @@ import {
   updateAdminCategory,
   updateAdminEmployer,
   updateAdminJob,
+  updateAdminJobSeeker,
+  updateAdminJobSeekerStatus,
   updateAdminReportStatus,
   updateAdminUser,
 } from "../services/admin.service.js";
@@ -90,6 +98,77 @@ export const users: RequestHandler = async (req, res, next) => {
   try {
     const query = paginationQuerySchema.parse(req.query);
     successResponse(res, "Users fetched successfully", await listAdminUsers(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const jobSeekers: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminJobSeekerQuerySchema.parse(req.query);
+    successResponse(
+      res,
+      "Job seekers fetched successfully",
+      await listAdminJobSeekers(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const jobSeekerStats: RequestHandler = async (_req, res, next) => {
+  try {
+    successResponse(
+      res,
+      "Job seeker stats fetched successfully",
+      await getAdminJobSeekerStats()
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const jobSeekerDetails: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeekerId = getRequiredParam(idParamSchema.parse(req.params));
+    successResponse(
+      res,
+      "Job seeker fetched successfully",
+      await getAdminJobSeeker(jobSeekerId)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateJobSeeker: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const jobSeekerId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = jobSeekerUpdateSchema.parse(req.body);
+    successResponse(
+      res,
+      "Job seeker updated successfully",
+      await updateAdminJobSeeker(actor, jobSeekerId, {
+        ...payload,
+        status: payload.status as UserStatus | undefined,
+      })
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateJobSeekerStatus: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const jobSeekerId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = jobSeekerStatusUpdateSchema.parse(req.body);
+    successResponse(
+      res,
+      "Job seeker status updated successfully",
+      await updateAdminJobSeekerStatus(actor, jobSeekerId, payload.status as UserStatus)
+    );
   } catch (error) {
     handleControllerError(error, res, next);
   }

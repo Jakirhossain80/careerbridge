@@ -48,14 +48,62 @@ export const paginationQuerySchema = z.object({
     .default("-createdAt"),
 });
 
+export const adminJobSeekerQuerySchema = z.object({
+  search: trimmedString.optional(),
+  status: z.enum(Object.values(USER_STATUS) as [string, ...string[]]).optional(),
+  resumeStatus: z
+    .enum(["uploaded", "missing", "processing", "active"] as [string, ...string[]])
+    .optional(),
+  profileCompletion: z
+    .enum(["under_50", "50_79", "80_100", "complete", "incomplete"] as [
+      string,
+      ...string[],
+    ])
+    .optional(),
+  location: trimmedString.optional(),
+  dateFrom: trimmedString.optional(),
+  dateTo: trimmedString.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  sortBy: z
+    .enum([
+      "createdAt",
+      "-createdAt",
+      "name",
+      "-name",
+      "profileCompletion",
+      "-profileCompletion",
+    ])
+    .default("-createdAt"),
+});
+
 export const idParamSchema = z.object({
   userId: objectIdSchema.optional(),
+  jobSeekerId: objectIdSchema.optional(),
   employerId: objectIdSchema.optional(),
   jobId: objectIdSchema.optional(),
   applicationId: objectIdSchema.optional(),
   categoryId: objectIdSchema.optional(),
   blogId: objectIdSchema.optional(),
   reportId: objectIdSchema.optional(),
+});
+
+export const jobSeekerUpdateSchema = z
+  .object({
+    name: optionalString,
+    photoURL: trimmedString.url().optional(),
+    status: z.enum(Object.values(USER_STATUS) as [string, ...string[]]).optional(),
+    phone: optionalString,
+    location: optionalString,
+    professionalHeadline: optionalString,
+  })
+  .refine(
+    (value) => Object.keys(value).length > 0,
+    "At least one job seeker field is required"
+  );
+
+export const jobSeekerStatusUpdateSchema = z.object({
+  status: z.enum(Object.values(USER_STATUS) as [string, ...string[]]),
 });
 
 export const userUpdateSchema = z

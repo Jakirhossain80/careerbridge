@@ -1,5 +1,5 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { Types, type SortOrder } from "mongoose";
+import { Types, type PipelineStage, type SortOrder } from "mongoose";
 
 import {
   APPLICATION_STATUS,
@@ -23,6 +23,7 @@ import Blog, { type IBlog } from "../models/blog.model.js";
 import Category, { type ICategory } from "../models/category.model.js";
 import Company, { type ICompany } from "../models/company.model.js";
 import Job, { type IJob } from "../models/job.model.js";
+import JobSeeker from "../models/jobSeeker.model.js";
 import Report from "../models/report.model.js";
 import User, { type IUser } from "../models/user.model.js";
 
@@ -42,6 +43,19 @@ type AdminActor = {
   firebaseUid: string;
   email: string;
   role: UserRole;
+};
+
+type AdminJobSeekerQuery = {
+  search?: string;
+  status?: string;
+  resumeStatus?: string;
+  profileCompletion?: string;
+  location?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page: number;
+  limit: number;
+  sortBy: string;
 };
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -269,6 +283,357 @@ export const listAdminUsers = async (query: PaginationQuery) => {
 
   return { users, meta: getPaginationMeta(query.page, query.limit, total) };
 };
+
+const buildJobSeekerBasePipeline = (
+  query: Partial<AdminJobSeekerQuery> = {}
+): PipelineStage[] => {
+  const match: Record<string, unknown> = { role: USER_ROLES.JOB_SEEKER };
+  const searchRegex = buildSearchRegex(query.search);
+  const locationRegex = buildSearchRegex(query.location);
+
+  if (query.status) match.status = query.status;
+  if (query.dateFrom || query.dateTo) {
+    const dateTo = query.dateTo ? new Date(query.dateTo) : undefined;
+    if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+    match.createdAt = {
+      ...(query.dateFrom ? { $gte: new Date(query.dateFrom) } : {}),
+      ...(dateTo ? { $lte: dateTo } : {}),
+    };
+  }
+
+  const pipeline: PipelineStage[] = [
+    { $match: match },
+    {
+      $lookup: {
+        from: "jobseekers",
+        localField: "_id",
+        foreignField: "userId",
+        as: "jobSeekerProfile",
+      },
+    },
+    {
+      $unwind: {
+        path: "$jobSeekerProfile",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "resumes",
+        let: { profileId: "$jobSeekerProfile._id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$jobSeekerId", "$$profileId"] } } },
+          { $sort: { isDefault: -1, uploadedAt: -1 } },
+          {
+            $group: {
+              _id: "$jobSeekerId",
+              count: { $sum: 1 },
+              defaultResume: { $first: "$$ROOT" },
+            },
+          },
+        ],
+        as: "resumeSummary",
+      },
+    },
+    {
+      $unwind: {
+        path: "$resumeSummary",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "applications",
+        localField: "_id",
+        foreignField: "applicantId",
+        as: "applications",
+      },
+    },
+    {
+      $addFields: {
+        applicationsCount: { $size: "$applications" },
+        lastApplicationActivityAt: { $max: "$applications.updatedAt" },
+        avatar: { $ifNull: ["$photoURL", "$jobSeekerProfile.avatar"] },
+        phone: "$jobSeekerProfile.phone",
+        location: "$jobSeekerProfile.location",
+        professionalHeadline: "$jobSeekerProfile.headline",
+        skills: { $ifNull: ["$jobSeekerProfile.skills", []] },
+        resume: "$resumeSummary.defaultResume",
+        resumeStatus: {
+          $cond: [
+            { $gt: [{ $ifNull: ["$resumeSummary.count", 0] }, 0] },
+            {
+              $cond: [
+                { $eq: ["$resumeSummary.defaultResume.isDefault", true] },
+                "active",
+                "uploaded",
+              ],
+            },
+            "missing",
+          ],
+        },
+        profileCompletion: {
+          $round: [
+            {
+              $multiply: [
+                {
+                  $divide: [
+                    {
+                      $add: [
+                        { $cond: [{ $ifNull: ["$name", false] }, 1, 0] },
+                        { $cond: [{ $ifNull: ["$email", false] }, 1, 0] },
+                        { $cond: [{ $ifNull: ["$jobSeekerProfile.phone", false] }, 1, 0] },
+                        { $cond: [{ $ifNull: ["$jobSeekerProfile.location", false] }, 1, 0] },
+                        { $cond: [{ $ifNull: ["$jobSeekerProfile.headline", false] }, 1, 0] },
+                        {
+                          $cond: [
+                            { $gt: [{ $size: { $ifNull: ["$jobSeekerProfile.skills", []] } }, 0] },
+                            1,
+                            0,
+                          ],
+                        },
+                        {
+                          $cond: [
+                            { $gt: [{ $ifNull: ["$resumeSummary.count", 0] }, 0] },
+                            1,
+                            0,
+                          ],
+                        },
+                      ],
+                    },
+                    7,
+                  ],
+                },
+                100,
+              ],
+            },
+            0,
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
+        lastActivityAt: {
+          $max: ["$updatedAt", "$jobSeekerProfile.updatedAt", "$lastApplicationActivityAt"],
+        },
+      },
+    },
+  ];
+
+  const postLookupMatch: Record<string, unknown> = {};
+
+  if (searchRegex) {
+    postLookupMatch.$or = [
+      { name: searchRegex },
+      { email: searchRegex },
+      { firebaseUid: searchRegex },
+      { phone: searchRegex },
+      { location: searchRegex },
+      { professionalHeadline: searchRegex },
+      { skills: searchRegex },
+    ];
+
+    if (query.search && Types.ObjectId.isValid(query.search)) {
+      (postLookupMatch.$or as Record<string, unknown>[]).push({
+        _id: new Types.ObjectId(query.search),
+      });
+    }
+  }
+
+  if (locationRegex) postLookupMatch.location = locationRegex;
+  if (query.resumeStatus) postLookupMatch.resumeStatus = query.resumeStatus;
+
+  if (query.profileCompletion) {
+    if (query.profileCompletion === "under_50") {
+      postLookupMatch.profileCompletion = { $lt: 50 };
+    } else if (query.profileCompletion === "50_79") {
+      postLookupMatch.profileCompletion = { $gte: 50, $lte: 79 };
+    } else if (query.profileCompletion === "80_100") {
+      postLookupMatch.profileCompletion = { $gte: 80 };
+    } else if (query.profileCompletion === "complete") {
+      postLookupMatch.profileCompletion = 100;
+    } else if (query.profileCompletion === "incomplete") {
+      postLookupMatch.profileCompletion = { $lt: 100 };
+    }
+  }
+
+  if (Object.keys(postLookupMatch).length > 0) {
+    pipeline.push({ $match: postLookupMatch });
+  }
+
+  return pipeline;
+};
+
+const buildJobSeekerSort = (sortBy: string): Record<string, 1 | -1> => {
+  const allowed = new Set(["createdAt", "name", "profileCompletion"]);
+  const direction = sortBy.startsWith("-") ? -1 : 1;
+  const field = sortBy.replace(/^-/, "");
+
+  return { [allowed.has(field) ? field : "createdAt"]: direction };
+};
+
+const projectAdminJobSeeker: PipelineStage.Project = {
+  $project: {
+    _id: 1,
+    firebaseUid: 1,
+    name: 1,
+    email: 1,
+    avatar: 1,
+    photoURL: 1,
+    role: 1,
+    status: 1,
+    phone: 1,
+    location: 1,
+    professionalHeadline: 1,
+    profileCompletion: 1,
+    resumeStatus: 1,
+    skills: 1,
+    applicationsCount: 1,
+    createdAt: 1,
+    updatedAt: 1,
+    lastActivityAt: 1,
+    resume: {
+      _id: "$resume._id",
+      fileName: "$resume.fileName",
+      fileUrl: "$resume.fileUrl",
+      fileType: "$resume.fileType",
+      uploadedAt: "$resume.uploadedAt",
+    },
+  },
+};
+
+export const listAdminJobSeekers = async (query: AdminJobSeekerQuery) => {
+  const skip = (query.page - 1) * query.limit;
+  const pipeline = buildJobSeekerBasePipeline(query);
+
+  const [result] = await User.aggregate<{
+    jobSeekers: unknown[];
+    total: Array<{ count: number }>;
+  }>([
+    ...pipeline,
+    {
+      $facet: {
+        jobSeekers: [
+          { $sort: buildJobSeekerSort(query.sortBy) },
+          { $skip: skip },
+          { $limit: query.limit },
+          projectAdminJobSeeker,
+        ],
+        total: [{ $count: "count" }],
+      },
+    },
+  ]);
+
+  const total = result?.total[0]?.count ?? 0;
+
+  return {
+    jobSeekers: result?.jobSeekers ?? [],
+    meta: getPaginationMeta(query.page, query.limit, total),
+  };
+};
+
+export const getAdminJobSeekerStats = async () => {
+  const [stats] = await User.aggregate<{
+    totalJobSeekers: number;
+    blockedAccounts: number;
+    activeApplications: number;
+    averageProfileCompletion: number;
+  }>([
+    ...buildJobSeekerBasePipeline(),
+    {
+      $group: {
+        _id: null,
+        totalJobSeekers: { $sum: 1 },
+        blockedAccounts: {
+          $sum: { $cond: [{ $eq: ["$status", USER_STATUS.BLOCKED] }, 1, 0] },
+        },
+        activeApplications: { $sum: "$applicationsCount" },
+        averageProfileCompletion: { $avg: "$profileCompletion" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalJobSeekers: 1,
+        blockedAccounts: 1,
+        activeApplications: 1,
+        averageProfileCompletion: { $round: ["$averageProfileCompletion", 0] },
+      },
+    },
+  ]);
+
+  return {
+    totalJobSeekers: stats?.totalJobSeekers ?? 0,
+    activeApplications: stats?.activeApplications ?? 0,
+    averageProfileCompletion: stats?.averageProfileCompletion ?? 0,
+    blockedAccounts: stats?.blockedAccounts ?? 0,
+  };
+};
+
+export const getAdminJobSeeker = async (jobSeekerId: string) => {
+  const [jobSeeker] = await User.aggregate([
+    { $match: { _id: new Types.ObjectId(jobSeekerId), role: USER_ROLES.JOB_SEEKER } },
+    ...buildJobSeekerBasePipeline(),
+    projectAdminJobSeeker,
+  ]);
+
+  if (!jobSeeker) throw new AppError("Job seeker not found", 404);
+
+  return jobSeeker;
+};
+
+export const updateAdminJobSeeker = async (
+  actor: AdminActor,
+  jobSeekerId: string,
+  input: Partial<IUser> & {
+    phone?: string;
+    location?: string;
+    professionalHeadline?: string;
+  }
+) => {
+  const target = await User.findOne({
+    _id: jobSeekerId,
+    role: USER_ROLES.JOB_SEEKER,
+  });
+  if (!target) throw new AppError("Job seeker not found", 404);
+  assertCanManageUser(actor, target);
+
+  const userUpdate: Partial<IUser> = {};
+  if (input.name !== undefined) userUpdate.name = input.name;
+  if (input.photoURL !== undefined) userUpdate.photoURL = input.photoURL;
+  if (input.status !== undefined) userUpdate.status = input.status;
+
+  if (Object.keys(userUpdate).length > 0) {
+    Object.assign(target, userUpdate);
+    await target.save();
+  }
+
+  const profileUpdate: Record<string, string> = {};
+  if (input.name !== undefined) profileUpdate.fullName = input.name;
+  if (input.phone !== undefined) profileUpdate.phone = input.phone;
+  if (input.location !== undefined) profileUpdate.location = input.location;
+  if (input.professionalHeadline !== undefined) {
+    profileUpdate.headline = input.professionalHeadline;
+  }
+
+  if (Object.keys(profileUpdate).length > 0) {
+    await JobSeeker.findOneAndUpdate(
+      { userId: target._id },
+      { $set: profileUpdate },
+      { new: true }
+    );
+  }
+
+  return getAdminJobSeeker(jobSeekerId);
+};
+
+export const updateAdminJobSeekerStatus = async (
+  actor: AdminActor,
+  jobSeekerId: string,
+  status: UserStatus
+) => updateAdminJobSeeker(actor, jobSeekerId, { status });
 
 export const getAdminUser = async (userId: string) => {
   const user = await User.findById(userId).lean();

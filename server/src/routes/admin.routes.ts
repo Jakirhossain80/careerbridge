@@ -15,6 +15,9 @@ import {
   employerDetails,
   employers,
   jobDetails,
+  jobSeekerDetails,
+  jobSeekerStats,
+  jobSeekers,
   jobs,
   publishBlog,
   rejectEmployer,
@@ -33,6 +36,8 @@ import {
   updateCategory,
   updateEmployer,
   updateJob,
+  updateJobSeeker,
+  updateJobSeekerStatus,
   updateReportStatus,
   updateUser,
   userDetails,
@@ -60,6 +65,12 @@ router.delete("/users/:userId", removeUser);
 router.patch("/users/:userId/role", changeRole);
 router.patch("/users/:userId/block", blockUser);
 router.patch("/users/:userId/unblock", unblockUser);
+
+router.get("/job-seekers", jobSeekers);
+router.get("/job-seekers/stats", jobSeekerStats);
+router.get("/job-seekers/:jobSeekerId", jobSeekerDetails);
+router.patch("/job-seekers/:jobSeekerId", updateJobSeeker);
+router.patch("/job-seekers/:jobSeekerId/status", updateJobSeekerStatus);
 
 router.get("/employers", employers);
 router.get("/employers/:employerId", employerDetails);
