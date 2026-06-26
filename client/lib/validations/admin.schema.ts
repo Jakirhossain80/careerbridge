@@ -20,7 +20,7 @@ export const adminBlogSchema = z.object({
   slug: z.string().trim().optional(),
   category: z.string().trim().optional(),
   content: z.string().trim().min(20, "Blog content must be at least 20 characters"),
-  status: z.enum(["draft", "published", "archived"]),
+  status: z.enum(["draft", "scheduled", "published", "unpublished", "archived"]),
 });
 
 export const adminReportStatusSchema = z.object({

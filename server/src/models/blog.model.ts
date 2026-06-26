@@ -8,10 +8,18 @@ import {
 export interface IBlog {
   title: string;
   slug: string;
+  excerpt?: string;
   content: string;
   author: Types.ObjectId;
+  featuredImage?: string;
   category?: string;
+  tags?: string[];
   status: BlogStatus;
+  featured?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  viewCount?: number;
+  publishedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -35,6 +43,15 @@ const blogSchema = new Schema<IBlog>(
       type: String,
       required: true,
     },
+    excerpt: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+    },
+    featuredImage: {
+      type: String,
+      trim: true,
+    },
     author: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -43,13 +60,41 @@ const blogSchema = new Schema<IBlog>(
     },
     category: {
       type: String,
+      trim: true,
       index: true,
+    },
+    tags: {
+      type: [String],
+      default: [],
     },
     status: {
       type: String,
       enum: Object.values(BLOG_STATUS),
       default: BLOG_STATUS.DRAFT,
       index: true,
+    },
+    featured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    seoTitle: {
+      type: String,
+      trim: true,
+      maxlength: 70,
+    },
+    seoDescription: {
+      type: String,
+      trim: true,
+      maxlength: 160,
+    },
+    viewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    publishedAt: {
+      type: Date,
     },
   },
   {
@@ -58,6 +103,7 @@ const blogSchema = new Schema<IBlog>(
 );
 
 blogSchema.index({ status: 1, category: 1 });
+blogSchema.index({ featured: 1, status: 1 });
 blogSchema.index({ author: 1, status: 1 });
 
 export const Blog =

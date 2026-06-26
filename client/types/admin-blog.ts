@@ -87,3 +87,17 @@ export type AdminBlogFormValues = {
   seoTitle?: string;
   seoDescription?: string;
 };
+
+export type AdminBlogCreatePayload = {
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  featuredImage?: string;
+  category: string;
+  tags?: string[];
+  status: Exclude<AdminBlogStatus, "archived">;
+  featured?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+};

@@ -227,11 +227,17 @@ export const categoryUpdateSchema = categoryCreateSchema
 export const blogCreateSchema = z.object({
   title: requiredString.max(180),
   slug: optionalString,
+  excerpt: trimmedString.max(300).optional(),
   content: requiredString,
+  featuredImage: trimmedString.url().optional(),
   category: optionalString,
+  tags: z.array(trimmedString.min(1).max(60)).max(20).optional(),
   status: z
     .enum(Object.values(BLOG_STATUS) as [string, ...string[]])
     .default(BLOG_STATUS.DRAFT),
+  featured: z.boolean().optional(),
+  seoTitle: trimmedString.max(70).optional(),
+  seoDescription: trimmedString.max(160).optional(),
 });
 
 export const blogUpdateSchema = blogCreateSchema

@@ -1,5 +1,5 @@
-import AdminBlogForm from "@/components/admin/AdminBlogForm";
+import BlogEditorForm from "@/components/admin/blogs/BlogEditorForm";
 
 export default function AdminNewBlogPage() {
-  return <AdminBlogForm />;
+  return <BlogEditorForm />;
 }

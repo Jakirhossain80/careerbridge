@@ -98,7 +98,9 @@ export default function AdminBlogForm({ blogId }: AdminBlogFormProps) {
         <Input label="Category" error={form.formState.errors.category?.message} {...form.register("category")} />
         <Select label="Status" {...form.register("status")}>
           <option value="draft">Draft</option>
+          <option value="scheduled">Scheduled</option>
           <option value="published">Published</option>
+          <option value="unpublished">Unpublished</option>
           <option value="archived">Archived</option>
         </Select>
         <Textarea

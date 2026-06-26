@@ -12,6 +12,7 @@ import {
 } from "@/services/admin.service";
 import type {
   AdminBlog,
+  AdminBlogCreatePayload,
   AdminBlogFormValues,
   AdminBlogListParams,
   AdminBlogsResponse,
@@ -27,19 +28,34 @@ export const adminBlogQueryKeys = {
   stats: ["admin-blog-stats"] as const,
 };
 
-function toSupportedStatus(status: AdminBlogStatus): "draft" | "published" | "archived" {
+function toSupportedStatus(
+  status: AdminBlogStatus,
+): AdminBlogCreatePayload["status"] | "archived" {
   if (status === "published") return "published";
+  if (status === "scheduled") return "scheduled";
+  if (status === "unpublished") return "unpublished";
   if (status === "archived") return "archived";
   return "draft";
 }
 
 function toApiPayload(values: AdminBlogFormValues) {
+  const tags = values.tags
+    ?.split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
   return {
     title: values.title,
     slug: values.slug?.trim() || undefined,
+    excerpt: values.excerpt?.trim() || undefined,
+    featuredImage: values.featuredImage?.trim() || undefined,
     category: values.category?.trim() || undefined,
+    tags: tags?.length ? tags : undefined,
     content: values.content,
     status: toSupportedStatus(values.status),
+    featured: values.featuredStatus === "featured",
+    seoTitle: values.seoTitle?.trim() || undefined,
+    seoDescription: values.seoDescription?.trim() || undefined,
   };
 }
 

@@ -79,7 +79,9 @@ export const NOTIFICATION_TYPE = {
 
 export const BLOG_STATUS = {
   DRAFT: "draft",
+  SCHEDULED: "scheduled",
   PUBLISHED: "published",
+  UNPUBLISHED: "unpublished",
   ARCHIVED: "archived",
 } as const;
 

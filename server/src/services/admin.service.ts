@@ -1460,13 +1460,21 @@ export const createAdminBlog = async (
   input: Partial<IBlog> & { title: string; content: string }
 ) => {
   const slug = input.slug ?? (await generateUniqueSlug(Blog, input.title));
-  return Blog.create({ ...input, slug, author: actor.id });
+  const publishedAt =
+    input.status === BLOG_STATUS.PUBLISHED && !input.publishedAt
+      ? new Date()
+      : input.publishedAt;
+
+  return Blog.create({ ...input, slug, publishedAt, author: actor.id });
 };
 
 export const updateAdminBlog = async (blogId: string, input: Partial<IBlog>) => {
   const update = { ...input };
   if (input.title && !input.slug) {
     update.slug = await generateUniqueSlug(Blog, input.title, blogId);
+  }
+  if (input.status === BLOG_STATUS.PUBLISHED && !input.publishedAt) {
+    update.publishedAt = new Date();
   }
 
   const blog = await Blog.findByIdAndUpdate(
@@ -1496,7 +1504,7 @@ export const publishAdminBlog = async (blogId: string) =>
   updateAdminBlog(blogId, { status: BLOG_STATUS.PUBLISHED as BlogStatus });
 
 export const unpublishAdminBlog = async (blogId: string) =>
-  updateAdminBlog(blogId, { status: BLOG_STATUS.DRAFT as BlogStatus });
+  updateAdminBlog(blogId, { status: BLOG_STATUS.UNPUBLISHED as BlogStatus });
 
 export const listAdminReports = async (query: PaginationQuery) => {
   const filter: Record<string, unknown> = {};

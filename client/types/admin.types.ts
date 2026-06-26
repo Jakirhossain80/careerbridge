@@ -10,7 +10,12 @@ export type AdminJobStatus =
   | "closed"
   | "rejected";
 export type AdminReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
-export type AdminBlogStatus = "draft" | "published" | "archived";
+export type AdminBlogStatus =
+  | "draft"
+  | "scheduled"
+  | "published"
+  | "unpublished"
+  | "archived";
 export type AdminCategoryStatus = "active" | "inactive";
 
 export type AdminMeta = {
@@ -131,10 +136,19 @@ export type AdminBlog = {
   _id: string;
   title: string;
   slug: string;
+  excerpt?: string;
   category?: string;
   content?: string;
+  featuredImage?: string;
+  tags?: string[];
+  featured?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  viewCount?: number;
+  publishedAt?: string;
   status: AdminBlogStatus;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type AdminReport = {
