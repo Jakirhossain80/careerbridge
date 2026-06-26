@@ -1,4 +1,4 @@
-import AdminDetailPage from "@/components/admin/AdminDetailPage";
+import UserDetailsView from "@/components/admin/users/UserDetailsView";
 
 export default async function AdminUserDetailsPage({
   params,
@@ -6,5 +6,5 @@ export default async function AdminUserDetailsPage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = await params;
-  return <AdminDetailPage resource="user" id={userId} />;
+  return <UserDetailsView userId={userId} />;
 }

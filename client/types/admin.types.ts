@@ -40,7 +40,45 @@ export type AdminUser = {
   avatar?: string;
   role: AdminRole;
   status: AdminUserStatus;
+  phone?: string;
+  location?: string;
+  headline?: string;
+  company?: {
+    _id?: string;
+    name?: string;
+    companyName?: string;
+    industry?: string;
+    location?: string;
+    website?: string;
+  } | null;
+  skills?: string[];
+  technicalSkills?: string[];
+  softSkills?: string[];
+  experienceSummary?: string;
+  educationSummary?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  otherLinks?: Array<{
+    label: string;
+    url: string;
+  }>;
   profileCompleted?: boolean;
+  stats?: {
+    appliedJobsCount?: number;
+    postedJobsCount?: number;
+    savedJobsCount?: number;
+    interviewCount?: number;
+    profileCompletionPercentage?: number;
+    profileViews?: number;
+  };
+  recentActivity?: Array<{
+    id: string;
+    action: string;
+    details?: string;
+    status?: string;
+    timestamp?: string;
+  }>;
   createdAt?: string;
   updatedAt?: string;
   lastActivityAt?: string;
