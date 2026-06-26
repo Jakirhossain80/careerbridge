@@ -1,5 +1,12 @@
-import AdminBlogsPage from "@/components/admin/AdminBlogsPage";
+import { Suspense } from "react";
+
+import ManageBlogsView from "@/components/admin/blogs/ManageBlogsView";
+import PageLoader from "@/components/ui/PageLoader";
 
 export default function AdminBlogsRoutePage() {
-  return <AdminBlogsPage />;
+  return (
+    <Suspense fallback={<PageLoader message="Loading blog management..." />}>
+      <ManageBlogsView />
+    </Suspense>
+  );
 }
