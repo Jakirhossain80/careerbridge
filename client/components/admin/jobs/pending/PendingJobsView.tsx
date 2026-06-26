@@ -1,17 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Download, Filter, Plus } from "lucide-react";
+import { ChevronRight, Download, Filter } from "lucide-react";
 
 import ConfirmActionModal from "@/components/admin/ConfirmActionModal";
-import JobBulkActionsBar from "@/components/admin/jobs/JobBulkActionsBar";
 import JobFiltersBar from "@/components/admin/jobs/JobFiltersBar";
-import JobInsightsCards from "@/components/admin/jobs/JobInsightsCards";
-import JobsTable from "@/components/admin/jobs/JobsTable";
+import PendingJobBulkActionsBar from "@/components/admin/jobs/pending/PendingJobBulkActionsBar";
+import PendingJobStatsCards from "@/components/admin/jobs/pending/PendingJobStatsCards";
+import PendingJobTabs from "@/components/admin/jobs/pending/PendingJobTabs";
+import PendingJobsTable from "@/components/admin/jobs/pending/PendingJobsTable";
 import Button from "@/components/ui/Button";
 import ErrorState from "@/components/ui/ErrorState";
-import { useAdminJobMutations, useAdminJobs } from "@/hooks/admin/useAdminJobs";
+import { useAdminJobMutations, usePendingJobs } from "@/hooks/admin/useAdminJobs";
 import { getApiErrorMessage } from "@/lib/api";
 import type {
   AdminJob,
@@ -20,13 +22,14 @@ import type {
   AdminJobListParams,
   AdminJobSortBy,
   AdminJobStatus,
+  PendingJobQueueTab,
 } from "@/types/admin-job.types";
 
 type RequiredFilters = Required<AdminJobFilters>;
 
 type PendingStatusAction = {
   job: AdminJob;
-  status: AdminJobStatus | "delete";
+  status: AdminJobStatus;
 } | null;
 
 type PendingApprovalAction = {
@@ -34,9 +37,13 @@ type PendingApprovalAction = {
   status: AdminJobApprovalStatus;
 } | null;
 
+type RequestChangesAction = {
+  job: AdminJob;
+} | null;
+
 const defaultFilters: RequiredFilters = {
   search: "",
-  status: "all",
+  status: "pending",
   approvalStatus: "all",
   category: "",
   jobType: "all",
@@ -96,7 +103,9 @@ function readFilters(searchParams: URLSearchParams): RequiredFilters {
     sortBy:
       (searchParams.get("sortBy") as AdminJobSortBy | null) ??
       defaultFilters.sortBy,
-    queue: "all",
+    queue:
+      (searchParams.get("queue") as PendingJobQueueTab | null) ??
+      defaultFilters.queue,
   };
 }
 
@@ -104,7 +113,7 @@ function getStatusCopy(action: PendingStatusAction) {
   if (!action) return null;
 
   const labels: Record<
-    AdminJobStatus | "delete",
+    AdminJobStatus,
     { title: string; confirmLabel: string; verb: string; destructive?: boolean }
   > = {
     draft: { title: "Move job to draft", confirmLabel: "Move to Draft", verb: "move to draft" },
@@ -123,12 +132,6 @@ function getStatusCopy(action: PendingStatusAction) {
       title: "Reject job",
       confirmLabel: "Reject",
       verb: "reject",
-      destructive: true,
-    },
-    delete: {
-      title: "Delete job",
-      confirmLabel: "Delete",
-      verb: "delete",
       destructive: true,
     },
   };
@@ -169,19 +172,41 @@ function getApprovalCopy(action: PendingApprovalAction) {
   return labels[action.status];
 }
 
-function getSupportedJobStatus(status: AdminJobStatus): AdminJobStatus {
+function normalizeStatus(status: AdminJobStatus): AdminJobStatus {
   if (status === "expired") return "closed";
   if (status === "published") return "active";
   return status;
 }
 
-export default function ManageJobsView() {
+function isHighRisk(job: AdminJob) {
+  return (
+    job.riskLevel === "high" ||
+    job.riskLevel === "critical" ||
+    (job.riskScore ?? 0) >= 70
+  );
+}
+
+function applyQueueFilter(jobs: AdminJob[], queue: PendingJobQueueTab) {
+  if (queue === "high_risk") return jobs.filter(isHighRisk);
+  if (queue === "updates") {
+    return jobs.filter(
+      (job) =>
+        Boolean(job.updatedAt && job.createdAt && job.updatedAt !== job.createdAt),
+    );
+  }
+
+  return jobs;
+}
+
+export default function PendingJobsView() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [statusAction, setStatusAction] = useState<PendingStatusAction>(null);
   const [approvalAction, setApprovalAction] = useState<PendingApprovalAction>(null);
+  const [requestChangesAction, setRequestChangesAction] =
+    useState<RequestChangesAction>(null);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [actionError, setActionError] = useState("");
 
@@ -203,7 +228,7 @@ export default function ManageJobsView() {
     return {
       search: searchTerms.join(" ") || undefined,
       status:
-        filters.status !== "all" ? getSupportedJobStatus(filters.status) : undefined,
+        filters.status !== "all" ? normalizeStatus(filters.status) : "pending",
       dateFrom: filters.dateFrom || undefined,
       dateTo: filters.dateTo || undefined,
       page: filters.page,
@@ -212,10 +237,14 @@ export default function ManageJobsView() {
     };
   }, [filters]);
 
-  const jobsQuery = useAdminJobs(apiFilters);
+  const jobsQuery = usePendingJobs(apiFilters);
   const { approvalMutation, archiveMutation, statusMutation } = useAdminJobMutations();
   const statusCopy = getStatusCopy(statusAction);
   const approvalCopy = getApprovalCopy(approvalAction);
+  const jobs = useMemo(
+    () => applyQueueFilter(jobsQuery.data?.jobs ?? [], filters.queue),
+    [filters.queue, jobsQuery.data?.jobs],
+  );
 
   function setQueryParams(nextFilters: Partial<RequiredFilters>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -252,7 +281,7 @@ export default function ManageJobsView() {
   function confirmStatusAction() {
     if (!statusAction) return;
 
-    if (statusAction.status === "delete" || statusAction.status === "archived") {
+    if (statusAction.status === "archived") {
       archiveMutation.mutate(
         { targetJobId: statusAction.job._id },
         {
@@ -272,7 +301,7 @@ export default function ManageJobsView() {
     statusMutation.mutate(
       {
         targetJobId: statusAction.job._id,
-        status: getSupportedJobStatus(statusAction.status),
+        status: normalizeStatus(statusAction.status),
       },
       {
         onSuccess: () => {
@@ -298,31 +327,46 @@ export default function ManageJobsView() {
       {
         onSuccess: () => {
           setApprovalAction(null);
-          setFeedbackMessage("Job moderation status updated successfully.");
+          setFeedbackMessage("Job review decision saved successfully.");
           setActionError("");
         },
         onError: (error) => {
           setActionError(
-            getApiErrorMessage(error) || "Unable to update job moderation status.",
+            getApiErrorMessage(error) || "Unable to save job review decision.",
           );
         },
       },
     );
   }
 
-  const jobs = jobsQuery.data?.jobs ?? [];
+  function confirmRequestChanges() {
+    if (!requestChangesAction) return;
+
+    setRequestChangesAction(null);
+    setFeedbackMessage(
+      "Request changes workflow is prepared and will activate when the backend endpoint is available.",
+    );
+  }
 
   return (
     <main className="space-y-5 p-4 pb-24 sm:p-6 sm:pb-24">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-sm font-medium text-primary">Admin Console</p>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">
-            Manage Job Listings
+          <nav
+            aria-label="Breadcrumb"
+            className="flex items-center gap-2 text-sm font-medium text-muted"
+          >
+            <Link href="/admin/jobs" className="hover:text-primary">
+              Jobs
+            </Link>
+            <ChevronRight className="size-4" aria-hidden="true" />
+            <span className="text-slate-900">Approval Queue</span>
+          </nav>
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">
+            Job Approval Queue
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Oversee, moderate, and optimize all active postings across the
-            CareerBridge network.
+            Review and moderate submitted job listings before they go live.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -344,21 +388,21 @@ export default function ManageJobsView() {
           >
             Export List
           </Button>
-          <Button
-            type="button"
-            disabled
-            title="Admin job creation will be enabled when the create-job endpoint is available."
-            leftIcon={<Plus className="size-4" aria-hidden="true" />}
-          >
-            Create New Job
-          </Button>
         </div>
       </div>
 
-      <JobInsightsCards
+      <PendingJobStatsCards
         jobs={jobs}
         meta={jobsQuery.data?.meta}
         loading={jobsQuery.isLoading}
+      />
+
+      <PendingJobTabs
+        activeTab={filters.queue}
+        onTabChange={(queue) => {
+          setSelectedJobIds([]);
+          setQueryParams({ queue, page: 1 });
+        }}
       />
 
       <JobFiltersBar
@@ -381,12 +425,12 @@ export default function ManageJobsView() {
 
       {jobsQuery.isError ? (
         <ErrorState
-          title="Unable to load jobs"
-          message="Job listings could not be loaded. Please try again."
+          title="Unable to load pending jobs"
+          message="Pending job listings could not be loaded. Please try again."
           onRetry={() => jobsQuery.refetch()}
         />
       ) : (
-        <JobsTable
+        <PendingJobsTable
           jobs={jobs}
           meta={jobsQuery.data?.meta}
           loading={jobsQuery.isLoading}
@@ -398,17 +442,19 @@ export default function ManageJobsView() {
           onSelectionChange={setSelectedJobIds}
           onChangeStatus={(job, status) => setStatusAction({ job, status })}
           onChangeApproval={(job, status) => setApprovalAction({ job, status })}
+          onRequestChanges={(job) => setRequestChangesAction({ job })}
         />
       )}
 
       <footer className="rounded-lg border border-slate-200 bg-surface px-4 py-3 text-sm text-muted shadow-sm">
-        System status: job listing, search, status moderation, approval
-        moderation, archive, sorting, and pagination are connected to existing
-        admin APIs. Bulk actions, export, hard delete, and dedicated analytics
-        are prepared for backend expansion.
+        System status: pending queue listing, search, filters, sorting,
+        pagination, approve, reject, activate, close, and archive use existing
+        admin job APIs. Dedicated pending endpoint, request changes, risk scoring,
+        review analytics, export, and bulk moderation are prepared for backend
+        expansion.
       </footer>
 
-      <JobBulkActionsBar
+      <PendingJobBulkActionsBar
         selectedCount={selectedJobIds.length}
         onClearSelection={() => setSelectedJobIds([])}
       />
@@ -439,6 +485,18 @@ export default function ManageJobsView() {
         isLoading={approvalMutation.isPending}
         onClose={() => setApprovalAction(null)}
         onConfirm={confirmApprovalAction}
+      />
+      <ConfirmActionModal
+        open={Boolean(requestChangesAction)}
+        title="Request job changes"
+        description={
+          requestChangesAction
+            ? `This will prepare a request for changes on ${requestChangesAction.job.title}.`
+            : ""
+        }
+        confirmLabel="Request Changes"
+        onClose={() => setRequestChangesAction(null)}
+        onConfirm={confirmRequestChanges}
       />
     </main>
   );

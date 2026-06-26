@@ -7,6 +7,7 @@ import {
   archiveAdminJob,
   getAdminJobDetails,
   getAdminJobList,
+  getPendingAdminJobList,
   relatedAdminJobInvalidations,
   updateAdminJobApproval,
   updateAdminJobDetails,
@@ -23,6 +24,13 @@ export function useAdminJobs(filters: AdminJobListParams) {
   return useQuery({
     queryKey: adminJobQueryKeys.list(filters),
     queryFn: () => getAdminJobList(filters),
+  });
+}
+
+export function usePendingJobs(filters: AdminJobListParams) {
+  return useQuery({
+    queryKey: adminJobQueryKeys.pendingList(filters),
+    queryFn: () => getPendingAdminJobList(filters),
   });
 }
 

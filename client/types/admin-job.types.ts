@@ -12,6 +12,7 @@ export type AdminJobStatus =
 
 export type AdminJobApprovalStatus =
   | "pending_review"
+  | "under_review"
   | "approved"
   | "rejected";
 
@@ -33,7 +34,14 @@ export type AdminJobSortBy =
   | "title_desc"
   | "most_applications"
   | "least_applications"
-  | "recently_updated";
+  | "recently_updated"
+  | "upcoming_deadlines";
+
+export type PendingJobQueueTab =
+  | "all"
+  | "high_risk"
+  | "new_employers"
+  | "updates";
 
 export type AdminJobFilters = {
   search?: string;
@@ -52,6 +60,7 @@ export type AdminJobFilters = {
   page?: number;
   limit?: number;
   sortBy?: AdminJobSortBy;
+  queue?: PendingJobQueueTab;
 };
 
 export type AdminJobListParams = {
@@ -116,6 +125,8 @@ export type AdminJob = {
   openings?: number;
   status: AdminJobStatus;
   approvalStatus?: AdminJobApprovalStatus;
+  riskScore?: number;
+  riskLevel?: "safe" | "low" | "medium" | "high" | "critical";
   applicationsCount?: number;
   applicationCount?: number;
   visibility?: AdminJobVisibility;
@@ -123,6 +134,7 @@ export type AdminJob = {
   isFeatured?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  submittedAt?: string;
 };
 
 export type AdminJobsResponse = {

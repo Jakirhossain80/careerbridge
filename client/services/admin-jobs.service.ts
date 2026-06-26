@@ -35,6 +35,8 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
 export const adminJobQueryKeys = {
   lists: ["admin-jobs"] as const,
   list: (filters: AdminJobListParams) => ["admin-jobs", filters] as const,
+  pendingLists: ["pending-jobs"] as const,
+  pendingList: (filters: AdminJobListParams) => ["pending-jobs", filters] as const,
   details: ["admin-job"] as const,
   detail: (jobId: string) => ["admin-job", jobId] as const,
 };
@@ -45,6 +47,10 @@ export async function getAdminJobList(params: AdminJobListParams = {}) {
     { params },
   );
   return unwrap<AdminJobsResponse>(response);
+}
+
+export async function getPendingAdminJobList(params: AdminJobListParams = {}) {
+  return getAdminJobList({ status: "pending", ...params });
 }
 
 export async function getAdminJobDetails(jobId: string) {
@@ -105,6 +111,7 @@ export async function archiveAdminJob(jobId: string) {
 
 export const relatedAdminJobInvalidations = [
   adminJobQueryKeys.lists,
+  adminJobQueryKeys.pendingLists,
   adminQueryKeys.stats,
   ["admin-dashboard"] as const,
   ["admin-applications"] as const,

@@ -40,6 +40,7 @@ const approvalOptions: Array<{
 }> = [
   { label: "All approval", value: "all" },
   { label: "Pending Review", value: "pending_review" },
+  { label: "Under Review", value: "under_review" },
   { label: "Approved", value: "approved" },
   { label: "Rejected", value: "rejected" },
 ];
@@ -69,6 +70,7 @@ const sortOptions: Array<{ label: string; value: AdminJobSortBy }> = [
   { label: "Most Applications", value: "most_applications" },
   { label: "Least Applications", value: "least_applications" },
   { label: "Recently Updated", value: "recently_updated" },
+  { label: "Upcoming Deadlines", value: "upcoming_deadlines" },
 ];
 
 export default function JobFiltersBar({
