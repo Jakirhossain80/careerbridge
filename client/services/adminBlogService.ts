@@ -112,6 +112,7 @@ export async function getAdminBlogStats() {
 
 export const relatedAdminBlogInvalidations = [
   adminBlogQueryKeys.lists,
+  adminBlogQueryKeys.details,
   adminBlogQueryKeys.stats,
   adminQueryKeys.stats,
   ["admin-dashboard"] as const,

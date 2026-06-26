@@ -1,4 +1,4 @@
-import AdminBlogForm from "@/components/admin/AdminBlogForm";
+import BlogEditorForm from "@/components/admin/blogs/BlogEditorForm";
 
 export default async function AdminEditBlogPage({
   params,
@@ -6,5 +6,5 @@ export default async function AdminEditBlogPage({
   params: Promise<{ blogId: string }>;
 }) {
   const { blogId } = await params;
-  return <AdminBlogForm blogId={blogId} />;
+  return <BlogEditorForm blogId={blogId} />;
 }

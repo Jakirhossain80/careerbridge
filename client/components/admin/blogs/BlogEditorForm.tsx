@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { FormEvent } from "react";
 import {
   ArrowLeft,
   CalendarClock,
@@ -24,11 +25,17 @@ import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
+import ErrorState from "@/components/ui/ErrorState";
 import Input from "@/components/ui/Input";
+import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
-import { useAdminBlogMutations } from "@/hooks/admin/useAdminBlogs";
+import {
+  useAdminBlog,
+  useAdminBlogMutations,
+} from "@/hooks/admin/useAdminBlogs";
 import { useAdminCategories } from "@/hooks/admin/useAdminCategories";
 import { getApiErrorMessage } from "@/lib/api";
 import {
@@ -36,6 +43,7 @@ import {
   type AdminBlogEditorValues,
 } from "@/lib/validations/admin-blog.schema";
 import type { AdminBlogFormValues, AdminBlogStatus } from "@/types/admin-blog";
+import type { AdminBlog } from "@/types/admin-blog";
 
 const defaultValues: AdminBlogEditorValues = {
   title: "",
@@ -51,11 +59,12 @@ const defaultValues: AdminBlogEditorValues = {
   seoDescription: "",
 };
 
-const statusOptions: Array<{ label: string; value: Exclude<AdminBlogStatus, "archived"> }> = [
+const statusOptions: Array<{ label: string; value: AdminBlogStatus }> = [
   { label: "Draft", value: "draft" },
   { label: "Scheduled", value: "scheduled" },
   { label: "Published", value: "published" },
   { label: "Unpublished", value: "unpublished" },
+  { label: "Archived", value: "archived" },
 ];
 
 function slugify(value: string) {
@@ -93,21 +102,53 @@ function toBlogValues(values: AdminBlogEditorValues): AdminBlogFormValues {
   };
 }
 
-export default function BlogEditorForm() {
+function toEditorValues(blog: AdminBlog): AdminBlogEditorValues {
+  return {
+    title: blog.title ?? "",
+    slug: blog.slug ?? "",
+    excerpt: blog.excerpt ?? "",
+    content: blog.content ?? "",
+    featuredImage: blog.featuredImage ?? "",
+    category: blog.category ?? "",
+    tags: blog.tags?.join(", ") ?? "",
+    status: blog.status ?? "draft",
+    featuredStatus: blog.featured ? "featured" : "not_featured",
+    seoTitle: blog.seoTitle ?? "",
+    seoDescription: blog.seoDescription ?? "",
+  };
+}
+
+function formatDate(value?: string) {
+  if (!value) return "Not available";
+
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+type BlogEditorFormProps = {
+  blogId?: string;
+};
+
+export default function BlogEditorForm({ blogId }: BlogEditorFormProps) {
   const router = useRouter();
   const [actionError, setActionError] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [trashOpen, setTrashOpen] = useState(false);
   const [localImagePreview, setLocalImagePreview] = useState("");
   const lastGeneratedSlug = useRef("");
+  const mode = blogId ? "edit" : "create";
 
+  const blogQuery = useAdminBlog(blogId ?? "");
   const categoriesQuery = useAdminCategories({
     page: 1,
     limit: 100,
     sortBy: "name",
   });
-  const { createMutation } = useAdminBlogMutations();
+  const { createMutation, deleteMutation, updateMutation } = useAdminBlogMutations();
 
   const form = useForm<AdminBlogEditorValues>({
     resolver: zodResolver(adminBlogEditorSchema),
@@ -136,6 +177,14 @@ export default function BlogEditorForm() {
   const imagePreview = featuredImage || localImagePreview;
 
   useEffect(() => {
+    if (!blogQuery.data || mode !== "edit") return;
+
+    const nextValues = toEditorValues(blogQuery.data);
+    form.reset(nextValues);
+    lastGeneratedSlug.current = nextValues.slug;
+  }, [blogQuery.data, form, mode]);
+
+  useEffect(() => {
     const nextSlug = slugify(title);
 
     if (!nextSlug) return;
@@ -157,12 +206,31 @@ export default function BlogEditorForm() {
     };
   }, [localImagePreview]);
 
-  function createBlog(values: AdminBlogEditorValues, successMessage: string) {
+  function saveBlog(values: AdminBlogEditorValues, successMessage: string) {
     setActionError("");
     setFeedbackMessage("");
 
+    if (mode === "edit" && blogId) {
+      updateMutation.mutate(
+        { blogId, values: toBlogValues(values) },
+        {
+          onSuccess: (blog) => {
+            const nextValues = toEditorValues(blog);
+            form.reset(nextValues);
+            lastGeneratedSlug.current = nextValues.slug;
+            setFeedbackMessage(successMessage);
+          },
+          onError: (error) => {
+            setActionError(getApiErrorMessage(error) || "Unable to update blog article.");
+          },
+        },
+      );
+      return;
+    }
+
     createMutation.mutate(toBlogValues(values), {
       onSuccess: (blog) => {
+        form.reset(toEditorValues(blog));
         setFeedbackMessage(successMessage);
         router.push(`/admin/blogs/${blog._id}/edit`);
       },
@@ -172,16 +240,29 @@ export default function BlogEditorForm() {
     });
   }
 
-  function submitWithStatus(nextStatus: Exclude<AdminBlogStatus, "archived">) {
+  function submitWithStatus(nextStatus: AdminBlogStatus) {
     form.setValue("status", nextStatus, { shouldDirty: true, shouldValidate: true });
     void form.handleSubmit((values) => {
-      createBlog(
+      saveBlog(
         { ...values, status: nextStatus },
         nextStatus === "published"
-          ? "Blog article published successfully."
-          : "Blog draft saved successfully.",
+          ? mode === "edit"
+            ? "Blog article updated and published successfully."
+            : "Blog article published successfully."
+          : mode === "edit"
+            ? "Blog article updated successfully."
+            : "Blog draft saved successfully.",
       );
     })();
+  }
+
+  function handleFormSubmit(event: FormEvent<HTMLFormElement>) {
+    void form.handleSubmit((values) =>
+      saveBlog(
+        values,
+        mode === "edit" ? "Blog article updated successfully." : "Blog article created successfully.",
+      ),
+    )(event);
   }
 
   async function openPreview() {
@@ -203,6 +284,28 @@ export default function BlogEditorForm() {
   function confirmCancel() {
     setCancelOpen(false);
     router.push("/admin/blogs");
+  }
+
+  function confirmTrash() {
+    if (!blogId) {
+      confirmCancel();
+      return;
+    }
+
+    deleteMutation.mutate(
+      { blogId },
+      {
+        onSuccess: () => {
+          setTrashOpen(false);
+          setFeedbackMessage("Blog article moved to trash.");
+          setActionError("");
+          router.push("/admin/blogs");
+        },
+        onError: (error) => {
+          setActionError(getApiErrorMessage(error) || "Unable to move blog article to trash.");
+        },
+      },
+    );
   }
 
   function handleImageFile(file?: File) {
@@ -234,11 +337,56 @@ export default function BlogEditorForm() {
     form.setValue("featuredImage", "", { shouldDirty: true, shouldValidate: true });
   }
 
+  if (mode === "edit" && blogQuery.isLoading) {
+    return (
+      <main className="space-y-5 p-4 pb-24 sm:p-6 sm:pb-24">
+        <LoadingSkeleton variant="card" />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <LoadingSkeleton variant="card" className="min-h-96" />
+          <LoadingSkeleton variant="card" />
+        </div>
+      </main>
+    );
+  }
+
+  if (mode === "edit" && blogQuery.isError) {
+    return (
+      <main className="p-4 sm:p-6">
+        <ErrorState
+          title="Blog unavailable"
+          message="This blog post could not be loaded. It may have been removed or the API request failed."
+          onRetry={() => blogQuery.refetch()}
+        />
+      </main>
+    );
+  }
+
+  if (mode === "edit" && !blogQuery.data) {
+    return (
+      <main className="p-4 sm:p-6">
+        <EmptyState
+          title="Blog not found"
+          description="No blog post was returned for this admin edit route."
+          actionLabel="Back to Blogs"
+          actionHref="/admin/blogs"
+        />
+      </main>
+    );
+  }
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+  const currentBlog = blogQuery.data;
+  const pageTitle = mode === "edit" ? "Edit Blog Post" : "Add Blog Post";
+  const pageDescription =
+    mode === "edit"
+      ? "Update editorial content, publication settings, images, and metadata for this article."
+      : "Create editorial content, prepare metadata, and choose how this article appears across CareerBridge.";
+
   return (
     <main className="p-4 pb-24 sm:p-6 sm:pb-24">
       <form
         className="mx-auto flex w-full max-w-7xl flex-col gap-5"
-        onSubmit={form.handleSubmit((values) => createBlog(values, "Blog article created successfully."))}
+        onSubmit={handleFormSubmit}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -251,13 +399,13 @@ export default function BlogEditorForm() {
                 Blogs
               </Link>
               <span>/</span>
-              <span>New Article</span>
+              <span>{mode === "edit" ? "Edit Article" : "New Article"}</span>
             </nav>
             <h1 className="mt-3 text-2xl font-semibold text-foreground sm:text-3xl">
-              Add Blog Post
+              {pageTitle}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Create editorial content, prepare metadata, and choose how this article appears across CareerBridge.
+              {pageDescription}
             </p>
           </div>
 
@@ -281,19 +429,19 @@ export default function BlogEditorForm() {
             <Button
               type="button"
               variant="secondary"
-              isLoading={createMutation.isPending && form.getValues("status") === "draft"}
+              isLoading={isSaving && form.getValues("status") === "draft"}
               onClick={() => submitWithStatus("draft")}
               leftIcon={<Save className="size-4" aria-hidden="true" />}
             >
-              Save Draft
+              {mode === "edit" ? "Update Draft" : "Save Draft"}
             </Button>
             <Button
               type="button"
-              isLoading={createMutation.isPending && form.getValues("status") === "published"}
+              isLoading={isSaving && form.getValues("status") === "published"}
               onClick={() => submitWithStatus("published")}
               leftIcon={<Send className="size-4" aria-hidden="true" />}
             >
-              Publish Now
+              {mode === "edit" ? "Update & Publish" : "Publish Now"}
             </Button>
           </div>
         </div>
@@ -460,7 +608,9 @@ export default function BlogEditorForm() {
                 error={form.formState.errors.status?.message}
                 {...form.register("status")}
               >
-                {statusOptions.map((option) => (
+                {statusOptions
+                  .filter((option) => mode === "edit" || option.value !== "archived")
+                  .map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -491,11 +641,37 @@ export default function BlogEditorForm() {
                 variant="outline"
                 className="w-full"
                 onClick={() => submitWithStatus(status)}
-                isLoading={createMutation.isPending}
+                isLoading={isSaving}
                 leftIcon={<CalendarClock className="size-4" aria-hidden="true" />}
               >
-                Save Current Status
+                {mode === "edit" ? "Update Current Status" : "Save Current Status"}
               </Button>
+            </Card>
+
+            <Card
+              className="shadow-sm"
+              contentClassName="space-y-3"
+              header={
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Revision History</h2>
+                  <p className="mt-1 text-sm text-muted">Available timestamps from the blog API.</p>
+                </div>
+              }
+            >
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Created</span>
+                  <span className="font-medium text-foreground">{formatDate(currentBlog?.createdAt)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Updated</span>
+                  <span className="font-medium text-foreground">{formatDate(currentBlog?.updatedAt)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted">Published</span>
+                  <span className="font-medium text-foreground">{formatDate(currentBlog?.publishedAt)}</span>
+                </div>
+              </div>
             </Card>
 
             <Card
@@ -588,29 +764,29 @@ export default function BlogEditorForm() {
                 type="button"
                 className="w-full"
                 onClick={() => submitWithStatus("published")}
-                isLoading={createMutation.isPending}
+                isLoading={isSaving}
                 leftIcon={<Send className="size-4" aria-hidden="true" />}
               >
-                Publish Now
+                {mode === "edit" ? "Update & Publish" : "Publish Now"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full"
                 onClick={() => submitWithStatus("draft")}
-                isLoading={createMutation.isPending}
+                isLoading={isSaving}
                 leftIcon={<Save className="size-4" aria-hidden="true" />}
               >
-                Save Draft
+                {mode === "edit" ? "Update Draft" : "Save Draft"}
               </Button>
               <Button
                 type="button"
                 variant="danger"
                 className="w-full"
-                onClick={handleCancel}
+                onClick={() => (mode === "edit" ? setTrashOpen(true) : handleCancel())}
                 leftIcon={<Trash2 className="size-4" aria-hidden="true" />}
               >
-                Delete / Cancel
+                {mode === "edit" ? "Move to Trash" : "Delete / Cancel"}
               </Button>
             </Card>
           </aside>
@@ -656,12 +832,30 @@ export default function BlogEditorForm() {
 
       <ConfirmActionModal
         open={cancelOpen}
-        title="Discard new blog post?"
-        description="This will leave the editor and discard unsaved changes."
+        title={mode === "edit" ? "Discard blog changes?" : "Discard new blog post?"}
+        description={
+          mode === "edit"
+            ? "This will leave the editor and discard unsaved changes."
+            : "This will leave the editor and discard unsaved changes."
+        }
         confirmLabel="Discard"
         destructive
         onClose={() => setCancelOpen(false)}
         onConfirm={confirmCancel}
+      />
+      <ConfirmActionModal
+        open={trashOpen}
+        title="Move blog post to trash?"
+        description={
+          currentBlog
+            ? `The current backend archives "${currentBlog.title}" instead of hard deleting it.`
+            : "The current backend archives this blog post instead of hard deleting it."
+        }
+        confirmLabel="Move to Trash"
+        destructive
+        isLoading={deleteMutation.isPending}
+        onClose={() => setTrashOpen(false)}
+        onConfirm={confirmTrash}
       />
     </main>
   );

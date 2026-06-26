@@ -37,7 +37,7 @@ export const adminBlogEditorSchema = z.object({
   featuredImage: z.string().trim().url("Use a valid image URL").optional().or(z.literal("")),
   category: z.string().trim().min(1, "Category is required"),
   tags: z.string().trim().max(240, "Tags must be 240 characters or less").optional(),
-  status: z.enum(["draft", "scheduled", "published", "unpublished"]),
+  status: z.enum(["draft", "scheduled", "published", "unpublished", "archived"]),
   featuredStatus: z.enum(["featured", "not_featured"]),
   seoTitle: z.string().trim().max(70, "SEO title should be 70 characters or less").optional(),
   seoDescription: z
