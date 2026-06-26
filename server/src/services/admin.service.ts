@@ -58,6 +58,21 @@ type AdminJobSeekerQuery = {
   sortBy: string;
 };
 
+type AdminPendingEmployerQuery = {
+  search?: string;
+  verificationStatus?: string;
+  accountStatus?: string;
+  industry?: string;
+  companySize?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  submittedFrom?: string;
+  submittedTo?: string;
+  page: number;
+  limit: number;
+  sortBy: string;
+};
+
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const slugify = (value: string) =>
@@ -68,6 +83,13 @@ const slugify = (value: string) =>
     .replace(/^-+|-+$/g, "");
 
 const buildSort = (sortBy: string): Record<string, SortOrder> => {
+  const direction = sortBy.startsWith("-") ? -1 : 1;
+  const field = sortBy.replace(/^-/, "");
+
+  return { [field]: direction };
+};
+
+const buildAggregationSort = (sortBy: string): Record<string, 1 | -1> => {
   const direction = sortBy.startsWith("-") ? -1 : 1;
   const field = sortBy.replace(/^-/, "");
 
@@ -742,6 +764,180 @@ export const listAdminEmployers = async (query: PaginationQuery) => {
   ]);
 
   return { employers, meta: getPaginationMeta(query.page, query.limit, total) };
+};
+
+const pendingCompanyStatuses = [
+  COMPANY_VERIFICATION_STATUS.PENDING,
+  "pending_verification",
+  "under_review",
+];
+
+const buildPendingEmployerMatch = (query: AdminPendingEmployerQuery) => {
+  const match: Record<string, unknown> = {
+    $or: [
+      { status: { $in: pendingCompanyStatuses } },
+      { verificationStatus: { $in: pendingCompanyStatuses } },
+    ],
+  };
+
+  if (query.verificationStatus) {
+    match.$or = [
+      { status: query.verificationStatus },
+      { verificationStatus: query.verificationStatus },
+    ];
+  }
+
+  if (query.industry) {
+    match.industry = buildSearchRegex(query.industry);
+  }
+
+  if (query.companySize) {
+    match.$and = [
+      ...(match.$and as Record<string, unknown>[] | undefined ?? []),
+      {
+        $or: [
+          { size: buildSearchRegex(query.companySize) },
+          { companySize: buildSearchRegex(query.companySize) },
+        ],
+      },
+    ];
+  }
+
+  if (query.dateFrom || query.dateTo) {
+    const dateTo = query.dateTo ? new Date(query.dateTo) : undefined;
+    if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+    match.createdAt = {
+      ...(query.dateFrom ? { $gte: new Date(query.dateFrom) } : {}),
+      ...(dateTo ? { $lte: dateTo } : {}),
+    };
+  }
+
+  if (query.submittedFrom || query.submittedTo) {
+    const submittedTo = query.submittedTo ? new Date(query.submittedTo) : undefined;
+    if (submittedTo) submittedTo.setHours(23, 59, 59, 999);
+
+    match.updatedAt = {
+      ...(query.submittedFrom ? { $gte: new Date(query.submittedFrom) } : {}),
+      ...(submittedTo ? { $lte: submittedTo } : {}),
+    };
+  }
+
+  return match;
+};
+
+export const getAdminPendingEmployers = async (query: AdminPendingEmployerQuery) => {
+  const skip = (query.page - 1) * query.limit;
+  const searchRegex = buildSearchRegex(query.search);
+  const baseMatch = buildPendingEmployerMatch(query);
+  const postLookupMatch: Record<string, unknown> = {};
+
+  if (query.accountStatus) {
+    postLookupMatch["owner.status"] = query.accountStatus;
+  }
+
+  if (searchRegex) {
+    postLookupMatch.$or = [
+      { name: searchRegex },
+      { companyName: searchRegex },
+      { ownerEmail: searchRegex },
+      { industry: searchRegex },
+      { location: searchRegex },
+      { headquarters: searchRegex },
+      { "owner.name": searchRegex },
+      { "owner.email": searchRegex },
+    ];
+  }
+
+  const pipeline: PipelineStage[] = [
+    { $match: baseMatch },
+    {
+      $lookup: {
+        from: "users",
+        localField: "ownerId",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: {
+        path: "$owner",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    ...(Object.keys(postLookupMatch).length > 0 ? [{ $match: postLookupMatch }] : []),
+  ];
+
+  const [result, approvedThisMonth, rejectedTotal, totalEmployers] = await Promise.all([
+    Company.aggregate<{
+      employers: unknown[];
+      total: Array<{ count: number }>;
+    }>([
+      ...pipeline,
+      {
+        $facet: {
+          employers: [
+            { $sort: buildAggregationSort(query.sortBy) },
+            { $skip: skip },
+            { $limit: query.limit },
+            {
+              $addFields: {
+                ownerId: "$owner",
+                submittedAt: "$updatedAt",
+              },
+            },
+            { $project: { owner: 0 } },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]),
+    Company.countDocuments({
+      $or: [
+        { status: COMPANY_VERIFICATION_STATUS.APPROVED },
+        { verificationStatus: COMPANY_VERIFICATION_STATUS.APPROVED },
+      ],
+      updatedAt: {
+        $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      },
+    }),
+    Company.countDocuments({
+      $or: [
+        { status: COMPANY_VERIFICATION_STATUS.REJECTED },
+        { verificationStatus: COMPANY_VERIFICATION_STATUS.REJECTED },
+      ],
+    }),
+    Company.countDocuments(),
+  ]);
+
+  const total = result?.[0]?.total[0]?.count ?? 0;
+  const pendingDates = (result?.[0]?.employers ?? [])
+    .map((employer) => {
+      const record = employer as { submittedAt?: Date; updatedAt?: Date; createdAt?: Date };
+      const value = record.submittedAt ?? record.updatedAt ?? record.createdAt;
+      return value ? new Date(value).getTime() : undefined;
+    })
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const averageWaitTimeHours =
+    pendingDates.length > 0
+      ? Math.round(
+          pendingDates.reduce((sum, value) => sum + (Date.now() - value), 0) /
+            pendingDates.length /
+            36_000,
+        ) / 100
+      : undefined;
+
+  return {
+    employers: result?.[0]?.employers ?? [],
+    meta: getPaginationMeta(query.page, query.limit, total),
+    stats: {
+      awaitingReview: total,
+      averageWaitTimeHours,
+      approvedThisMonth,
+      rejectionRate:
+        totalEmployers > 0 ? Math.round((rejectedTotal / totalEmployers) * 100) : 0,
+    },
+  };
 };
 
 export const getAdminEmployer = async (employerId: string) => {

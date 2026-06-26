@@ -77,6 +77,23 @@ export const adminJobSeekerQuerySchema = z.object({
     .default("-createdAt"),
 });
 
+export const adminPendingEmployerQuerySchema = z.object({
+  search: trimmedString.optional(),
+  verificationStatus: trimmedString.optional(),
+  accountStatus: z.enum(Object.values(USER_STATUS) as [string, ...string[]]).optional(),
+  industry: trimmedString.optional(),
+  companySize: trimmedString.optional(),
+  dateFrom: trimmedString.optional(),
+  dateTo: trimmedString.optional(),
+  submittedFrom: trimmedString.optional(),
+  submittedTo: trimmedString.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  sortBy: z
+    .enum(["createdAt", "-createdAt", "updatedAt", "-updatedAt", "name", "-name"])
+    .default("-createdAt"),
+});
+
 export const idParamSchema = z.object({
   userId: objectIdSchema.optional(),
   jobSeekerId: objectIdSchema.optional(),

@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 
 import {
   applicationUpdateSchema,
+  adminPendingEmployerQuerySchema,
   adminJobSeekerQuerySchema,
   blogCreateSchema,
   blogUpdateSchema,
@@ -37,6 +38,7 @@ import {
   getAdminJob,
   getAdminJobSeeker,
   getAdminJobSeekerStats,
+  getAdminPendingEmployers,
   getAdminReport,
   getAdminStats,
   getAdminUser,
@@ -250,6 +252,19 @@ export const employers: RequestHandler = async (req, res, next) => {
   try {
     const query = paginationQuerySchema.parse(req.query);
     successResponse(res, "Employers fetched successfully", await listAdminEmployers(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const pendingEmployers: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminPendingEmployerQuerySchema.parse(req.query);
+    successResponse(
+      res,
+      "Pending employers fetched successfully",
+      await getAdminPendingEmployers(query)
+    );
   } catch (error) {
     handleControllerError(error, res, next);
   }

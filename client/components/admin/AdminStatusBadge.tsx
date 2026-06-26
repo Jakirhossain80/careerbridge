@@ -7,10 +7,13 @@ type AdminStatusBadgeProps = {
 const statusVariant: Record<string, "primary" | "success" | "warning" | "danger" | "neutral"> = {
   active: "success",
   approved: "success",
+  verified: "success",
   published: "success",
   resolved: "success",
   reviewed: "primary",
+  under_review: "primary",
   pending: "warning",
+  pending_verification: "warning",
   draft: "warning",
   suspended: "warning",
   inactive: "neutral",

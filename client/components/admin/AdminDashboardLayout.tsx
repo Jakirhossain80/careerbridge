@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Newspaper,
   Settings,
+  ShieldCheck,
   UserRoundSearch,
   Users,
 } from "lucide-react";
@@ -24,6 +25,7 @@ export const adminDashboardLinks: DashboardNavItem[] = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Job Seekers", href: "/admin/job-seekers", icon: UserRoundSearch },
   { label: "Employers", href: "/admin/employers", icon: Building2 },
+  { label: "Pending Employers", href: "/admin/employers/pending", icon: ShieldCheck },
   { label: "Jobs", href: "/admin/jobs", icon: BriefcaseBusiness },
   { label: "Applications", href: "/admin/applications", icon: FileText },
   { label: "Categories", href: "/admin/categories", icon: FolderTree },

@@ -20,6 +20,7 @@ import {
   jobSeekers,
   jobs,
   publishBlog,
+  pendingEmployers,
   rejectEmployer,
   rejectJob,
   removeBlog,
@@ -73,6 +74,7 @@ router.patch("/job-seekers/:jobSeekerId", updateJobSeeker);
 router.patch("/job-seekers/:jobSeekerId/status", updateJobSeekerStatus);
 
 router.get("/employers", employers);
+router.get("/employers/pending", pendingEmployers);
 router.get("/employers/:employerId", employerDetails);
 router.patch("/employers/:employerId", updateEmployer);
 router.patch("/employers/:employerId/approve", approveEmployer);
