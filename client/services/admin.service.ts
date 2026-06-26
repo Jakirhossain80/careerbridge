@@ -130,6 +130,14 @@ export async function getAdminEmployer(employerId: string) {
   return unwrap<AdminEmployer>(response);
 }
 
+export async function updateAdminEmployer(
+  employerId: string,
+  payload: Record<string, unknown>,
+) {
+  const response = await api.patch(`/admin/employers/${employerId}`, payload);
+  return unwrap<AdminEmployer>(response);
+}
+
 export async function approveAdminEmployer(employerId: string, reason?: string) {
   const response = await api.patch(`/admin/employers/${employerId}/approve`, { reason });
   return unwrap<AdminEmployer>(response);
