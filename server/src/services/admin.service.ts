@@ -26,6 +26,7 @@ import Job, { type IJob } from "../models/job.model.js";
 import JobSeeker from "../models/jobSeeker.model.js";
 import Interview from "../models/interview.model.js";
 import Report from "../models/report.model.js";
+import SystemSettings from "../models/systemSettings.model.js";
 import User, { type IUser } from "../models/user.model.js";
 
 type PaginationQuery = {
@@ -101,6 +102,103 @@ type AdminAnalyticsQuery = {
   employer?: string;
   location?: string;
 };
+
+const defaultSystemSettings = {
+  general: {
+    platformName: "CareerBridge",
+    platformTagline: "Connecting talent with opportunity",
+    platformDescription: "CareerBridge is a full-stack job portal for job seekers, employers, recruiters, and administrators.",
+    contactEmail: "contact@careerbridge.local",
+    supportEmail: "support@careerbridge.local",
+    contactPhone: "",
+    companyAddress: "",
+  },
+  platform: {
+    maintenanceMode: false,
+    publicRegistrationEnabled: true,
+    employerRegistrationEnabled: true,
+    jobPostingEnabled: true,
+    blogModuleEnabled: true,
+  },
+  authentication: {
+    emailLoginEnabled: true,
+    googleLoginEnabled: true,
+    passwordResetEnabled: true,
+    emailVerificationRequired: true,
+  },
+  registration: {
+    autoApproveJobSeekers: true,
+    requireProfileCompletion: false,
+    resumeUploadRequirement: false,
+  },
+  employerApproval: {
+    employerVerificationRequired: true,
+    manualEmployerApproval: true,
+    companyVerificationRequired: true,
+  },
+  jobApproval: {
+    manualJobApproval: true,
+    autoPublishJobs: false,
+    featuredJobRequirements: true,
+  },
+  blog: {
+    blogPublishingEnabled: true,
+    commentingEnabled: false,
+    featuredBlogsEnabled: true,
+  },
+  notifications: {
+    emailNotifications: true,
+    applicationNotifications: true,
+    interviewNotifications: true,
+    adminNotifications: true,
+  },
+  email: {
+    senderName: "CareerBridge",
+    senderEmail: "noreply@careerbridge.local",
+    replyToEmail: "support@careerbridge.local",
+  },
+  security: {
+    sessionTimeoutMinutes: 120,
+    loginAttemptLimit: 5,
+    minimumPasswordLength: 8,
+    requirePasswordUppercase: true,
+    requirePasswordNumber: true,
+    requirePasswordSymbol: false,
+    twoFactorRequired: false,
+  },
+  seo: {
+    defaultSeoTitle: "CareerBridge - Find Jobs and Hire Talent",
+    defaultSeoDescription: "Discover jobs, manage applications, and connect with employers on CareerBridge.",
+    openGraphTitle: "CareerBridge",
+    openGraphDescription: "A modern job portal for candidates and employers.",
+    openGraphImage: "",
+  },
+  analytics: {
+    analyticsEnabled: true,
+    trackingEnabled: true,
+    anonymizeIp: true,
+    reportingEnabled: true,
+  },
+};
+
+type SystemSettingsInput = {
+  [Key in keyof typeof defaultSystemSettings]: Record<string, unknown>;
+};
+
+const mergeSystemSettings = (settings?: Partial<SystemSettingsInput>) => ({
+  general: { ...defaultSystemSettings.general, ...settings?.general },
+  platform: { ...defaultSystemSettings.platform, ...settings?.platform },
+  authentication: { ...defaultSystemSettings.authentication, ...settings?.authentication },
+  registration: { ...defaultSystemSettings.registration, ...settings?.registration },
+  employerApproval: { ...defaultSystemSettings.employerApproval, ...settings?.employerApproval },
+  jobApproval: { ...defaultSystemSettings.jobApproval, ...settings?.jobApproval },
+  blog: { ...defaultSystemSettings.blog, ...settings?.blog },
+  notifications: { ...defaultSystemSettings.notifications, ...settings?.notifications },
+  email: { ...defaultSystemSettings.email, ...settings?.email },
+  security: { ...defaultSystemSettings.security, ...settings?.security },
+  seo: { ...defaultSystemSettings.seo, ...settings?.seo },
+  analytics: { ...defaultSystemSettings.analytics, ...settings?.analytics },
+});
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -2147,3 +2245,117 @@ export const getAdminReportAnalytics = async (query: PaginationQuery) => {
     })),
   };
 };
+
+const getEnvironmentStats = () => ({
+  frameworkVersion: process.version,
+  apiLatencyMs: 0,
+  lastReboot: new Date(Date.now() - process.uptime() * 1000).toISOString(),
+  systemHealth: "operational",
+  environment: process.env.NODE_ENV ?? "development",
+});
+
+const shapeSystemSettingsResponse = (document: Awaited<ReturnType<typeof SystemSettings.findOne>>) => {
+  const settings = mergeSystemSettings(document ? {
+    general: document.general as SystemSettingsInput["general"],
+    platform: document.platform as SystemSettingsInput["platform"],
+    authentication: document.authentication as SystemSettingsInput["authentication"],
+    registration: document.registration as SystemSettingsInput["registration"],
+    employerApproval: document.employerApproval as SystemSettingsInput["employerApproval"],
+    jobApproval: document.jobApproval as SystemSettingsInput["jobApproval"],
+    blog: document.blog as SystemSettingsInput["blog"],
+    notifications: document.notifications as SystemSettingsInput["notifications"],
+    email: document.email as SystemSettingsInput["email"],
+    security: document.security as SystemSettingsInput["security"],
+    seo: document.seo as SystemSettingsInput["seo"],
+    analytics: document.analytics as SystemSettingsInput["analytics"],
+  } : undefined);
+
+  return {
+    ...settings,
+    auditLog: document?.auditLog?.slice(-10).reverse() ?? [],
+    environment: getEnvironmentStats(),
+    updatedAt: document?.updatedAt?.toISOString(),
+  };
+};
+
+export const getAdminSystemSettings = async () => {
+  const document = await SystemSettings.findOne({ key: "global" }).lean();
+  return shapeSystemSettingsResponse(document as Awaited<ReturnType<typeof SystemSettings.findOne>>);
+};
+
+export const updateAdminSystemSettings = async (
+  actor: AdminActor,
+  input: SystemSettingsInput
+) => {
+  const nextSettings = mergeSystemSettings(input);
+  const document = await SystemSettings.findOneAndUpdate(
+    { key: "global" },
+    {
+      $set: {
+        ...nextSettings,
+      },
+      $push: {
+        auditLog: {
+          $each: [
+            {
+              user: actor.id,
+              userEmail: actor.email,
+              action: "settings.updated",
+              category: "system",
+              summary: "Updated global system settings",
+              createdAt: new Date(),
+            },
+          ],
+          $slice: -50,
+        },
+      },
+    },
+    { upsert: true, new: true, runValidators: true }
+  ).lean();
+
+  return shapeSystemSettingsResponse(document as Awaited<ReturnType<typeof SystemSettings.findOne>>);
+};
+
+export const resetAdminSystemSettings = async (actor: AdminActor) => {
+  const document = await SystemSettings.findOneAndUpdate(
+    { key: "global" },
+    {
+      $set: {
+        ...defaultSystemSettings,
+      },
+      $push: {
+        auditLog: {
+          $each: [
+            {
+              user: actor.id,
+              userEmail: actor.email,
+              action: "settings.reset",
+              category: "system",
+              summary: "Reset global system settings to defaults",
+              createdAt: new Date(),
+            },
+          ],
+          $slice: -50,
+        },
+      },
+    },
+    { upsert: true, new: true, runValidators: true }
+  ).lean();
+
+  return shapeSystemSettingsResponse(document as Awaited<ReturnType<typeof SystemSettings.findOne>>);
+};
+
+export const getAdminSystemSettingsCategories = async () => [
+  "general",
+  "platform",
+  "authentication",
+  "registration",
+  "employerApproval",
+  "jobApproval",
+  "blog",
+  "notifications",
+  "email",
+  "security",
+  "seo",
+  "analytics",
+];

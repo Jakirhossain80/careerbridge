@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 
 import {
   adminAnalyticsQuerySchema,
+  adminSettingsSchema,
   applicationUpdateSchema,
   adminCompanyQuerySchema,
   adminPendingEmployerQuerySchema,
@@ -57,6 +58,8 @@ import {
   getAdminReport,
   getAdminReportAnalytics,
   getAdminStats,
+  getAdminSystemSettings,
+  getAdminSystemSettingsCategories,
   getAdminUser,
   getAuthenticatedAdmin,
   listAdminApplications,
@@ -74,6 +77,7 @@ import {
   dismissAdminReport,
   escalateAdminReport,
   resolveAdminReport,
+  resetAdminSystemSettings,
   unblockAdminUser,
   unpublishAdminBlog,
   updateAdminApplication,
@@ -87,6 +91,7 @@ import {
   updateAdminJobSeeker,
   updateAdminJobSeekerStatus,
   updateAdminReportStatus,
+  updateAdminSystemSettings,
   updateAdminUser,
 } from "../services/admin.service.js";
 import type {
@@ -176,6 +181,57 @@ export const analyticsCategories: RequestHandler = async (req, res, next) => {
       res,
       "Admin category analytics fetched successfully",
       await getAdminAnalyticsCategories(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const settings: RequestHandler = async (_req, res, next) => {
+  try {
+    successResponse(
+      res,
+      "Admin settings fetched successfully",
+      await getAdminSystemSettings()
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const payload = adminSettingsSchema.parse(req.body);
+    successResponse(
+      res,
+      "Admin settings updated successfully",
+      await updateAdminSystemSettings(actor, payload)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const resetSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    successResponse(
+      res,
+      "Admin settings reset successfully",
+      await resetAdminSystemSettings(actor)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const settingsCategories: RequestHandler = async (_req, res, next) => {
+  try {
+    successResponse(
+      res,
+      "Admin settings categories fetched successfully",
+      await getAdminSystemSettingsCategories()
     );
   } catch (error) {
     handleControllerError(error, res, next);

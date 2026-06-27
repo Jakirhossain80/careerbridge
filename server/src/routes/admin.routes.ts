@@ -43,6 +43,9 @@ import {
   reportAnalytics,
   reportDetails,
   reports,
+  resetSettings,
+  settings,
+  settingsCategories,
   resolveReport,
   stats,
   unblockUser,
@@ -59,6 +62,7 @@ import {
   updateJobSeekerStatus,
   updateReportStatus,
   updateReport,
+  updateSettings,
   updateUser,
   userDetails,
   users,
@@ -77,6 +81,11 @@ router.use(
 );
 
 router.get("/stats", stats);
+
+router.get("/settings", settings);
+router.patch("/settings", updateSettings);
+router.post("/settings/reset", resetSettings);
+router.get("/settings/categories", settingsCategories);
 
 router.get("/analytics/overview", analyticsOverview);
 router.get("/analytics/users", analyticsUsers);

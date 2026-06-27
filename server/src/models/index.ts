@@ -10,3 +10,4 @@ export { JobAlert } from "./jobAlert.model.js";
 export { Interview } from "./interview.model.js";
 export { Notification } from "./notification.model.js";
 export { Blog } from "./blog.model.js";
+export { SystemSettings } from "./systemSettings.model.js";
