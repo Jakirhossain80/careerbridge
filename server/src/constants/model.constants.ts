@@ -86,6 +86,9 @@ export const BLOG_STATUS = {
 } as const;
 
 export const REPORT_STATUS = {
+  NEW: "new",
+  UNDER_REVIEW: "under_review",
+  ESCALATED: "escalated",
   PENDING: "pending",
   REVIEWED: "reviewed",
   RESOLVED: "resolved",

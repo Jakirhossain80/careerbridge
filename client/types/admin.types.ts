@@ -9,7 +9,14 @@ export type AdminJobStatus =
   | "archived"
   | "closed"
   | "rejected";
-export type AdminReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
+export type AdminReportStatus =
+  | "new"
+  | "under_review"
+  | "pending"
+  | "reviewed"
+  | "resolved"
+  | "dismissed"
+  | "escalated";
 export type AdminBlogStatus =
   | "draft"
   | "scheduled"
@@ -153,12 +160,25 @@ export type AdminBlog = {
 
 export type AdminReport = {
   _id: string;
+  reporterId?: string | { _id: string; name?: string; email?: string };
+  reporterName?: string;
   reporterEmail?: string;
+  reporterAvatar?: string;
   targetType: string;
+  targetId?: string;
+  targetLabel?: string;
+  reportedEntityType?: string;
+  reportedEntityLabel?: string;
   reason: string;
   description?: string;
+  severity?: "critical" | "high" | "medium" | "low";
+  evidence?: string[];
   status: AdminReportStatus;
+  moderatorNote?: string;
+  resolutionNote?: string;
   createdAt?: string;
+  updatedAt?: string;
+  resolvedAt?: string;
 };
 
 export type AdminStats = {

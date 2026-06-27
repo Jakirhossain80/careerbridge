@@ -24,7 +24,7 @@ export const adminBlogSchema = z.object({
 });
 
 export const adminReportStatusSchema = z.object({
-  status: z.enum(["pending", "reviewed", "resolved", "dismissed"]),
+  status: z.enum(["new", "under_review", "pending", "reviewed", "resolved", "dismissed", "escalated"]),
   resolutionNote: z.string().trim().max(1000).optional(),
 });
 

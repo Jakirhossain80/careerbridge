@@ -34,6 +34,11 @@ type PaginationQuery = {
   status?: string;
   dateFrom?: string;
   dateTo?: string;
+  severity?: string;
+  reason?: string;
+  targetType?: string;
+  reporter?: string;
+  assignedModerator?: string;
   page: number;
   limit: number;
   sortBy: string;
@@ -1954,13 +1959,43 @@ export const listAdminReports = async (query: PaginationQuery) => {
   const regex = buildSearchRegex(query.search);
 
   if (query.status) filter.status = query.status;
+  if (query.severity) filter.severity = query.severity;
+  if (query.reason) filter.reason = query.reason;
+  if (query.targetType) filter.targetType = query.targetType;
+  if (query.assignedModerator && Types.ObjectId.isValid(query.assignedModerator)) {
+    filter.assignedModeratorId = query.assignedModerator;
+  }
+  if (query.reporter) {
+    const reporterRegex = buildSearchRegex(query.reporter);
+    if (reporterRegex) {
+      filter.$or = [
+        { reporterName: reporterRegex },
+        { reporterEmail: reporterRegex },
+      ];
+    }
+  }
+  if (query.dateFrom || query.dateTo) {
+    const createdAt: Record<string, Date> = {};
+    if (query.dateFrom) createdAt.$gte = new Date(query.dateFrom);
+    if (query.dateTo) {
+      const dateTo = new Date(query.dateTo);
+      dateTo.setHours(23, 59, 59, 999);
+      createdAt.$lte = dateTo;
+    }
+    filter.createdAt = createdAt;
+  }
   if (regex) {
-    filter.$or = [
+    const searchConditions = [
+      { reporterName: regex },
       { reason: regex },
       { description: regex },
       { reporterEmail: regex },
       { targetType: regex },
+      { targetLabel: regex },
     ];
+    filter.$or = filter.$or
+      ? [...(filter.$or as Array<Record<string, unknown>>), ...searchConditions]
+      : searchConditions;
   }
 
   const skip = (query.page - 1) * query.limit;
@@ -1968,6 +2003,7 @@ export const listAdminReports = async (query: PaginationQuery) => {
     Report.find(filter)
       .populate("reporterId", "name email")
       .populate("reviewedBy", "name email")
+      .populate("assignedModeratorId", "name email")
       .sort(buildSort(query.sortBy))
       .skip(skip)
       .limit(query.limit)
@@ -1982,6 +2018,7 @@ export const getAdminReport = async (reportId: string) => {
   const report = await Report.findById(reportId)
     .populate("reporterId", "name email")
     .populate("reviewedBy", "name email")
+    .populate("assignedModeratorId", "name email")
     .lean();
 
   if (!report) throw new AppError("Report not found", 404);
@@ -1992,15 +2029,24 @@ export const getAdminReport = async (reportId: string) => {
 export const updateAdminReportStatus = async (
   actor: AdminActor,
   reportId: string,
-  input: { status: string; resolutionNote?: string }
+  input: { status: string; resolutionNote?: string; moderatorNote?: string }
 ) => {
+  const resolvedStatuses = [
+    REPORT_STATUS.RESOLVED,
+    REPORT_STATUS.DISMISSED,
+  ];
   const report = await Report.findByIdAndUpdate(
     reportId,
     {
       $set: {
         status: input.status as ReportStatus,
         resolutionNote: input.resolutionNote,
+        moderatorNote: input.moderatorNote,
         reviewedBy: actor.id,
+        assignedModeratorId: actor.id,
+        resolvedAt: resolvedStatuses.includes(input.status as typeof resolvedStatuses[number])
+          ? new Date()
+          : undefined,
       },
     },
     { new: true, runValidators: true }
@@ -2009,4 +2055,95 @@ export const updateAdminReportStatus = async (
   if (!report) throw new AppError("Report not found", 404);
 
   return report;
+};
+
+export const resolveAdminReport = async (
+  actor: AdminActor,
+  reportId: string,
+  input: { moderatorNote?: string; resolutionNote?: string }
+) =>
+  updateAdminReportStatus(actor, reportId, {
+    status: REPORT_STATUS.RESOLVED,
+    moderatorNote: input.moderatorNote,
+    resolutionNote: input.resolutionNote,
+  });
+
+export const dismissAdminReport = async (
+  actor: AdminActor,
+  reportId: string,
+  input: { moderatorNote?: string; resolutionNote?: string }
+) =>
+  updateAdminReportStatus(actor, reportId, {
+    status: REPORT_STATUS.DISMISSED,
+    moderatorNote: input.moderatorNote,
+    resolutionNote: input.resolutionNote,
+  });
+
+export const escalateAdminReport = async (
+  actor: AdminActor,
+  reportId: string,
+  input: { moderatorNote?: string; resolutionNote?: string }
+) =>
+  updateAdminReportStatus(actor, reportId, {
+    status: REPORT_STATUS.ESCALATED,
+    moderatorNote: input.moderatorNote,
+    resolutionNote: input.resolutionNote,
+  });
+
+export const getAdminReportAnalytics = async (query: PaginationQuery) => {
+  const filter: Record<string, unknown> = {};
+  if (query.dateFrom || query.dateTo) {
+    const createdAt: Record<string, Date> = {};
+    if (query.dateFrom) createdAt.$gte = new Date(query.dateFrom);
+    if (query.dateTo) {
+      const dateTo = new Date(query.dateTo);
+      dateTo.setHours(23, 59, 59, 999);
+      createdAt.$lte = dateTo;
+    }
+    filter.createdAt = createdAt;
+  }
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const [severityRows, reasonRows, trends] = await Promise.all([
+    Report.aggregate([
+      { $match: filter },
+      { $group: { _id: "$severity", count: { $sum: 1 } } },
+    ]),
+    Report.aggregate([
+      { $match: filter },
+      { $group: { _id: "$reason", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    Report.aggregate([
+      { $match: { ...filter, createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+  ]);
+
+  const severityCounts = severityRows.reduce(
+    (acc, row) => ({ ...acc, [row._id ?? "low"]: row.count }),
+    { critical: 0, high: 0, medium: 0, low: 0 }
+  );
+  const reasonTotal = reasonRows.reduce((total, row) => total + row.count, 0);
+
+  return {
+    severityCounts,
+    trends: trends.map((row) => ({ date: row._id, count: row.count })),
+    reasonDistribution: reasonRows.map((row) => ({
+      reason: row._id ?? "other",
+      count: row.count,
+      percentage: reasonTotal > 0 ? Math.round((row.count / reasonTotal) * 100) : 0,
+    })),
+  };
 };

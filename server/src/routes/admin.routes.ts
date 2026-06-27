@@ -23,8 +23,10 @@ import {
   companyStats,
   createBlog,
   createCategory,
+  dismissReport,
   employerDetails,
   employers,
+  escalateReport,
   jobDetails,
   jobSeekerDetails,
   jobSeekerStats,
@@ -38,8 +40,10 @@ import {
   removeCategory,
   removeJob,
   removeUser,
+  reportAnalytics,
   reportDetails,
   reports,
+  resolveReport,
   stats,
   unblockUser,
   unpublishBlog,
@@ -54,6 +58,7 @@ import {
   updateJobSeeker,
   updateJobSeekerStatus,
   updateReportStatus,
+  updateReport,
   updateUser,
   userDetails,
   users,
@@ -135,7 +140,12 @@ router.patch("/blogs/:blogId/publish", publishBlog);
 router.patch("/blogs/:blogId/unpublish", unpublishBlog);
 
 router.get("/reports", reports);
+router.get("/reports/analytics", reportAnalytics);
 router.get("/reports/:reportId", reportDetails);
+router.patch("/reports/:reportId", updateReport);
 router.patch("/reports/:reportId/status", updateReportStatus);
+router.post("/reports/:reportId/resolve", resolveReport);
+router.post("/reports/:reportId/dismiss", dismissReport);
+router.post("/reports/:reportId/escalate", escalateReport);
 
 export default router;

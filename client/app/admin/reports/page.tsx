@@ -1,5 +1,12 @@
-import AdminListPage from "@/components/admin/AdminListPage";
+import { Suspense } from "react";
+
+import ReportsModerationView from "@/components/admin/reports/ReportsModerationView";
+import PageLoader from "@/components/ui/PageLoader";
 
 export default function AdminReportsPage() {
-  return <AdminListPage resource="reports" />;
+  return (
+    <Suspense fallback={<PageLoader message="Loading reports..." />}>
+      <ReportsModerationView />
+    </Suspense>
+  );
 }

@@ -30,6 +30,11 @@ export const paginationQuerySchema = z.object({
   status: trimmedString.optional(),
   dateFrom: trimmedString.optional(),
   dateTo: trimmedString.optional(),
+  severity: trimmedString.optional(),
+  reason: trimmedString.optional(),
+  targetType: trimmedString.optional(),
+  reporter: trimmedString.optional(),
+  assignedModerator: trimmedString.optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
   sortBy: z
@@ -265,5 +270,11 @@ export const blogUpdateSchema = blogCreateSchema
 
 export const reportStatusUpdateSchema = z.object({
   status: z.enum(Object.values(REPORT_STATUS) as [string, ...string[]]),
+  resolutionNote: trimmedString.max(1000).optional(),
+  moderatorNote: trimmedString.max(1000).optional(),
+});
+
+export const reportModerationActionSchema = z.object({
+  moderatorNote: trimmedString.max(1000).optional(),
   resolutionNote: trimmedString.max(1000).optional(),
 });

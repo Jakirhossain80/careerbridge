@@ -19,6 +19,7 @@ import {
   jobSeekerUpdateSchema,
   moderationReasonSchema,
   paginationQuerySchema,
+  reportModerationActionSchema,
   reportStatusUpdateSchema,
   roleChangeSchema,
   userUpdateSchema,
@@ -54,6 +55,7 @@ import {
   getAdminJobSeekerStats,
   getAdminPendingEmployers,
   getAdminReport,
+  getAdminReportAnalytics,
   getAdminStats,
   getAdminUser,
   getAuthenticatedAdmin,
@@ -69,6 +71,9 @@ import {
   publishAdminBlog,
   rejectAdminEmployer,
   rejectAdminJob,
+  dismissAdminReport,
+  escalateAdminReport,
+  resolveAdminReport,
   unblockAdminUser,
   unpublishAdminBlog,
   updateAdminApplication,
@@ -748,6 +753,19 @@ export const reports: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const reportAnalytics: RequestHandler = async (req, res, next) => {
+  try {
+    const query = paginationQuerySchema.parse(req.query);
+    successResponse(
+      res,
+      "Report analytics fetched successfully",
+      await getAdminReportAnalytics(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
 export const reportDetails: RequestHandler = async (req, res, next) => {
   try {
     const reportId = getRequiredParam(idParamSchema.parse(req.params));
@@ -767,6 +785,54 @@ export const updateReportStatus: RequestHandler = async (req, res, next) => {
       "Report status updated successfully",
       await updateAdminReportStatus(actor, reportId, payload)
     );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateReport: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const reportId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = reportStatusUpdateSchema.parse(req.body);
+    successResponse(
+      res,
+      "Report updated successfully",
+      await updateAdminReportStatus(actor, reportId, payload)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const resolveReport: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const reportId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = reportModerationActionSchema.parse(req.body);
+    successResponse(res, "Report resolved successfully", await resolveAdminReport(actor, reportId, payload));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const dismissReport: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const reportId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = reportModerationActionSchema.parse(req.body);
+    successResponse(res, "Report dismissed successfully", await dismissAdminReport(actor, reportId, payload));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const escalateReport: RequestHandler = async (req, res, next) => {
+  try {
+    const actor = await getAuthenticatedAdmin(req.user);
+    const reportId = getRequiredParam(idParamSchema.parse(req.params));
+    const payload = reportModerationActionSchema.parse(req.body);
+    successResponse(res, "Report escalated successfully", await escalateAdminReport(actor, reportId, payload));
   } catch (error) {
     handleControllerError(error, res, next);
   }
