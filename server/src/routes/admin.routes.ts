@@ -3,6 +3,14 @@ import { Router } from "express";
 import {
   applicationDetails,
   applications,
+  analyticsApplications,
+  analyticsBlogs,
+  analyticsCategories,
+  analyticsEmployers,
+  analyticsInterviews,
+  analyticsJobs,
+  analyticsOverview,
+  analyticsUsers,
   approveEmployer,
   approveJob,
   blockUser,
@@ -64,6 +72,15 @@ router.use(
 );
 
 router.get("/stats", stats);
+
+router.get("/analytics/overview", analyticsOverview);
+router.get("/analytics/users", analyticsUsers);
+router.get("/analytics/employers", analyticsEmployers);
+router.get("/analytics/jobs", analyticsJobs);
+router.get("/analytics/applications", analyticsApplications);
+router.get("/analytics/interviews", analyticsInterviews);
+router.get("/analytics/blogs", analyticsBlogs);
+router.get("/analytics/categories", analyticsCategories);
 
 router.get("/users", users);
 router.get("/users/:userId", userDetails);

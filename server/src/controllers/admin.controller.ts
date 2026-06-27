@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 
 import {
+  adminAnalyticsQuerySchema,
   applicationUpdateSchema,
   adminCompanyQuerySchema,
   adminPendingEmployerQuerySchema,
@@ -36,6 +37,14 @@ import {
   deleteAdminJob,
   deleteAdminUser,
   getAdminApplication,
+  getAdminAnalyticsApplications,
+  getAdminAnalyticsBlogs,
+  getAdminAnalyticsCategories,
+  getAdminAnalyticsEmployers,
+  getAdminAnalyticsInterviews,
+  getAdminAnalyticsJobs,
+  getAdminAnalyticsOverview,
+  getAdminAnalyticsUsers,
   getAdminBlog,
   getAdminCompany,
   getAdminCompanyStats,
@@ -83,6 +92,90 @@ import type {
   UserRole,
   UserStatus,
 } from "../constants/model.constants.js";
+
+export const analyticsOverview: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(
+      res,
+      "Admin analytics overview fetched successfully",
+      await getAdminAnalyticsOverview(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsUsers: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(res, "Admin user analytics fetched successfully", await getAdminAnalyticsUsers(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsEmployers: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(res, "Admin employer analytics fetched successfully", await getAdminAnalyticsEmployers(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsJobs: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(res, "Admin job analytics fetched successfully", await getAdminAnalyticsJobs(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsApplications: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(
+      res,
+      "Admin application analytics fetched successfully",
+      await getAdminAnalyticsApplications(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsInterviews: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(res, "Admin interview analytics fetched successfully", await getAdminAnalyticsInterviews(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsBlogs: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(res, "Admin blog analytics fetched successfully", await getAdminAnalyticsBlogs(query));
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const analyticsCategories: RequestHandler = async (req, res, next) => {
+  try {
+    const query = adminAnalyticsQuerySchema.parse(req.query);
+    successResponse(
+      res,
+      "Admin category analytics fetched successfully",
+      await getAdminAnalyticsCategories(query)
+    );
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
 import AppError from "../utils/AppError.js";
 
 const getRequiredParam = (params: ReturnType<typeof idParamSchema.parse>) => {

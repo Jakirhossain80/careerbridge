@@ -48,6 +48,25 @@ export const paginationQuerySchema = z.object({
     .default("-createdAt"),
 });
 
+export const adminAnalyticsQuerySchema = z.object({
+  dateRange: z
+    .enum([
+      "today",
+      "last_7_days",
+      "last_30_days",
+      "last_90_days",
+      "last_12_months",
+      "custom",
+    ])
+    .default("last_30_days"),
+  dateFrom: trimmedString.optional(),
+  dateTo: trimmedString.optional(),
+  category: trimmedString.optional(),
+  company: trimmedString.optional(),
+  employer: trimmedString.optional(),
+  location: trimmedString.optional(),
+});
+
 export const adminJobSeekerQuerySchema = z.object({
   search: trimmedString.optional(),
   status: z.enum(Object.values(USER_STATUS) as [string, ...string[]]).optional(),

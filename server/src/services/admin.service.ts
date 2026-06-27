@@ -24,6 +24,7 @@ import Category, { type ICategory } from "../models/category.model.js";
 import Company, { type ICompany } from "../models/company.model.js";
 import Job, { type IJob } from "../models/job.model.js";
 import JobSeeker from "../models/jobSeeker.model.js";
+import Interview from "../models/interview.model.js";
 import Report from "../models/report.model.js";
 import User, { type IUser } from "../models/user.model.js";
 
@@ -84,6 +85,16 @@ type AdminCompanyQuery = {
   page: number;
   limit: number;
   sortBy: string;
+};
+
+type AdminAnalyticsQuery = {
+  dateRange: "today" | "last_7_days" | "last_30_days" | "last_90_days" | "last_12_months" | "custom";
+  dateFrom?: string;
+  dateTo?: string;
+  category?: string;
+  company?: string;
+  employer?: string;
+  location?: string;
 };
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1505,6 +1516,438 @@ export const publishAdminBlog = async (blogId: string) =>
 
 export const unpublishAdminBlog = async (blogId: string) =>
   updateAdminBlog(blogId, { status: BLOG_STATUS.UNPUBLISHED as BlogStatus });
+
+const getAnalyticsDateWindow = (query: AdminAnalyticsQuery) => {
+  const end = query.dateTo ? new Date(query.dateTo) : new Date();
+  end.setHours(23, 59, 59, 999);
+
+  const start = query.dateFrom ? new Date(query.dateFrom) : new Date(end);
+
+  if (!query.dateFrom) {
+    if (query.dateRange === "today") {
+      start.setHours(0, 0, 0, 0);
+    } else if (query.dateRange === "last_7_days") {
+      start.setDate(end.getDate() - 6);
+    } else if (query.dateRange === "last_90_days") {
+      start.setDate(end.getDate() - 89);
+    } else if (query.dateRange === "last_12_months") {
+      start.setMonth(end.getMonth() - 11);
+      start.setDate(1);
+    } else {
+      start.setDate(end.getDate() - 29);
+    }
+  }
+
+  start.setHours(0, 0, 0, 0);
+  const duration = Math.max(end.getTime() - start.getTime(), 24 * 60 * 60 * 1000);
+  const previousEnd = new Date(start.getTime() - 1);
+  const previousStart = new Date(previousEnd.getTime() - duration);
+
+  return { start, end, previousStart, previousEnd };
+};
+
+const getDateFilter = (start: Date, end: Date) => ({
+  createdAt: { $gte: start, $lte: end },
+});
+
+const getJobAnalyticsFilter = (query: AdminAnalyticsQuery) => {
+  const filter: Record<string, unknown> = {};
+  const category = query.category?.trim();
+  const company = query.company?.trim();
+  const employer = query.employer?.trim();
+  const location = query.location?.trim();
+
+  if (category) filter.category = buildSearchRegex(category);
+  if (company) filter.companyName = buildSearchRegex(company);
+  if (employer) filter.employerEmail = buildSearchRegex(employer);
+  if (location) filter.location = buildSearchRegex(location);
+
+  return filter;
+};
+
+const getTrendLabel = (date: Date, range: AdminAnalyticsQuery["dateRange"]) => {
+  if (range === "today") {
+    return new Intl.DateTimeFormat("en", { hour: "numeric" }).format(date);
+  }
+
+  if (range === "last_12_months") {
+    return new Intl.DateTimeFormat("en", { month: "short" }).format(date);
+  }
+
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+};
+
+const buildTrendBuckets = (query: AdminAnalyticsQuery, start: Date, end: Date) => {
+  const buckets: Array<{
+    label: string;
+    from: Date;
+    to: Date;
+    users: number;
+    employers: number;
+    companies: number;
+    jobs: number;
+    applications: number;
+    interviews: number;
+    blogs: number;
+  }> = [];
+  const bucketCount = query.dateRange === "today" ? 8 : query.dateRange === "last_12_months" ? 12 : 7;
+  const span = Math.max(end.getTime() - start.getTime(), 1);
+
+  Array.from({ length: bucketCount }).forEach((_, index) => {
+    const from = new Date(start.getTime() + (span / bucketCount) * index);
+    const to = new Date(start.getTime() + (span / bucketCount) * (index + 1));
+    buckets.push({
+      label: getTrendLabel(from, query.dateRange),
+      from,
+      to,
+      users: 0,
+      employers: 0,
+      companies: 0,
+      jobs: 0,
+      applications: 0,
+      interviews: 0,
+      blogs: 0,
+    });
+  });
+
+  return buckets;
+};
+
+const incrementBuckets = (
+  buckets: ReturnType<typeof buildTrendBuckets>,
+  values: Array<{ createdAt?: Date }>,
+  key: "users" | "employers" | "companies" | "jobs" | "applications" | "interviews" | "blogs"
+) => {
+  values.forEach((value) => {
+    if (!value.createdAt) return;
+    const timestamp = value.createdAt.getTime();
+    const bucket =
+      buckets.find((entry) => timestamp >= entry.from.getTime() && timestamp < entry.to.getTime()) ??
+      buckets[buckets.length - 1];
+    bucket[key] += 1;
+  });
+};
+
+const getGrowthPercentage = (current: number, previous: number) => {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return Math.round(((current - previous) / previous) * 100);
+};
+
+const toKpi = (
+  key: string,
+  label: string,
+  value: number,
+  previous: number,
+  comparisonLabel = "vs previous period"
+) => {
+  const growthPercentage = getGrowthPercentage(value, previous);
+
+  return {
+    key,
+    label,
+    value,
+    growthPercentage,
+    trend: growthPercentage > 0 ? "up" : growthPercentage < 0 ? "down" : "neutral",
+    comparisonLabel,
+  };
+};
+
+export const getAdminAnalyticsOverview = async (query: AdminAnalyticsQuery) => {
+  const { start, end, previousStart, previousEnd } = getAnalyticsDateWindow(query);
+  const dateFilter = getDateFilter(start, end);
+  const previousDateFilter = getDateFilter(previousStart, previousEnd);
+  const jobFilter = getJobAnalyticsFilter(query);
+  const filteredJobIds = await Job.find(jobFilter).select("_id").lean();
+  const jobIds = filteredJobIds.map((job) => job._id);
+  const relatedFilter = jobIds.length > 0 ? { jobId: { $in: jobIds } } : {};
+
+  const [
+    totalUsers,
+    totalJobSeekers,
+    totalEmployers,
+    totalCompanies,
+    totalJobs,
+    activeJobs,
+    totalApplications,
+    totalInterviews,
+    totalBlogs,
+    totalCategories,
+    previousUsers,
+    previousJobSeekers,
+    previousEmployers,
+    previousCompanies,
+    previousJobs,
+    previousActiveJobs,
+    previousApplications,
+    previousInterviews,
+    previousBlogs,
+    previousCategories,
+    trendUsers,
+    trendCompanies,
+    trendJobs,
+    trendApplications,
+    trendInterviews,
+    trendBlogs,
+    categoryRows,
+    locationRows,
+    funnelRows,
+    topCategories,
+    topCompanies,
+    topEmployers,
+    topJobs,
+    topJobSeekers,
+    topBlogs,
+  ] = await Promise.all([
+    User.countDocuments({ ...dateFilter }),
+    User.countDocuments({ role: USER_ROLES.JOB_SEEKER, ...dateFilter }),
+    User.countDocuments({ role: USER_ROLES.EMPLOYER, ...dateFilter }),
+    Company.countDocuments({ ...dateFilter }),
+    Job.countDocuments({ ...jobFilter, ...dateFilter }),
+    Job.countDocuments({
+      ...jobFilter,
+      status: { $in: [JOB_STATUS.ACTIVE, JOB_STATUS.PUBLISHED] },
+      ...dateFilter,
+    }),
+    Application.countDocuments({ ...relatedFilter, ...dateFilter }),
+    Interview.countDocuments({ ...relatedFilter, ...dateFilter }),
+    Blog.countDocuments({ ...dateFilter }),
+    Category.countDocuments({ ...dateFilter }),
+    User.countDocuments({ ...previousDateFilter }),
+    User.countDocuments({ role: USER_ROLES.JOB_SEEKER, ...previousDateFilter }),
+    User.countDocuments({ role: USER_ROLES.EMPLOYER, ...previousDateFilter }),
+    Company.countDocuments({ ...previousDateFilter }),
+    Job.countDocuments({ ...jobFilter, ...previousDateFilter }),
+    Job.countDocuments({
+      ...jobFilter,
+      status: { $in: [JOB_STATUS.ACTIVE, JOB_STATUS.PUBLISHED] },
+      ...previousDateFilter,
+    }),
+    Application.countDocuments({ ...relatedFilter, ...previousDateFilter }),
+    Interview.countDocuments({ ...relatedFilter, ...previousDateFilter }),
+    Blog.countDocuments({ ...previousDateFilter }),
+    Category.countDocuments({ ...previousDateFilter }),
+    User.find({ ...dateFilter }).select("createdAt role").lean(),
+    Company.find({ ...dateFilter }).select("createdAt").lean(),
+    Job.find({ ...jobFilter, ...dateFilter }).select("createdAt").lean(),
+    Application.find({ ...relatedFilter, ...dateFilter }).select("createdAt").lean(),
+    Interview.find({ ...relatedFilter, ...dateFilter }).select("createdAt").lean(),
+    Blog.find({ ...dateFilter }).select("createdAt").lean(),
+    Job.aggregate([
+      { $match: { ...jobFilter, ...dateFilter, category: { $nin: [null, ""] } } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 8 },
+    ]),
+    Job.aggregate([
+      { $match: { ...jobFilter, ...dateFilter, location: { $nin: [null, ""] } } },
+      { $group: { _id: "$location", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 8 },
+    ]),
+    Application.aggregate([
+      { $match: { ...relatedFilter, ...dateFilter } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+    Job.aggregate([
+      { $match: { ...jobFilter, ...dateFilter } },
+      {
+        $group: {
+          _id: "$category",
+          jobs: { $sum: 1 },
+          activeJobs: {
+            $sum: {
+              $cond: [{ $in: ["$status", [JOB_STATUS.ACTIVE, JOB_STATUS.PUBLISHED]] }, 1, 0],
+            },
+          },
+          applications: { $sum: "$applicationsCount" },
+          companies: { $addToSet: "$companyId" },
+        },
+      },
+      { $sort: { applications: -1, jobs: -1 } },
+      { $limit: 20 },
+    ]),
+    Job.aggregate([
+      { $match: { ...jobFilter, ...dateFilter } },
+      {
+        $group: {
+          _id: "$companyId",
+          company: { $first: "$companyName" },
+          location: { $first: "$location" },
+          jobs: { $sum: 1 },
+          activeJobs: {
+            $sum: {
+              $cond: [{ $in: ["$status", [JOB_STATUS.ACTIVE, JOB_STATUS.PUBLISHED]] }, 1, 0],
+            },
+          },
+          applications: { $sum: "$applicationsCount" },
+        },
+      },
+      { $sort: { applications: -1, jobs: -1 } },
+      { $limit: 20 },
+    ]),
+    Job.aggregate([
+      { $match: { ...jobFilter, ...dateFilter } },
+      {
+        $group: {
+          _id: "$employerId",
+          employer: { $first: "$employerEmail" },
+          jobs: { $sum: 1 },
+          applications: { $sum: "$applicationsCount" },
+        },
+      },
+      { $sort: { applications: -1, jobs: -1 } },
+      { $limit: 10 },
+    ]),
+    Job.find({ ...jobFilter, ...dateFilter })
+      .sort({ applicationsCount: -1, createdAt: -1 })
+      .limit(10)
+      .select("_id title companyName category location applicationsCount status")
+      .lean(),
+    Application.aggregate([
+      { $match: { ...relatedFilter, ...dateFilter } },
+      { $group: { _id: "$applicantId", name: { $first: "$applicantName" }, applications: { $sum: 1 } } },
+      { $sort: { applications: -1 } },
+      { $limit: 10 },
+    ]),
+    Blog.find({ ...dateFilter })
+      .sort({ viewCount: -1, publishedAt: -1, createdAt: -1 })
+      .limit(10)
+      .select("_id title status viewCount publishedAt")
+      .lean(),
+  ]);
+
+  const buckets = buildTrendBuckets(query, start, end);
+  incrementBuckets(buckets, trendUsers, "users");
+  incrementBuckets(
+    buckets,
+    trendUsers.filter((user) => user.role === USER_ROLES.EMPLOYER),
+    "employers"
+  );
+  incrementBuckets(buckets, trendCompanies, "companies");
+  incrementBuckets(buckets, trendJobs, "jobs");
+  incrementBuckets(buckets, trendApplications, "applications");
+  incrementBuckets(buckets, trendInterviews, "interviews");
+  incrementBuckets(buckets, trendBlogs, "blogs");
+
+  const categoryTotal = categoryRows.reduce((total, row) => total + row.count, 0);
+  const locationTotal = locationRows.reduce((total, row) => total + row.count, 0);
+  const submitted = totalApplications;
+  const reviewed = funnelRows
+    .filter((row) => ["under_review", "in_review", "reviewing", "shortlisted", "interview", "offered", "hired"].includes(String(row._id)))
+    .reduce((total, row) => total + row.count, 0);
+  const shortlisted = funnelRows
+    .filter((row) => ["shortlisted", "interview", "offered", "hired"].includes(String(row._id)))
+    .reduce((total, row) => total + row.count, 0);
+  const offers = funnelRows
+    .filter((row) => ["offered", "hired"].includes(String(row._id)))
+    .reduce((total, row) => total + row.count, 0);
+  const hires = funnelRows.find((row) => row._id === APPLICATION_STATUS.HIRED)?.count ?? 0;
+
+  const kpis = [
+    toKpi("totalUsers", "Total Users", totalUsers, previousUsers),
+    toKpi("totalJobSeekers", "Total Job Seekers", totalJobSeekers, previousJobSeekers),
+    toKpi("totalEmployers", "Total Employers", totalEmployers, previousEmployers),
+    toKpi("totalCompanies", "Total Companies", totalCompanies, previousCompanies),
+    toKpi("totalJobs", "Total Jobs", totalJobs, previousJobs),
+    toKpi("activeJobs", "Active Jobs", activeJobs, previousActiveJobs),
+    toKpi("totalApplications", "Total Applications", totalApplications, previousApplications),
+    toKpi("totalInterviews", "Total Interviews", totalInterviews, previousInterviews),
+    toKpi("totalBlogs", "Total Blogs", totalBlogs, previousBlogs),
+    toKpi("totalCategories", "Total Categories", totalCategories, previousCategories),
+  ];
+
+  return {
+    kpis,
+    growthMetrics: kpis,
+    trends: buckets.map(({ from, to, ...bucket }) => bucket),
+    categoryDistribution: categoryRows.map((row) => ({
+      label: row._id ?? "Uncategorized",
+      count: row.count,
+      percentage: categoryTotal > 0 ? Math.round((row.count / categoryTotal) * 100) : 0,
+    })),
+    locationDistribution: locationRows.map((row) => ({
+      label: row._id ?? "Unspecified",
+      count: row.count,
+      percentage: locationTotal > 0 ? Math.round((row.count / locationTotal) * 100) : 0,
+    })),
+    hiringFunnel: [
+      { label: "Applications Submitted", count: submitted, percentage: submitted > 0 ? 100 : 0 },
+      { label: "Applications Reviewed", count: reviewed, percentage: submitted > 0 ? Math.round((reviewed / submitted) * 100) : 0 },
+      { label: "Shortlisted", count: shortlisted, percentage: submitted > 0 ? Math.round((shortlisted / submitted) * 100) : 0 },
+      { label: "Interviews Scheduled", count: totalInterviews, percentage: submitted > 0 ? Math.round((totalInterviews / submitted) * 100) : 0 },
+      { label: "Offers Sent", count: offers, percentage: submitted > 0 ? Math.round((offers / submitted) * 100) : 0 },
+      { label: "Hires Completed", count: hires, percentage: submitted > 0 ? Math.round((hires / submitted) * 100) : 0 },
+    ],
+    topCategories: topCategories.map((row) => ({
+      category: row._id ?? "Uncategorized",
+      jobs: row.jobs,
+      activeJobs: row.activeJobs,
+      applications: row.applications,
+      companies: row.companies.length,
+    })),
+    topCompanies: topCompanies.map((row) => ({
+      companyId: row._id?.toString(),
+      company: row.company ?? "Unknown company",
+      location: row.location,
+      jobs: row.jobs,
+      activeJobs: row.activeJobs,
+      applications: row.applications,
+    })),
+    topEmployers: topEmployers.map((row) => ({
+      employerId: row._id?.toString(),
+      employer: row.employer ?? "Unknown employer",
+      jobs: row.jobs,
+      applications: row.applications,
+    })),
+    topJobs: topJobs.map((job) => ({
+      jobId: job._id.toString(),
+      title: job.title,
+      company: job.companyName,
+      category: job.category,
+      location: job.location,
+      applications: job.applicationsCount ?? 0,
+      status: job.status,
+    })),
+    topJobSeekers: topJobSeekers.map((row) => ({
+      jobSeekerId: row._id?.toString(),
+      name: row.name ?? "Unknown job seeker",
+      applications: row.applications,
+    })),
+    topBlogs: topBlogs.map((blog) => ({
+      blogId: blog._id.toString(),
+      title: blog.title,
+      status: blog.status,
+      views: blog.viewCount ?? 0,
+      publishedAt: blog.publishedAt?.toISOString(),
+    })),
+    exports: {
+      csv: false,
+      excel: false,
+      pdf: false,
+    },
+  };
+};
+
+export const getAdminAnalyticsUsers = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).trends;
+
+export const getAdminAnalyticsEmployers = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).topEmployers;
+
+export const getAdminAnalyticsJobs = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).topJobs;
+
+export const getAdminAnalyticsApplications = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).hiringFunnel;
+
+export const getAdminAnalyticsInterviews = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).trends;
+
+export const getAdminAnalyticsBlogs = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).topBlogs;
+
+export const getAdminAnalyticsCategories = async (query: AdminAnalyticsQuery) =>
+  (await getAdminAnalyticsOverview(query)).topCategories;
 
 export const listAdminReports = async (query: PaginationQuery) => {
   const filter: Record<string, unknown> = {};

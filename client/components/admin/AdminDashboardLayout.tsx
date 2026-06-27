@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import {
   BriefcaseBusiness,
   Building2,
+  ChartNoAxesCombined,
   FileText,
   Flag,
   FolderTree,
@@ -22,6 +23,7 @@ import AdminRouteGuard from "@/components/admin/AdminRouteGuard";
 
 export const adminDashboardLinks: DashboardNavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Analytics", href: "/admin/analytics", icon: ChartNoAxesCombined },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Job Seekers", href: "/admin/job-seekers", icon: UserRoundSearch },
   { label: "Employers", href: "/admin/employers", icon: Building2 },
