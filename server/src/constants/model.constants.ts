@@ -70,11 +70,21 @@ export const INTERVIEW_STATUS = {
 } as const;
 
 export const NOTIFICATION_TYPE = {
+  APPLICATION_SUBMITTED: "application_submitted",
+  APPLICATION_STATUS_CHANGED: "application_status_changed",
+  INTERVIEW_SCHEDULED: "interview_scheduled",
+  EMPLOYER_APPROVED: "employer_approved",
+  JOB_APPROVED: "job_approved",
+  JOB_REJECTED: "job_rejected",
+  NEW_JOB_ALERT: "new_job_alert",
+} as const;
+
+export const NOTIFICATION_ENTITY_TYPE = {
   APPLICATION: "application",
   INTERVIEW: "interview",
+  EMPLOYER: "employer",
   JOB: "job",
-  ACCOUNT: "account",
-  SYSTEM: "system",
+  JOB_ALERT: "job_alert",
 } as const;
 
 export const BLOG_STATUS = {
@@ -110,5 +120,7 @@ export type InterviewStatus =
   (typeof INTERVIEW_STATUS)[keyof typeof INTERVIEW_STATUS];
 export type NotificationType =
   (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
+export type NotificationEntityType =
+  (typeof NOTIFICATION_ENTITY_TYPE)[keyof typeof NOTIFICATION_ENTITY_TYPE];
 export type BlogStatus = (typeof BLOG_STATUS)[keyof typeof BLOG_STATUS];
 export type ReportStatus = (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];

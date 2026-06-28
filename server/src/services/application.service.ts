@@ -4,6 +4,7 @@ import { APPLICATION_STATUS } from "../constants/model.constants.js";
 import Application from "../models/application.model.js";
 import Job from "../models/job.model.js";
 import Resume from "../models/resume.model.js";
+import { notifyApplicationSubmitted } from "./notification.service.js";
 import AppError from "../utils/AppError.js";
 import type { AuthenticatedJobSeeker } from "./jobSeeker.service.js";
 import type {
@@ -81,6 +82,7 @@ export const applyForJob = async (
   });
 
   await Job.findByIdAndUpdate(job._id, { $inc: { applicationsCount: 1 } });
+  await notifyApplicationSubmitted(application._id.toString());
 
   return application;
 };

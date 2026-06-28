@@ -5,12 +5,17 @@ import {
   APPLICATION_STATUS,
   COMPANY_VERIFICATION_STATUS,
   JOB_STATUS,
+  type JobStatus,
 } from "../constants/model.constants.js";
 import AppError from "../utils/AppError.js";
 import Application, { type IApplication } from "../models/application.model.js";
 import Company, { type ICompany } from "../models/company.model.js";
 import Job, { type IJob } from "../models/job.model.js";
 import User from "../models/user.model.js";
+import {
+  notifyApplicationStatusChanged,
+  notifyMatchingJobAlertsForJob,
+} from "./notification.service.js";
 import type {
   ApplicationStatusUpdateInput,
   AuthenticatedEmployer,
@@ -54,6 +59,9 @@ const getPaginationMeta = (
     totalPages: Math.ceil(total / limit),
   };
 };
+
+const isVisibleJobStatus = (status: JobStatus) =>
+  status === JOB_STATUS.ACTIVE || status === JOB_STATUS.PUBLISHED;
 
 const generateUniqueSlug = async (
   model: { exists: (filter: Record<string, unknown>) => Promise<unknown> },
@@ -215,7 +223,7 @@ export const createEmployerJob = async (
   const company = await getApprovedCompanyForEmployer(employer);
   const slug = await generateUniqueSlug(Job, `${company.name}-${input.title}`);
 
-  return Job.create({
+  const job = await Job.create({
     employerId: employer.userId,
     employerEmail: employer.email,
     companyId: company._id,
@@ -248,6 +256,12 @@ export const createEmployerJob = async (
     featured: input.featured,
     applicationsCount: 0,
   });
+
+  if (isVisibleJobStatus(job.status)) {
+    await notifyMatchingJobAlertsForJob(job._id);
+  }
+
+  return job;
 };
 
 export const updateEmployerJob = async (
@@ -309,6 +323,7 @@ export const updateEmployerJob = async (
   if (input.status !== undefined) update.status = input.status as IJob["status"];
   if (input.featured !== undefined) update.featured = input.featured;
 
+  const previousStatus = job.status;
   const updatedJob = await Job.findOneAndUpdate(
     { _id: jobId, employerId: employer.userId },
     { $set: update },
@@ -317,6 +332,13 @@ export const updateEmployerJob = async (
 
   if (!updatedJob) {
     throw new AppError("Job not found", 404);
+  }
+
+  if (
+    updatedJob.status !== previousStatus &&
+    isVisibleJobStatus(updatedJob.status)
+  ) {
+    await notifyMatchingJobAlertsForJob(updatedJob._id);
   }
 
   return updatedJob;
@@ -442,6 +464,7 @@ export const updateApplicationStatus = async (
   }
 
   await application.save();
+  await notifyApplicationStatusChanged(application._id.toString(), employer.userId);
 
   return application;
 };

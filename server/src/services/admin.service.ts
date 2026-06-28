@@ -28,6 +28,13 @@ import Interview from "../models/interview.model.js";
 import Report from "../models/report.model.js";
 import SystemSettings from "../models/systemSettings.model.js";
 import User, { type IUser } from "../models/user.model.js";
+import {
+  notifyApplicationStatusChanged,
+  notifyEmployerApproved,
+  notifyJobApproved,
+  notifyJobRejected,
+  notifyMatchingJobAlertsForJob,
+} from "./notification.service.js";
 
 type PaginationQuery = {
   search?: string;
@@ -1120,10 +1127,24 @@ export const updateAdminCompanyVerification = async (
   companyId: string,
   verificationStatus: CompanyVerificationStatus
 ) => {
+  const existingCompany = await Company.findById(companyId).select(
+    "_id ownerId status verificationStatus"
+  );
+  if (!existingCompany) throw new AppError("Company not found", 404);
+
   await updateAdminCompany(companyId, {
     status: verificationStatus,
     verificationStatus,
   });
+
+  if (
+    verificationStatus === COMPANY_VERIFICATION_STATUS.APPROVED &&
+    existingCompany.verificationStatus !== COMPANY_VERIFICATION_STATUS.APPROVED &&
+    existingCompany.status !== COMPANY_VERIFICATION_STATUS.APPROVED
+  ) {
+    await notifyEmployerApproved(existingCompany.ownerId, existingCompany._id);
+  }
+
   return getAdminCompany(companyId);
 };
 
@@ -1342,11 +1363,26 @@ export const updateAdminEmployer = async (
   return employer;
 };
 
-export const approveAdminEmployer = async (employerId: string) =>
-  updateAdminEmployer(employerId, {
+export const approveAdminEmployer = async (employerId: string) => {
+  const existingEmployer = await Company.findById(employerId).select(
+    "_id ownerId status verificationStatus"
+  );
+  if (!existingEmployer) throw new AppError("Employer not found", 404);
+
+  const employer = await updateAdminEmployer(employerId, {
     status: COMPANY_VERIFICATION_STATUS.APPROVED as CompanyVerificationStatus,
     verificationStatus: COMPANY_VERIFICATION_STATUS.APPROVED as CompanyVerificationStatus,
   });
+
+  if (
+    existingEmployer.verificationStatus !== COMPANY_VERIFICATION_STATUS.APPROVED &&
+    existingEmployer.status !== COMPANY_VERIFICATION_STATUS.APPROVED
+  ) {
+    await notifyEmployerApproved(existingEmployer.ownerId, existingEmployer._id);
+  }
+
+  return employer;
+};
 
 export const rejectAdminEmployer = async (employerId: string) =>
   updateAdminEmployer(employerId, {
@@ -1419,11 +1455,20 @@ export const deleteAdminJob = async (jobId: string) => {
   return job;
 };
 
-export const approveAdminJob = async (jobId: string) =>
-  updateAdminJob(jobId, { status: JOB_STATUS.ACTIVE as JobStatus });
+export const approveAdminJob = async (jobId: string) => {
+  const job = await updateAdminJob(jobId, { status: JOB_STATUS.ACTIVE as JobStatus });
+  await notifyJobApproved(job._id);
+  await notifyMatchingJobAlertsForJob(job._id);
 
-export const rejectAdminJob = async (jobId: string) =>
-  updateAdminJob(jobId, { status: JOB_STATUS.REJECTED as JobStatus });
+  return job;
+};
+
+export const rejectAdminJob = async (jobId: string) => {
+  const job = await updateAdminJob(jobId, { status: JOB_STATUS.REJECTED as JobStatus });
+  await notifyJobRejected(job._id);
+
+  return job;
+};
 
 export const listAdminApplications = async (query: PaginationQuery) => {
   const filter: Record<string, unknown> = {};
@@ -1484,6 +1529,10 @@ export const updateAdminApplication = async (
   }
 
   await application.save();
+  if (input.status) {
+    await notifyApplicationStatusChanged(application._id.toString(), actor.id);
+  }
+
   return application;
 };
 
