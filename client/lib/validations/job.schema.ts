@@ -11,11 +11,11 @@ export const jobFormSchema = z
       "internship",
       "temporary",
       "freelance",
-    ]),
-    workMode: z.enum(["remote", "onsite", "hybrid"]),
+    ], "Please select a job type"),
+    workMode: z.enum(["remote", "onsite", "hybrid"], "Please select a work mode"),
     location: z.string().trim().optional(),
-    salaryMin: z.number().min(0, "Must be zero or greater").optional(),
-    salaryMax: z.number().min(0, "Must be zero or greater").optional(),
+    salaryMin: z.number().min(0, "Minimum salary must be zero or greater").optional(),
+    salaryMax: z.number().min(0, "Maximum salary must be zero or greater").optional(),
     currency: z
       .string()
       .trim()
@@ -29,7 +29,10 @@ export const jobFormSchema = z
     responsibilities: z.string().trim().min(1, "Responsibilities are required"),
     requirements: z.string().trim().min(1, "Requirements are required"),
     benefits: z.string().trim().optional(),
-    status: z.enum(["draft", "pending", "published", "active", "closed", "archived"]),
+    status: z.enum(
+      ["draft", "pending", "published", "active", "closed", "archived"],
+      "Please select a job status",
+    ),
     isPublished: z.boolean(),
   })
   .refine(

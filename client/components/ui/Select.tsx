@@ -3,6 +3,8 @@
 import { useId } from "react";
 import type { ReactNode, SelectHTMLAttributes } from "react";
 
+import ValidationMessage from "./ValidationMessage";
+
 type SelectOption = {
   label: ReactNode;
   value: string;
@@ -86,11 +88,7 @@ export default function Select({
         </p>
       ) : null}
 
-      {error ? (
-        <p id={errorId} className="text-sm leading-5 text-red-600">
-          {error}
-        </p>
-      ) : null}
+      <ValidationMessage id={errorId}>{error}</ValidationMessage>
     </div>
   );
 }

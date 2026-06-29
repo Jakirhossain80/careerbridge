@@ -1,7 +1,17 @@
 import { z } from "zod";
 
-const optionalEmail = z.string().trim().email("Use a valid email").optional().or(z.literal(""));
-const optionalUrl = z.string().trim().url("Use a valid URL").optional().or(z.literal(""));
+const optionalEmail = z
+  .string()
+  .trim()
+  .email("Please enter a valid email address")
+  .optional()
+  .or(z.literal(""));
+const optionalUrl = z
+  .string()
+  .trim()
+  .url("Please enter a valid URL")
+  .optional()
+  .or(z.literal(""));
 
 export const adminSettingsSchema = z.object({
   general: z.object({
@@ -58,9 +68,21 @@ export const adminSettingsSchema = z.object({
     replyToEmail: optionalEmail,
   }),
   security: z.object({
-    sessionTimeoutMinutes: z.coerce.number().int().min(5).max(1440),
-    loginAttemptLimit: z.coerce.number().int().min(1).max(20),
-    minimumPasswordLength: z.coerce.number().int().min(8).max(64),
+    sessionTimeoutMinutes: z.coerce
+      .number()
+      .int("Session timeout must be a whole number")
+      .min(5, "Session timeout must be at least 5 minutes")
+      .max(1440, "Session timeout must be 1440 minutes or less"),
+    loginAttemptLimit: z.coerce
+      .number()
+      .int("Login attempt limit must be a whole number")
+      .min(1, "Login attempt limit must be at least 1")
+      .max(20, "Login attempt limit must be 20 or less"),
+    minimumPasswordLength: z.coerce
+      .number()
+      .int("Minimum password length must be a whole number")
+      .min(8, "Minimum password length must be at least 8")
+      .max(64, "Minimum password length must be 64 or less"),
     requirePasswordUppercase: z.boolean(),
     requirePasswordNumber: z.boolean(),
     requirePasswordSymbol: z.boolean(),

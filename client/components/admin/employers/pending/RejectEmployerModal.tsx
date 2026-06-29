@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
+import ValidationMessage from "@/components/ui/ValidationMessage";
 import {
   rejectEmployerSchema,
   type RejectEmployerFormValues,
@@ -50,6 +51,9 @@ export default function RejectEmployerModal({
     }
   }, [employer, form]);
 
+  const reasonCategoryError = form.formState.errors.reasonCategory?.message;
+  const reasonError = form.formState.errors.reason?.message;
+
   return (
     <Modal
       open={Boolean(employer)}
@@ -83,7 +87,10 @@ export default function RejectEmployerModal({
           </span>
           <Select
             className="mt-2"
-            aria-invalid={Boolean(form.formState.errors.reasonCategory)}
+            aria-invalid={Boolean(reasonCategoryError)}
+            aria-describedby={
+              reasonCategoryError ? "reject-employer-category-error" : undefined
+            }
             {...form.register("reasonCategory")}
           >
             {categoryOptions.map((option) => (
@@ -92,11 +99,12 @@ export default function RejectEmployerModal({
               </option>
             ))}
           </Select>
-          {form.formState.errors.reasonCategory ? (
-            <span className="mt-1 block text-sm text-red-600">
-              {form.formState.errors.reasonCategory.message}
-            </span>
-          ) : null}
+          <ValidationMessage
+            id="reject-employer-category-error"
+            className="mt-1 block"
+          >
+            {reasonCategoryError}
+          </ValidationMessage>
         </label>
         <label className="block">
           <span className="text-sm font-semibold text-slate-900">
@@ -106,14 +114,16 @@ export default function RejectEmployerModal({
             rows={5}
             className="mt-2"
             placeholder="Explain what the employer must fix before resubmitting."
-            aria-invalid={Boolean(form.formState.errors.reason)}
+            aria-invalid={Boolean(reasonError)}
+            aria-describedby={reasonError ? "reject-employer-reason-error" : undefined}
             {...form.register("reason")}
           />
-          {form.formState.errors.reason ? (
-            <span className="mt-1 block text-sm text-red-600">
-              {form.formState.errors.reason.message}
-            </span>
-          ) : null}
+          <ValidationMessage
+            id="reject-employer-reason-error"
+            className="mt-1 block"
+          >
+            {reasonError}
+          </ValidationMessage>
         </label>
         <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
           The backend currently stores this as a moderation reason on the reject

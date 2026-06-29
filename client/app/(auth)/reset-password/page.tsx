@@ -17,6 +17,7 @@ import {
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { confirmPasswordResetWithCode } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
+import { ValidationMessage } from "@/components/ui";
 
 type ResetPasswordErrors = {
   password?: string;
@@ -253,13 +254,9 @@ function ResetPasswordPageContent() {
                     )}
                   </button>
                 </div>
-                <p
-                  id="password-error"
-                  className="mt-2 min-h-5 text-sm text-red-600"
-                  aria-live="polite"
-                >
+                <ValidationMessage id="password-error" className="mt-2 min-h-5">
                   {errors.password}
-                </p>
+                </ValidationMessage>
               </div>
 
               <div>
@@ -310,13 +307,12 @@ function ResetPasswordPageContent() {
                     )}
                   </button>
                 </div>
-                <p
+                <ValidationMessage
                   id="confirm-password-error"
-                  className="mt-2 min-h-5 text-sm text-red-600"
-                  aria-live="polite"
+                  className="mt-2 min-h-5"
                 >
                   {errors.confirmPassword}
-                </p>
+                </ValidationMessage>
               </div>
 
               <div

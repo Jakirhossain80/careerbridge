@@ -3,6 +3,8 @@
 import { useId } from "react";
 import type { ReactNode, TextareaHTMLAttributes } from "react";
 
+import ValidationMessage from "./ValidationMessage";
+
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: ReactNode;
   error?: string;
@@ -63,11 +65,7 @@ export default function Textarea({
         </p>
       ) : null}
 
-      {error ? (
-        <p id={errorId} className="text-sm leading-5 text-red-600">
-          {error}
-        </p>
-      ) : null}
+      <ValidationMessage id={errorId}>{error}</ValidationMessage>
     </div>
   );
 }

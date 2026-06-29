@@ -3,6 +3,8 @@
 import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 
+import ValidationMessage from "./ValidationMessage";
+
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
   label?: ReactNode;
   error?: string;
@@ -67,11 +69,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         </p>
       ) : null}
 
-      {error ? (
-        <p id={errorId} className="text-sm leading-5 text-red-600">
-          {error}
-        </p>
-      ) : null}
+      <ValidationMessage id={errorId}>{error}</ValidationMessage>
     </div>
   );
 });

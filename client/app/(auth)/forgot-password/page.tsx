@@ -14,6 +14,7 @@ import {
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { sendPasswordResetLink } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
+import { ValidationMessage } from "@/components/ui";
 
 type ForgotPasswordErrors = {
   email?: string;
@@ -156,13 +157,9 @@ export default function ForgotPasswordPage() {
                     className="h-12 w-full rounded-md border border-slate-300 bg-white px-3 pl-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
-                <p
-                  id="email-error"
-                  className="mt-2 min-h-5 text-sm text-red-600"
-                  aria-live="polite"
-                >
+                <ValidationMessage id="email-error" className="mt-2 min-h-5">
                   {errors.email}
-                </p>
+                </ValidationMessage>
               </div>
 
               {errors.form ? (

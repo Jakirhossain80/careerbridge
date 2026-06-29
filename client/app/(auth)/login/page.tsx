@@ -14,6 +14,7 @@ import {
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { loginWithEmailAndPassword, loginWithGooglePopup } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
+import { ValidationMessage } from "@/components/ui";
 
 type LoginErrors = {
   email?: string;
@@ -205,13 +206,9 @@ function LoginPageContent() {
                   placeholder="you@example.com"
                   className="mt-2 h-12 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
-                <p
-                  id="email-error"
-                  className="mt-2 min-h-5 text-sm text-red-600"
-                  aria-live="polite"
-                >
+                <ValidationMessage id="email-error" className="mt-2 min-h-5">
                   {errors.email}
-                </p>
+                </ValidationMessage>
               </div>
 
               <div>
@@ -257,13 +254,9 @@ function LoginPageContent() {
                     )}
                   </button>
                 </div>
-                <p
-                  id="password-error"
-                  className="mt-2 min-h-5 text-sm text-red-600"
-                  aria-live="polite"
-                >
+                <ValidationMessage id="password-error" className="mt-2 min-h-5">
                   {errors.password}
-                </p>
+                </ValidationMessage>
               </div>
 
               <div className="flex items-center justify-between gap-4">

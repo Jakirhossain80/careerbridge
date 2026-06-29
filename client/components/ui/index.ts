@@ -39,3 +39,6 @@ export type { TableColumn, TableProps } from "./Table";
 
 export { default as Textarea } from "./Textarea";
 export type { TextareaProps } from "./Textarea";
+
+export { default as ValidationMessage } from "./ValidationMessage";
+export type { ValidationMessageProps } from "./ValidationMessage";

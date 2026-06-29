@@ -5,7 +5,7 @@ import { FileUp, Upload } from "lucide-react";
 import { useRef, useState, type DragEvent } from "react";
 import { useForm } from "react-hook-form";
 
-import { Button, Card } from "@/components/ui";
+import { Button, Card, ValidationMessage } from "@/components/ui";
 import {
   RESUME_ALLOWED_EXTENSIONS,
   RESUME_MAX_FILE_SIZE,
@@ -84,9 +84,12 @@ export default function ResumeUploadDropzone({
     >
       <input
         ref={inputRef}
+        id="resume-upload-file"
         type="file"
         accept={RESUME_ALLOWED_EXTENSIONS.join(",")}
         className="hidden"
+        aria-invalid={Boolean(fileError)}
+        aria-describedby={fileError ? "resume-upload-file-error" : undefined}
         onChange={(event) => {
           void handleFile(event.target.files?.[0]);
           event.target.value = "";
@@ -137,10 +140,10 @@ export default function ResumeUploadDropzone({
         </Button>
       </div>
 
-      {fileError ? <p className="mt-3 text-sm text-red-600">{fileError}</p> : null}
-      {submitError ? (
-        <p className="mt-3 text-sm text-red-600">{submitError}</p>
-      ) : null}
+      <ValidationMessage id="resume-upload-file-error" className="mt-3">
+        {fileError}
+      </ValidationMessage>
+      <ValidationMessage className="mt-3">{submitError}</ValidationMessage>
     </Card>
   );
 }

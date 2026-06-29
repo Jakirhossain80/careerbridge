@@ -47,8 +47,14 @@ export const notificationPreferencesSchema = z.object({
 });
 
 export const privacySettingsSchema = z.object({
-  profileVisibility: z.enum(["public", "recruiters_only", "private"]),
-  resumeVisibility: z.enum(["public", "recruiters_only", "private"]),
+  profileVisibility: z.enum(
+    ["public", "recruiters_only", "private"],
+    "Please select profile visibility",
+  ),
+  resumeVisibility: z.enum(
+    ["public", "recruiters_only", "private"],
+    "Please select resume visibility",
+  ),
   contactInfoVisible: z.boolean(),
   publicSearchVisible: z.boolean(),
 });
