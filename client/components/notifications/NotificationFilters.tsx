@@ -24,6 +24,13 @@ type NotificationFiltersProps = {
 
 const typeOptions: Array<{ label: string; value: NotificationType | "all" }> = [
   { label: "All Types", value: "all" },
+  { label: "Application Submitted", value: "application_submitted" },
+  { label: "Application Status Changed", value: "application_status_changed" },
+  { label: "Interview Scheduled", value: "interview_scheduled" },
+  { label: "Employer Approved", value: "employer_approved" },
+  { label: "Job Approved", value: "job_approved" },
+  { label: "Job Rejected", value: "job_rejected" },
+  { label: "New Job Alert", value: "new_job_alert" },
   { label: "Application Update", value: "application_update" },
   { label: "Interview Invitation", value: "interview_invitation" },
   { label: "Interview Reminder", value: "interview_reminder" },

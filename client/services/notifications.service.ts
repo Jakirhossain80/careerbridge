@@ -19,11 +19,18 @@ type ApiEnvelope<T> = {
 type LegacyNotification = {
   _id: string;
   userId?: string;
+  recipientId?: string;
+  recipientRole?: string;
+  actorId?: string;
   type?: string;
   title: string;
   message: string;
   isRead?: boolean;
   read?: boolean;
+  entityType?: NotificationResourceType;
+  entityId?: string;
+  link?: string;
+  metadata?: Record<string, unknown>;
   relatedId?: string;
   resourceType?: NotificationResourceType;
   resourceId?: string;
@@ -32,6 +39,16 @@ type LegacyNotification = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+const apiNotificationTypes = new Set<string>([
+  "application_submitted",
+  "application_status_changed",
+  "interview_scheduled",
+  "employer_approved",
+  "job_approved",
+  "job_rejected",
+  "new_job_alert",
+]);
 
 type NotificationsPayload =
   | CareerBridgeNotification[]
@@ -70,6 +87,27 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
 }
 
 function mapLegacyType(type?: string): NotificationType {
+  if (
+    type === "application_submitted" ||
+    type === "application_status_changed" ||
+    type === "interview_scheduled" ||
+    type === "employer_approved" ||
+    type === "job_approved" ||
+    type === "job_rejected" ||
+    type === "new_job_alert" ||
+    type === "application_update" ||
+    type === "interview_invitation" ||
+    type === "interview_reminder" ||
+    type === "job_alert" ||
+    type === "recommended_job" ||
+    type === "saved_job_update" ||
+    type === "employer_message" ||
+    type === "security" ||
+    type === "career_insight"
+  ) {
+    return type;
+  }
+
   if (type === "application") {
     return "application_update";
   }
@@ -84,20 +122,6 @@ function mapLegacyType(type?: string): NotificationType {
 
   if (type === "account") {
     return "security";
-  }
-
-  if (
-    type === "application_update" ||
-    type === "interview_invitation" ||
-    type === "interview_reminder" ||
-    type === "job_alert" ||
-    type === "recommended_job" ||
-    type === "saved_job_update" ||
-    type === "employer_message" ||
-    type === "security" ||
-    type === "career_insight"
-  ) {
-    return type;
   }
 
   return "system";
@@ -115,12 +139,28 @@ function inferResourceType(
     return "application";
   }
 
-  if (type === "interview_invitation" || type === "interview_reminder") {
+  if (type === "application_submitted" || type === "application_status_changed") {
+    return "application";
+  }
+
+  if (
+    type === "interview_invitation" ||
+    type === "interview_reminder" ||
+    type === "interview_scheduled"
+  ) {
     return "interview";
   }
 
-  if (type === "recommended_job") {
+  if (type === "recommended_job" || type === "job_approved" || type === "job_rejected") {
     return "job";
+  }
+
+  if (type === "new_job_alert") {
+    return "job_alert";
+  }
+
+  if (type === "employer_approved") {
+    return "employer";
   }
 
   if (type === "saved_job_update") {
@@ -145,12 +185,20 @@ function normalizeNotification(item: LegacyNotification): CareerBridgeNotificati
   return {
     _id: item._id,
     userId: item.userId,
+    recipientId: item.recipientId,
+    recipientRole: item.recipientRole,
+    actorId: item.actorId,
     type,
     title: item.title,
     message: item.message,
     isRead: item.isRead ?? item.read ?? false,
+    read: item.read ?? item.isRead ?? false,
+    entityType: item.entityType,
+    entityId: item.entityId,
+    link: item.link,
+    metadata: item.metadata,
     resourceType,
-    resourceId: item.resourceId ?? item.relatedId,
+    resourceId: item.resourceId ?? item.entityId ?? item.relatedId,
     resourceSlug: item.resourceSlug,
     actionLabel: item.actionLabel,
     createdAt: item.createdAt ?? new Date().toISOString(),
@@ -243,6 +291,8 @@ function normalizeResponse(
 export const notificationQueryKeys = {
   all: ["notifications"] as const,
   list: (params: NotificationsQueryParams) => ["notifications", params] as const,
+  details: ["notification"] as const,
+  detail: (notificationId: string) => ["notification", notificationId] as const,
   unread: ["notifications-unread"] as const,
   dashboard: ["job-seeker-dashboard"] as const,
 };
@@ -253,9 +303,18 @@ export async function getNotifications(params: NotificationsQueryParams = {}) {
       ApiEnvelope<NotificationsPayload> | NotificationsPayload
     >("/notifications", {
       params: {
-        ...params,
-        status: params.status === "all" ? undefined : params.status,
-        type: params.type === "all" ? undefined : params.type,
+        page: params.page,
+        limit: params.limit,
+        read:
+          params.status === "read"
+            ? true
+            : params.status === "unread"
+              ? false
+              : undefined,
+        type:
+          params.type && params.type !== "all" && apiNotificationTypes.has(params.type)
+            ? params.type
+            : undefined,
       },
     });
 
@@ -269,6 +328,39 @@ export async function getNotifications(params: NotificationsQueryParams = {}) {
   }
 }
 
+export async function getNotification(notificationId: string) {
+  try {
+    const response = await api.get<
+      ApiEnvelope<LegacyNotification> | LegacyNotification
+    >(`/notifications/${notificationId}`);
+
+    return normalizeNotification(unwrap(response));
+  } catch (error) {
+    const firstPage = await getNotifications({ page: 1, limit: 100 });
+    const notification = firstPage.notifications.find(
+      (item) => item._id === notificationId,
+    );
+
+    if (notification) {
+      return notification;
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+
+    const fallback = localMockNotifications.find(
+      (item) => item._id === notificationId,
+    );
+
+    if (!fallback) {
+      throw error;
+    }
+
+    return normalizeNotification(fallback);
+  }
+}
+
 export async function getUnreadNotifications() {
   try {
     const response = await api.get<
@@ -276,7 +368,7 @@ export async function getUnreadNotifications() {
         count?: number;
         notifications?: CareerBridgeNotification[];
       }
-    >("/notifications/unread");
+    >("/notifications/unread-count");
     const payload = unwrap(response);
 
     return {

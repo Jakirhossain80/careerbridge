@@ -16,6 +16,7 @@ type NotificationListProps = {
   onMarkRead: (notification: CareerBridgeNotification) => void;
   onMarkUnread: (notification: CareerBridgeNotification) => void;
   onDelete: (notification: CareerBridgeNotification) => void;
+  allowMarkUnread?: boolean;
 };
 
 export default function NotificationList({
@@ -26,6 +27,7 @@ export default function NotificationList({
   onMarkRead,
   onMarkUnread,
   onDelete,
+  allowMarkUnread = true,
 }: NotificationListProps) {
   return (
     <div className="space-y-6">
@@ -58,6 +60,7 @@ export default function NotificationList({
                   onMarkRead={onMarkRead}
                   onMarkUnread={onMarkUnread}
                   onDelete={onDelete}
+                  allowMarkUnread={allowMarkUnread}
                 />
               ))}
             </div>

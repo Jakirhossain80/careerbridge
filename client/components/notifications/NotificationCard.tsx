@@ -15,9 +15,17 @@ type NotificationCardProps = {
   onMarkRead: (notification: CareerBridgeNotification) => void;
   onMarkUnread: (notification: CareerBridgeNotification) => void;
   onDelete: (notification: CareerBridgeNotification) => void;
+  allowMarkUnread?: boolean;
 };
 
 const typeLabels: Record<CareerBridgeNotification["type"], string> = {
+  application_submitted: "Application Submitted",
+  application_status_changed: "Application Status Changed",
+  interview_scheduled: "Interview Scheduled",
+  employer_approved: "Employer Approved",
+  job_approved: "Job Approved",
+  job_rejected: "Job Rejected",
+  new_job_alert: "New Job Alert",
   application_update: "Application Update",
   interview_invitation: "Interview Invitation",
   interview_reminder: "Interview Reminder",
@@ -47,6 +55,7 @@ export default function NotificationCard({
   onMarkRead,
   onMarkUnread,
   onDelete,
+  allowMarkUnread = true,
 }: NotificationCardProps) {
   return (
     <Card
@@ -94,6 +103,7 @@ export default function NotificationCard({
                   {notification.resourceType.replace(/_/g, " ")}
                 </span>
               ) : null}
+              {notification.link ? <span>Related link available</span> : null}
             </div>
           </div>
         </div>
@@ -112,7 +122,7 @@ export default function NotificationCard({
             </Link>
           ) : null}
 
-          {notification.isRead ? (
+          {notification.isRead && allowMarkUnread ? (
             <Button
               type="button"
               size="sm"
@@ -123,7 +133,7 @@ export default function NotificationCard({
             >
               Mark Unread
             </Button>
-          ) : (
+          ) : !notification.isRead ? (
             <Button
               type="button"
               size="sm"
@@ -134,7 +144,7 @@ export default function NotificationCard({
             >
               Mark Read
             </Button>
-          )}
+          ) : null}
 
           <Button
             type="button"

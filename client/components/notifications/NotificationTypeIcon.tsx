@@ -17,6 +17,13 @@ type NotificationTypeIconProps = {
 };
 
 const iconMap = {
+  application_submitted: BriefcaseBusiness,
+  application_status_changed: BriefcaseBusiness,
+  interview_scheduled: CalendarClock,
+  employer_approved: Mail,
+  job_approved: Sparkles,
+  job_rejected: Megaphone,
+  new_job_alert: Bell,
   application_update: BriefcaseBusiness,
   interview_invitation: CalendarClock,
   interview_reminder: CalendarClock,

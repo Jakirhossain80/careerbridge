@@ -1,4 +1,11 @@
 export type NotificationType =
+  | "application_submitted"
+  | "application_status_changed"
+  | "interview_scheduled"
+  | "employer_approved"
+  | "job_approved"
+  | "job_rejected"
+  | "new_job_alert"
   | "application_update"
   | "interview_invitation"
   | "interview_reminder"
@@ -12,8 +19,10 @@ export type NotificationType =
 
 export type NotificationResourceType =
   | "application"
+  | "employer"
   | "job"
   | "interview"
+  | "job_alert"
   | "recommended_job"
   | "saved_job"
   | "message"
@@ -25,10 +34,18 @@ export type NotificationSortBy = "newest" | "oldest";
 export interface CareerBridgeNotification {
   _id: string;
   userId?: string;
+  recipientId?: string;
+  recipientRole?: string;
+  actorId?: string;
   type: NotificationType;
   title: string;
   message: string;
+  read?: boolean;
   isRead: boolean;
+  entityType?: NotificationResourceType;
+  entityId?: string;
+  link?: string;
+  metadata?: Record<string, unknown>;
   resourceType?: NotificationResourceType;
   resourceId?: string;
   resourceSlug?: string;
