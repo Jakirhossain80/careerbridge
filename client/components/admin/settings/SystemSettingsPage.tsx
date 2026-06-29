@@ -36,6 +36,7 @@ import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import Textarea from "@/components/ui/Textarea";
 import { useAdminSettings, useAdminSettingsMutations } from "@/hooks/admin/useAdminSettings";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   adminSettingsSchema,
   type AdminSettingsFormValues,
@@ -358,8 +359,13 @@ export default function SystemSettingsPage() {
       onSuccess: (settings) => {
         reset(settings);
         setSuccessMessage("System settings saved successfully.");
+        appToast.success("System settings saved successfully.");
       },
-      onError: (error) => setActionError(getApiErrorMessage(error) || "Unable to save settings."),
+      onError: (error) => {
+        const message = getApiErrorMessage(error) || "Unable to save settings.";
+        setActionError(message);
+        appToast.error(message);
+      },
     });
   }
 
@@ -370,8 +376,13 @@ export default function SystemSettingsPage() {
       onSuccess: (settings) => {
         reset(settings);
         setSuccessMessage("System settings reset to defaults.");
+        appToast.success("System settings reset to defaults.");
       },
-      onError: (error) => setActionError(getApiErrorMessage(error) || "Unable to reset settings."),
+      onError: (error) => {
+        const message = getApiErrorMessage(error) || "Unable to reset settings.";
+        setActionError(message);
+        appToast.error(message);
+      },
     });
   }
 

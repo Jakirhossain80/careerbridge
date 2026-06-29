@@ -27,6 +27,7 @@ import ErrorState from "@/components/ui/ErrorState";
 import Modal from "@/components/ui/Modal";
 import { useAdminReportAnalytics, useAdminReportMutations, useAdminReports } from "@/hooks/admin/useAdminReports";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type { AdminReport, AdminReportAction, AdminReportFilters } from "@/types/admin-report";
 
 type RequiredFilters = Required<AdminReportFilters>;
@@ -126,9 +127,12 @@ export default function ReportsModerationView() {
           setActionReport(null);
           setFeedbackMessage("Moderation action completed successfully.");
           setActionError("");
+          appToast.success("Moderation action completed successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to complete moderation action.");
+          const message = getApiErrorMessage(error) || "Unable to complete moderation action.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );

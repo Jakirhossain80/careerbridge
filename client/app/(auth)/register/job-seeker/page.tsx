@@ -13,6 +13,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { appToast } from "@/lib/toast";
 
 type JobType = "Full-time" | "Remote" | "Contract" | "Hybrid";
 
@@ -217,10 +218,13 @@ export default function JobSeekerProfilePage() {
     try {
       // TODO: Persist this draft when a job seeker profile draft API is added.
       await Promise.resolve();
+      appToast.success("Draft saved successfully.");
     } catch {
+      const message = "We could not save your draft. Please try again.";
       setErrors({
-        form: "We could not save your draft. Please try again.",
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsSavingDraft(false);
     }
@@ -241,11 +245,14 @@ export default function JobSeekerProfilePage() {
     try {
       // TODO: Submit this profile when the job seeker profile API is added.
       await Promise.resolve();
+      appToast.success("Registration completed successfully.");
       router.push("/dashboard");
     } catch {
+      const message = "We could not complete your registration. Please try again.";
       setErrors({
-        form: "We could not complete your registration. Please try again.",
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsCompletingRegistration(false);
     }

@@ -16,6 +16,8 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import type { TableColumn } from "@/components/ui/Table";
+import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   adminCategorySchema,
   type AdminCategoryValues,
@@ -69,6 +71,10 @@ export default function AdminCategoriesPage() {
       setEditing(null);
       form.reset({ name: "", slug: "", icon: "", status: "active" });
       await queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+      appToast.success(editing?._id ? "Category updated successfully." : "Category created successfully.");
+    },
+    onError: (error) => {
+      appToast.error(getApiErrorMessage(error) || "Unable to save category.");
     },
   });
 
@@ -77,6 +83,10 @@ export default function AdminCategoriesPage() {
     onSuccess: async () => {
       setDeleting(null);
       await queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+      appToast.success("Category deactivated successfully.");
+    },
+    onError: (error) => {
+      appToast.error(getApiErrorMessage(error) || "Unable to deactivate category.");
     },
   });
 

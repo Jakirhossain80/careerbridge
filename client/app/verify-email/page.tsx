@@ -10,6 +10,7 @@ import {
 } from "@/lib/firebase";
 import { getDashboardPathForRole } from "@/lib/authRedirects";
 import { useAuth } from "@/hooks/useAuth";
+import { appToast } from "@/lib/toast";
 
 const getDashboardRedirectPath = () => {
   return getDashboardPathForRole() ?? "/dashboard";
@@ -37,8 +38,11 @@ export default function VerifyEmailPage() {
     try {
       await sendVerificationEmail(user);
       setMessage("Verification email sent. Please check your inbox.");
+      appToast.success("Verification email sent.");
     } catch (sendError) {
-      setError(getFriendlyAuthErrorMessage(sendError));
+      const message = getFriendlyAuthErrorMessage(sendError);
+      setError(message);
+      appToast.error(message);
     } finally {
       setIsSending(false);
     }
@@ -54,13 +58,17 @@ export default function VerifyEmailPage() {
 
       if (isVerified) {
         setMessage("Email verified. Redirecting...");
+        appToast.success("Email verified successfully.");
         router.replace(getDashboardRedirectPath());
         return;
       }
 
       setMessage("Email is not verified yet. Please check your inbox.");
+      appToast.info("Email is not verified yet.");
     } catch (checkError) {
-      setError(getFriendlyAuthErrorMessage(checkError));
+      const message = getFriendlyAuthErrorMessage(checkError);
+      setError(message);
+      appToast.error(message);
     } finally {
       setIsChecking(false);
     }

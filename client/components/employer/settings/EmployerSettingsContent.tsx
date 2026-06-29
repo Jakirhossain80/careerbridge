@@ -27,6 +27,7 @@ import {
   employerSettingsSchema,
   type EmployerSettingsFormValues,
 } from "@/lib/validations/employer-settings.schema";
+import { appToast } from "@/lib/toast";
 
 export default function EmployerSettingsContent() {
   const queryClient = useQueryClient();
@@ -65,6 +66,10 @@ export default function EmployerSettingsContent() {
       queryClient.invalidateQueries({ queryKey: ["user-settings"] });
       reset(settings);
       setSuccessMessage("Settings updated successfully.");
+      appToast.success("Settings updated successfully.");
+    },
+    onError: () => {
+      appToast.error("Unable to save settings. Please try again.");
     },
   });
 
@@ -73,6 +78,10 @@ export default function EmployerSettingsContent() {
     onSuccess: () => {
       setIsDeactivateModalOpen(false);
       setSuccessMessage("Employer account deactivation request submitted.");
+      appToast.success("Employer account deactivation request submitted.");
+    },
+    onError: () => {
+      appToast.error("Unable to deactivate employer account.");
     },
   });
 

@@ -7,6 +7,7 @@ import { Eye, Undo2 } from "lucide-react";
 import { ListSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState } from "@/components/ui";
 import { ApplicationStatusBadge } from "@/components/job-seeker/status";
+import { appToast } from "@/lib/toast";
 import { getAppliedJobs, withdrawApplication } from "@/services/applications.service";
 
 const jobTitle = (job: unknown) =>
@@ -26,6 +27,10 @@ export default function AppliedJobsList() {
     mutationFn: withdrawApplication,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
+      appToast.success("Application withdrawn successfully.");
+    },
+    onError: () => {
+      appToast.error("Unable to withdraw application.");
     },
   });
 

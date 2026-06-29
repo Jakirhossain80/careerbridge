@@ -13,6 +13,7 @@ import {
   type ApplyJobFormValues,
 } from "@/lib/validations/application.schema";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import { applyJob } from "@/services/applications.service";
 import { getResumes } from "@/services/resumes.service";
 
@@ -52,11 +53,14 @@ export default function ApplyJobModal({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
       onApplicationSubmitted?.();
+      appToast.success("Job application submitted successfully.");
       setOpen(false);
       form.reset({ jobId, resumeId: "", coverLetter: "" });
     },
     onError: (error) => {
-      setErrorMessage(getApiErrorMessage(error));
+      const message = getApiErrorMessage(error);
+      setErrorMessage(message);
+      appToast.error(message);
     },
   });
 

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { loginWithEmailAndPassword, loginWithGooglePopup } from "@/lib/firebase";
+import { appToast } from "@/lib/toast";
 
 type LoginErrors = {
   email?: string;
@@ -97,15 +98,19 @@ function LoginPageContent() {
       });
 
       if (!user.emailVerified) {
+        appToast.info("Please verify your email to continue.");
         router.push("/verify-email");
         return;
       }
 
+      appToast.success("Signed in successfully.");
       router.push(redirectPath);
     } catch (error) {
+      const message = getFriendlyAuthErrorMessage(error);
       setErrors({
-        form: getFriendlyAuthErrorMessage(error),
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsSigningIn(false);
     }
@@ -119,15 +124,19 @@ function LoginPageContent() {
       const user = await loginWithGooglePopup();
 
       if (!user.emailVerified) {
+        appToast.info("Please verify your email to continue.");
         router.push("/verify-email");
         return;
       }
 
+      appToast.success("Signed in successfully.");
       router.push(redirectPath);
     } catch (error) {
+      const message = getFriendlyAuthErrorMessage(error);
       setErrors({
-        form: getFriendlyAuthErrorMessage(error),
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsSigningInWithGoogle(false);
     }

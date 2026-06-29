@@ -17,6 +17,7 @@ import {
   useAdminCompanyStats,
 } from "@/hooks/admin/useAdminCompanies";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminCompany,
   AdminCompanyFilters,
@@ -279,12 +280,13 @@ export default function ManageCompaniesView() {
           setVerificationAction(null);
           setFeedbackMessage("Company verification updated successfully.");
           setActionError("");
+          appToast.success("Company verification updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) ||
-              "Unable to update company verification.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update company verification.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -303,11 +305,13 @@ export default function ManageCompaniesView() {
           setStatusAction(null);
           setFeedbackMessage("Company status updated successfully.");
           setActionError("");
+          appToast.success("Company status updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to update company status.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update company status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );

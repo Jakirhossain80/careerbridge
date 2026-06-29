@@ -18,6 +18,7 @@ import {
   useAdminApplicationStats,
 } from "@/hooks/admin/useAdminApplications";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminApplicationFilters,
   AdminApplicationListParams,
@@ -265,11 +266,13 @@ export default function ManageApplicationsView() {
           setStatusAction(null);
           setFeedbackMessage("Application status updated successfully.");
           setActionError("");
+          appToast.success("Application status updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to update application status.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update application status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );

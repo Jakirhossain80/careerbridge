@@ -14,6 +14,7 @@ import {
   useUpdateEmailPreferences,
 } from "@/hooks/settings/useEmailPreferences";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   emailPreferencesSchema,
   type EmailPreferencesFormValues,
@@ -98,9 +99,12 @@ export default function EmailPreferencesForm() {
       onSuccess: (preferences) => {
         reset(preferences);
         setSuccessMessage("Email preferences updated successfully.");
+        appToast.success("Email preferences updated successfully.");
       },
       onError: (error) => {
-        setActionError(getApiErrorMessage(error) || "Unable to update email preferences.");
+        const message = getApiErrorMessage(error) || "Unable to update email preferences.";
+        setActionError(message);
+        appToast.error(message);
       },
     });
   }

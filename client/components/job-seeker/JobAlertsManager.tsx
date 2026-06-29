@@ -7,6 +7,7 @@ import { useState } from "react";
 import JobAlertForm from "@/components/job-seeker/JobAlertForm";
 import { ListSkeleton } from "@/components/skeletons";
 import { Badge, Button, Card, EmptyState, Modal } from "@/components/ui";
+import { appToast } from "@/lib/toast";
 import {
   createJobAlert,
   deleteJobAlert,
@@ -27,17 +28,39 @@ export default function JobAlertsManager() {
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["job-alerts"] });
-  const createMutation = useMutation({ mutationFn: createJobAlert, onSuccess: invalidate });
+  const createMutation = useMutation({
+    mutationFn: createJobAlert,
+    onSuccess: () => {
+      invalidate();
+      appToast.success("Job alert created successfully.");
+    },
+    onError: () => appToast.error("Unable to create job alert."),
+  });
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Partial<JobAlertFormValues> }) =>
       updateJobAlert(id, values),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      appToast.success("Job alert updated successfully.");
+    },
+    onError: () => appToast.error("Unable to update job alert."),
   });
-  const deleteMutation = useMutation({ mutationFn: deleteJobAlert, onSuccess: invalidate });
+  const deleteMutation = useMutation({
+    mutationFn: deleteJobAlert,
+    onSuccess: () => {
+      invalidate();
+      appToast.success("Job alert deleted successfully.");
+    },
+    onError: () => appToast.error("Unable to delete job alert."),
+  });
   const toggleMutation = useMutation({
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
       toggleJobAlert(id, active),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      appToast.success("Job alert status updated.");
+    },
+    onError: () => appToast.error("Unable to update job alert status."),
   });
 
   const alerts = data?.jobAlerts ?? [];

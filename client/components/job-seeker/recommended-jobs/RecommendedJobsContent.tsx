@@ -12,6 +12,7 @@ import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
 import { JobCardSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState, Pagination, SearchBar } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import { getRecommendedJobs } from "@/services/recommended-jobs.service";
 import { saveJob, unsaveJob } from "@/services/saved-jobs.service";
 import type {
@@ -65,10 +66,13 @@ export default function RecommendedJobsContent() {
     },
     onSuccess: async () => {
       setSuccessMessage("Job saved successfully.");
+      appToast.success("Job saved successfully.");
       await invalidateJobSeekerQueries();
     },
     onError: (error) => {
-      setErrorMessage(getApiErrorMessage(error) || "Unable to save job.");
+      const message = getApiErrorMessage(error) || "Unable to save job.";
+      setErrorMessage(message);
+      appToast.error(message);
     },
     onSettled: () => setSavingJobId(undefined),
   });
@@ -82,10 +86,13 @@ export default function RecommendedJobsContent() {
     },
     onSuccess: async () => {
       setSuccessMessage("Job removed from saved jobs.");
+      appToast.success("Job removed from saved jobs.");
       await invalidateJobSeekerQueries();
     },
     onError: (error) => {
-      setErrorMessage(getApiErrorMessage(error) || "Unable to remove saved job.");
+      const message = getApiErrorMessage(error) || "Unable to remove saved job.";
+      setErrorMessage(message);
+      appToast.error(message);
     },
     onSettled: () => setSavingJobId(undefined),
   });

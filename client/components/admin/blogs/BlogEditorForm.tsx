@@ -38,6 +38,7 @@ import {
 } from "@/hooks/admin/useAdminBlogs";
 import { useAdminCategories } from "@/hooks/admin/useAdminCategories";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   adminBlogEditorSchema,
   type AdminBlogEditorValues,
@@ -219,9 +220,12 @@ export default function BlogEditorForm({ blogId }: BlogEditorFormProps) {
             form.reset(nextValues);
             lastGeneratedSlug.current = nextValues.slug;
             setFeedbackMessage(successMessage);
+            appToast.success(successMessage);
           },
           onError: (error) => {
-            setActionError(getApiErrorMessage(error) || "Unable to update blog article.");
+            const message = getApiErrorMessage(error) || "Unable to update blog article.";
+            setActionError(message);
+            appToast.error(message);
           },
         },
       );
@@ -232,10 +236,13 @@ export default function BlogEditorForm({ blogId }: BlogEditorFormProps) {
       onSuccess: (blog) => {
         form.reset(toEditorValues(blog));
         setFeedbackMessage(successMessage);
+        appToast.success(successMessage);
         router.push(`/admin/blogs/${blog._id}/edit`);
       },
       onError: (error) => {
-        setActionError(getApiErrorMessage(error) || "Unable to create blog article.");
+        const message = getApiErrorMessage(error) || "Unable to create blog article.";
+        setActionError(message);
+        appToast.error(message);
       },
     });
   }
@@ -299,10 +306,13 @@ export default function BlogEditorForm({ blogId }: BlogEditorFormProps) {
           setTrashOpen(false);
           setFeedbackMessage("Blog article moved to trash.");
           setActionError("");
+          appToast.success("Blog article moved to trash.");
           router.push("/admin/blogs");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to move blog article to trash.");
+          const message = getApiErrorMessage(error) || "Unable to move blog article to trash.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -313,11 +323,13 @@ export default function BlogEditorForm({ blogId }: BlogEditorFormProps) {
 
     if (!file.type.startsWith("image/")) {
       form.setError("featuredImage", { message: "Upload an image file." });
+      appToast.error("Upload an image file.");
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
       form.setError("featuredImage", { message: "Image preview files must be 2MB or less." });
+      appToast.error("Image preview files must be 2MB or less.");
       return;
     }
 

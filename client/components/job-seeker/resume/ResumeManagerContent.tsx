@@ -12,6 +12,7 @@ import ResumeTipsGrid from "@/components/job-seeker/resume/ResumeTipsGrid";
 import ResumeUploadDropzone from "@/components/job-seeker/resume/ResumeUploadDropzone";
 import ResumeVersionHistory from "@/components/job-seeker/resume/ResumeVersionHistory";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   RESUME_ALLOWED_EXTENSIONS,
   resumeUploadSchema,
@@ -83,10 +84,13 @@ export default function ResumeManagerContent() {
       setSubmitError("");
       setStatusMessage("Resume uploaded successfully.");
       await invalidateResumeData();
+      appToast.success("Resume uploaded successfully.");
     },
     onError: (error) => {
       setStatusMessage("");
-      setSubmitError(getApiErrorMessage(error) || "Unable to upload resume. Please try again.");
+      const message = getApiErrorMessage(error) || "Unable to upload resume. Please try again.";
+      setSubmitError(message);
+      appToast.error(message);
     },
   });
 
@@ -98,10 +102,13 @@ export default function ResumeManagerContent() {
       setStatusMessage("Resume updated successfully.");
       setResumeToReplace(undefined);
       await invalidateResumeData();
+      appToast.success("Resume updated successfully.");
     },
     onError: (error) => {
       setStatusMessage("");
-      setSubmitError(getApiErrorMessage(error) || "Unable to update resume. Please try again.");
+      const message = getApiErrorMessage(error) || "Unable to update resume. Please try again.";
+      setSubmitError(message);
+      appToast.error(message);
     },
   });
 
@@ -112,10 +119,13 @@ export default function ResumeManagerContent() {
       setStatusMessage("Resume deleted successfully.");
       setResumeToDelete(undefined);
       await invalidateResumeData();
+      appToast.success("Resume deleted successfully.");
     },
     onError: (error) => {
       setStatusMessage("");
-      setSubmitError(getApiErrorMessage(error) || "Unable to delete resume. Please try again.");
+      const message = getApiErrorMessage(error) || "Unable to delete resume. Please try again.";
+      setSubmitError(message);
+      appToast.error(message);
     },
   });
 
@@ -124,9 +134,12 @@ export default function ResumeManagerContent() {
     onSuccess: async () => {
       setStatusMessage("Resume restored as active.");
       await invalidateResumeData();
+      appToast.success("Resume restored as active.");
     },
     onError: (error) => {
-      setSubmitError(getApiErrorMessage(error) || "Unable to restore resume. Please try again.");
+      const message = getApiErrorMessage(error) || "Unable to restore resume. Please try again.";
+      setSubmitError(message);
+      appToast.error(message);
     },
   });
 
@@ -139,6 +152,7 @@ export default function ResumeManagerContent() {
 
     if (!result.success) {
       setSubmitError(result.error.issues[0]?.message ?? "Unable to update resume. Please try again.");
+      appToast.error(result.error.issues[0]?.message ?? "Unable to update resume. Please try again.");
       return;
     }
 
@@ -155,6 +169,7 @@ export default function ResumeManagerContent() {
     }
 
     setSubmitError("Resume preview is not available yet.");
+    appToast.info("Resume preview is not available yet.");
   }
 
   async function handleDownload(resume: ResumeFile) {
@@ -170,7 +185,9 @@ export default function ResumeManagerContent() {
         window.open(result.downloadUrl, "_blank", "noopener,noreferrer");
       }
     } catch (error) {
-      setSubmitError(getApiErrorMessage(error) || "Download is not available yet.");
+      const message = getApiErrorMessage(error) || "Download is not available yet.";
+      setSubmitError(message);
+      appToast.error(message);
     }
   }
 

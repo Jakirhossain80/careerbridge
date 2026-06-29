@@ -16,6 +16,7 @@ import { NotificationsEmptyState } from "@/components/empty-states";
 import { ListSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
 import { Button, Card, Pagination } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   deleteNotification,
   getNotifications,
@@ -183,9 +184,12 @@ export default function JobSeekerNotificationsContent() {
     onSuccess: async () => {
       setFeedbackMessage("Notification marked as read.");
       await invalidateNotifications();
+      appToast.success("Notification marked as read.");
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to update notification.");
+      const message = getApiErrorMessage(error) || "Unable to update notification.";
+      setActionError(message);
+      appToast.error(message);
     },
     onSettled: () => setUpdatingNotificationId(undefined),
   });
@@ -200,9 +204,12 @@ export default function JobSeekerNotificationsContent() {
     onSuccess: async () => {
       setFeedbackMessage("Notification marked as unread.");
       await invalidateNotifications();
+      appToast.success("Notification marked as unread.");
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to update notification.");
+      const message = getApiErrorMessage(error) || "Unable to update notification.";
+      setActionError(message);
+      appToast.error(message);
     },
     onSettled: () => setUpdatingNotificationId(undefined),
   });
@@ -216,9 +223,12 @@ export default function JobSeekerNotificationsContent() {
     onSuccess: async () => {
       setFeedbackMessage("All notifications marked as read.");
       await invalidateNotifications();
+      appToast.success("All notifications marked as read.");
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to update notification.");
+      const message = getApiErrorMessage(error) || "Unable to update notification.";
+      setActionError(message);
+      appToast.error(message);
     },
   });
 
@@ -233,9 +243,12 @@ export default function JobSeekerNotificationsContent() {
       setNotificationToDelete(null);
       setFeedbackMessage("Notification deleted.");
       await invalidateNotifications();
+      appToast.success("Notification deleted.");
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to delete notification.");
+      const message = getApiErrorMessage(error) || "Unable to delete notification.";
+      setActionError(message);
+      appToast.error(message);
     },
     onSettled: () => setDeletingNotificationId(undefined),
   });

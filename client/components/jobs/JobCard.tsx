@@ -13,6 +13,7 @@ import {
 
 import { Badge, Button, Card } from "@/components/ui";
 import type { Job } from "@/lib/jobs-data";
+import { appToast } from "@/lib/toast";
 import { saveJob } from "@/services/saved-jobs.service";
 
 type JobCardProps = {
@@ -30,6 +31,10 @@ export default function JobCard({ job, view = "grid" }: JobCardProps) {
     mutationFn: saveJob,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+      appToast.success("Job saved successfully.");
+    },
+    onError: () => {
+      appToast.error("Unable to save job. Please try again.");
     },
   });
 

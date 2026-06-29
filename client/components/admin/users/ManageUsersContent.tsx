@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import ErrorState from "@/components/ui/ErrorState";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   adminQueryKeys,
   blockUser,
@@ -123,10 +124,13 @@ export default function ManageUsersContent() {
       setRoleUser(null);
       setFeedbackMessage("User role updated successfully.");
       setActionError("");
+      appToast.success("User role updated successfully.");
       await invalidateAdminUsers();
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to change user role.");
+      const message = getApiErrorMessage(error) || "Unable to change user role.";
+      setActionError(message);
+      appToast.error(message);
     },
   });
 
@@ -146,10 +150,13 @@ export default function ManageUsersContent() {
           : "User status updated successfully.",
       );
       setActionError("");
+      appToast.success("User status updated successfully.");
       await invalidateAdminUsers();
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to update user.");
+      const message = getApiErrorMessage(error) || "Unable to update user.";
+      setActionError(message);
+      appToast.error(message);
     },
   });
 
@@ -164,15 +171,21 @@ export default function ManageUsersContent() {
           : "User unblocked successfully.",
       );
       setActionError("");
+      appToast.success(
+        variables.action === "block"
+          ? "User blocked successfully."
+          : "User unblocked successfully.",
+      );
       await invalidateAdminUsers();
     },
     onError: (error, variables) => {
-      setActionError(
+      const message =
         getApiErrorMessage(error) ||
           (variables.action === "block"
             ? "Unable to block user."
-            : "Unable to unblock user."),
-      );
+            : "Unable to unblock user.");
+      setActionError(message);
+      appToast.error(message);
     },
   });
 

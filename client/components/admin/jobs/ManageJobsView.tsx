@@ -13,6 +13,7 @@ import Button from "@/components/ui/Button";
 import ErrorState from "@/components/ui/ErrorState";
 import { useAdminJobMutations, useAdminJobs } from "@/hooks/admin/useAdminJobs";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminJob,
   AdminJobApprovalStatus,
@@ -260,9 +261,12 @@ export default function ManageJobsView() {
             setStatusAction(null);
             setFeedbackMessage("Job archived successfully.");
             setActionError("");
+            appToast.success("Job archived successfully.");
           },
           onError: (error) => {
-            setActionError(getApiErrorMessage(error) || "Unable to archive job.");
+            const message = getApiErrorMessage(error) || "Unable to archive job.";
+            setActionError(message);
+            appToast.error(message);
           },
         },
       );
@@ -279,9 +283,12 @@ export default function ManageJobsView() {
           setStatusAction(null);
           setFeedbackMessage("Job status updated successfully.");
           setActionError("");
+          appToast.success("Job status updated successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to update job status.");
+          const message = getApiErrorMessage(error) || "Unable to update job status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -300,11 +307,13 @@ export default function ManageJobsView() {
           setApprovalAction(null);
           setFeedbackMessage("Job moderation status updated successfully.");
           setActionError("");
+          appToast.success("Job moderation status updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to update job moderation status.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update job moderation status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );

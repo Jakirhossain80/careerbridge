@@ -18,6 +18,7 @@ import {
   useAdminCategoryStats,
 } from "@/hooks/admin/useAdminCategories";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminCategory,
   AdminCategoryFilters,
@@ -233,9 +234,12 @@ export default function ManageCategoriesView() {
           setFormCategory(null);
           setFeedbackMessage("Category updated successfully.");
           setActionError("");
+          appToast.success("Category updated successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to update category.");
+          const message = getApiErrorMessage(error) || "Unable to update category.";
+          setActionError(message);
+          appToast.error(message);
         },
       });
       return;
@@ -246,9 +250,12 @@ export default function ManageCategoriesView() {
         setFormOpen(false);
         setFeedbackMessage("Category created successfully.");
         setActionError("");
+        appToast.success("Category created successfully.");
       },
       onError: (error) => {
-        setActionError(getApiErrorMessage(error) || "Unable to create category.");
+        const message = getApiErrorMessage(error) || "Unable to create category.";
+        setActionError(message);
+        appToast.error(message);
       },
     });
 
@@ -268,9 +275,12 @@ export default function ManageCategoriesView() {
           setStatusAction(null);
           setFeedbackMessage("Category status updated successfully.");
           setActionError("");
+          appToast.success("Category status updated successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to update category status.");
+          const message = getApiErrorMessage(error) || "Unable to update category status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -286,9 +296,12 @@ export default function ManageCategoriesView() {
           setDeleteAction(null);
           setFeedbackMessage("Category deactivated successfully.");
           setActionError("");
+          appToast.success("Category deactivated successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to delete category.");
+          const message = getApiErrorMessage(error) || "Unable to delete category.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );

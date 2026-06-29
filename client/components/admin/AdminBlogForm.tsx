@@ -12,6 +12,8 @@ import Input from "@/components/ui/Input";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
+import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import { adminBlogSchema, type AdminBlogValues } from "@/lib/validations/admin.schema";
 import {
   adminQueryKeys,
@@ -61,7 +63,11 @@ export default function AdminBlogForm({ blogId }: AdminBlogFormProps) {
       blogId ? updateAdminBlog(blogId, values) : createAdminBlog(values),
     onSuccess: async (blog) => {
       await queryClient.invalidateQueries({ queryKey: ["admin-blogs"] });
+      appToast.success(blogId ? "Blog updated successfully." : "Blog created successfully.");
       router.push(`/admin/blogs/${blog._id}/edit`);
+    },
+    onError: (error) => {
+      appToast.error(getApiErrorMessage(error) || "Unable to save blog.");
     },
   });
 

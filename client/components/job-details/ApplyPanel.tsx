@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ApplyJobModal from "@/components/job-seeker/ApplyJobModal";
 import { Button, Card } from "@/components/ui";
 import type { JobDetails } from "@/lib/job-details-data";
+import { appToast } from "@/lib/toast";
 import { saveJob } from "@/services/saved-jobs.service";
 
 type ApplyPanelProps = {
@@ -18,6 +19,10 @@ export default function ApplyPanel({ job }: ApplyPanelProps) {
     mutationFn: saveJob,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+      appToast.success("Job saved successfully.");
+    },
+    onError: () => {
+      appToast.error("Unable to save job. Please try again.");
     },
   });
 

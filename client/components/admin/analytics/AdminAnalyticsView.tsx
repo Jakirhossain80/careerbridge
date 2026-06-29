@@ -36,6 +36,7 @@ import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
 import DashboardSection from "@/components/dashboard/DashboardSection";
 import { DashboardEmptyState } from "@/components/empty-states";
+import { WidgetErrorBoundary } from "@/components/errors";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
@@ -434,13 +435,21 @@ export default function AdminAnalyticsView() {
           </section>
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-            <TrendChart data={data.trends} />
-            <HiringFunnel data={data.hiringFunnel} />
+            <WidgetErrorBoundary context="admin-analytics-growth-chart">
+              <TrendChart data={data.trends} />
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary context="admin-analytics-hiring-funnel">
+              <HiringFunnel data={data.hiringFunnel} />
+            </WidgetErrorBoundary>
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <CategoryDistributionChart data={data.categoryDistribution} />
-            <LocationChart data={data.locationDistribution} />
+            <WidgetErrorBoundary context="admin-analytics-category-chart">
+              <CategoryDistributionChart data={data.categoryDistribution} />
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary context="admin-analytics-location-chart">
+              <LocationChart data={data.locationDistribution} />
+            </WidgetErrorBoundary>
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">

@@ -17,6 +17,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { appToast } from "@/lib/toast";
 
 type RecruiterRole =
   | "HR Manager"
@@ -261,10 +262,13 @@ export default function EmployerAccountCreationPage() {
       // TODO: Persist payload when an employer profile draft API is added.
       void payload;
       await Promise.resolve();
+      appToast.success("Draft saved successfully.");
     } catch {
+      const message = "We could not save your draft. Please try again.";
       setErrors({
-        form: "We could not save your draft. Please try again.",
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsSavingDraft(false);
     }
@@ -288,11 +292,14 @@ export default function EmployerAccountCreationPage() {
       // the account pending page from the backend-confirmed response.
       void payload;
       await Promise.resolve();
+      appToast.success("Employer account submitted successfully.");
       router.push("/account-pending");
     } catch {
+      const message = "We could not create your employer account. Please try again.";
       setErrors({
-        form: "We could not create your employer account. Please try again.",
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsCreatingAccount(false);
     }

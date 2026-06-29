@@ -17,6 +17,7 @@ import {
   useAdminEmployerStats,
 } from "@/hooks/admin/useAdminEmployers";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminEmployer,
   AdminEmployerAccountStatus,
@@ -281,12 +282,13 @@ export default function ManageEmployersView() {
           setVerificationAction(null);
           setFeedbackMessage("Employer verification updated successfully.");
           setActionError("");
+          appToast.success("Employer verification updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) ||
-              "Unable to update employer verification.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update employer verification.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -298,7 +300,9 @@ export default function ManageEmployersView() {
     const ownerUserId = getOwnerUserId(accountAction.employer);
 
     if (!ownerUserId) {
-      setActionError("Unable to update employer account without an owner user.");
+      const message = "Unable to update employer account without an owner user.";
+      setActionError(message);
+      appToast.error(message);
       setAccountAction(null);
       return;
     }
@@ -313,11 +317,13 @@ export default function ManageEmployersView() {
           setAccountAction(null);
           setFeedbackMessage("Employer account status updated successfully.");
           setActionError("");
+          appToast.success("Employer account status updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to update employer account.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update employer account.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );

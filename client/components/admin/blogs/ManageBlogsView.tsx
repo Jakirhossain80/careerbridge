@@ -19,6 +19,7 @@ import {
 } from "@/hooks/admin/useAdminBlogs";
 import { useAdminCategories } from "@/hooks/admin/useAdminCategories";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminBlog,
   AdminBlogFilters,
@@ -251,9 +252,12 @@ export default function ManageBlogsView() {
             setFormBlog(null);
             setFeedbackMessage("Blog article updated successfully.");
             setActionError("");
+            appToast.success("Blog article updated successfully.");
           },
           onError: (error) => {
-            setActionError(getApiErrorMessage(error) || "Unable to update blog article.");
+            const message = getApiErrorMessage(error) || "Unable to update blog article.";
+            setActionError(message);
+            appToast.error(message);
           },
         },
       );
@@ -265,9 +269,12 @@ export default function ManageBlogsView() {
         setFormOpen(false);
         setFeedbackMessage("Blog article created successfully.");
         setActionError("");
+        appToast.success("Blog article created successfully.");
       },
       onError: (error) => {
-        setActionError(getApiErrorMessage(error) || "Unable to create blog article.");
+        const message = getApiErrorMessage(error) || "Unable to create blog article.";
+        setActionError(message);
+        appToast.error(message);
       },
     });
   }
@@ -285,9 +292,12 @@ export default function ManageBlogsView() {
           setStatusAction(null);
           setFeedbackMessage("Blog publication status updated successfully.");
           setActionError("");
+          appToast.success("Blog publication status updated successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to update blog status.");
+          const message = getApiErrorMessage(error) || "Unable to update blog status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -303,9 +313,12 @@ export default function ManageBlogsView() {
           setDeleteAction(null);
           setFeedbackMessage("Blog article archived successfully.");
           setActionError("");
+          appToast.success("Blog article archived successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to delete blog article.");
+          const message = getApiErrorMessage(error) || "Unable to delete blog article.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -318,6 +331,7 @@ export default function ManageBlogsView() {
         : `"${blog.title}" is ready to have featured status removed when the backend field is available.`,
     );
     setActionError("");
+    appToast.info("Featured blog persistence is not available yet.");
   }
 
   return (

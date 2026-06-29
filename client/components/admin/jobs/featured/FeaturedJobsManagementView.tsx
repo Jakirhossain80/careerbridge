@@ -19,6 +19,7 @@ import {
   useAdminFeaturedJobStats,
 } from "@/hooks/admin/useAdminFeaturedJobs";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminFeaturedJob,
   AdminFeaturedJobFilters,
@@ -175,9 +176,12 @@ export default function FeaturedJobsManagementView() {
         setFeatureModalOpen(false);
         setFeedbackMessage("Job featured successfully.");
         setActionError("");
+        appToast.success("Job featured successfully.");
       },
       onError: (error) => {
-        setActionError(getApiErrorMessage(error) || "Unable to feature job.");
+        const message = getApiErrorMessage(error) || "Unable to feature job.";
+        setActionError(message);
+        appToast.error(message);
       },
     });
   }
@@ -195,11 +199,12 @@ export default function FeaturedJobsManagementView() {
           setStatusAction(null);
           setFeedbackMessage("Featured promotion status updated.");
           setActionError("");
+          appToast.success("Featured promotion status updated.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to update promotion status.",
-          );
+          const message = getApiErrorMessage(error) || "Unable to update promotion status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -215,11 +220,12 @@ export default function FeaturedJobsManagementView() {
           setRemoveAction(null);
           setFeedbackMessage("Job removed from featured promotions.");
           setActionError("");
+          appToast.success("Job removed from featured promotions.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to remove featured job.",
-          );
+          const message = getApiErrorMessage(error) || "Unable to remove featured job.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -233,6 +239,7 @@ export default function FeaturedJobsManagementView() {
       `${featuredJob.title} priority is prepared as ${priority}. Dedicated promotion priority persistence requires the featured jobs backend endpoint.`,
     );
     setActionError("");
+    appToast.info("Promotion priority persistence is not available yet.");
   }
 
   return (

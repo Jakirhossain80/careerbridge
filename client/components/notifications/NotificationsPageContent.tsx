@@ -13,6 +13,7 @@ import { Badge, Button, Card, LoadingSkeleton, Pagination } from "@/components/u
 import { useNotificationMutations } from "@/hooks/notifications/useNotificationMutations";
 import { useNotifications } from "@/hooks/notifications/useNotifications";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   CareerBridgeNotification,
   NotificationsQueryParams,
@@ -100,9 +101,15 @@ export default function NotificationsPageContent() {
     setFeedbackMessage("");
     setActionError("");
     markRead.mutate(notification._id, {
-      onSuccess: () => setFeedbackMessage("Notification marked as read."),
-      onError: (error) =>
-        setActionError(getApiErrorMessage(error) || "Unable to update notification."),
+      onSuccess: () => {
+        setFeedbackMessage("Notification marked as read.");
+        appToast.success("Notification marked as read.");
+      },
+      onError: (error) => {
+        const message = getApiErrorMessage(error) || "Unable to update notification.";
+        setActionError(message);
+        appToast.error(message);
+      },
       onSettled: () => setUpdatingNotificationId(undefined),
     });
   }
@@ -111,9 +118,15 @@ export default function NotificationsPageContent() {
     setFeedbackMessage("");
     setActionError("");
     markAllRead.mutate(undefined, {
-      onSuccess: () => setFeedbackMessage("All notifications marked as read."),
-      onError: (error) =>
-        setActionError(getApiErrorMessage(error) || "Unable to update notifications."),
+      onSuccess: () => {
+        setFeedbackMessage("All notifications marked as read.");
+        appToast.success("All notifications marked as read.");
+      },
+      onError: (error) => {
+        const message = getApiErrorMessage(error) || "Unable to update notifications.";
+        setActionError(message);
+        appToast.error(message);
+      },
     });
   }
 
@@ -125,9 +138,13 @@ export default function NotificationsPageContent() {
       onSuccess: () => {
         setNotificationToDelete(null);
         setFeedbackMessage("Notification deleted.");
+        appToast.success("Notification deleted.");
       },
-      onError: (error) =>
-        setActionError(getApiErrorMessage(error) || "Unable to delete notification."),
+      onError: (error) => {
+        const message = getApiErrorMessage(error) || "Unable to delete notification.";
+        setActionError(message);
+        appToast.error(message);
+      },
       onSettled: () => setDeletingNotificationId(undefined),
     });
   }

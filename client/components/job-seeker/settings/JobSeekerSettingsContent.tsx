@@ -19,6 +19,7 @@ import { FormSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
 import { mockUserSettings } from "@/data/mock-user-settings";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   userSettingsSchema,
   type UserSettingsFormValues,
@@ -74,9 +75,12 @@ export default function JobSeekerSettingsContent() {
       ]);
       reset(settings);
       setSuccessMessage("Settings updated successfully.");
+      appToast.success("Settings updated successfully.");
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to update settings.");
+      const message = getApiErrorMessage(error) || "Unable to update settings.";
+      setActionError(message);
+      appToast.error(message);
     },
   });
 
@@ -89,9 +93,12 @@ export default function JobSeekerSettingsContent() {
     onSuccess: () => {
       setIsDeactivateModalOpen(false);
       setSuccessMessage("Account deactivation request submitted.");
+      appToast.success("Account deactivation request submitted.");
     },
     onError: (error) => {
-      setActionError(getApiErrorMessage(error) || "Unable to deactivate account.");
+      const message = getApiErrorMessage(error) || "Unable to deactivate account.";
+      setActionError(message);
+      appToast.error(message);
     },
   });
 

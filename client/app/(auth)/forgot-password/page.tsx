@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { sendPasswordResetLink } from "@/lib/firebase";
+import { appToast } from "@/lib/toast";
 
 type ForgotPasswordErrors = {
   email?: string;
@@ -61,10 +62,13 @@ export default function ForgotPasswordPage() {
     try {
       await sendPasswordResetLink(email.trim());
       setResetEmailSent(true);
+      appToast.success("Password reset link sent.");
     } catch (error) {
+      const message = getFriendlyAuthErrorMessage(error);
       setErrors({
-        form: getFriendlyAuthErrorMessage(error),
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsSendingResetLink(false);
     }

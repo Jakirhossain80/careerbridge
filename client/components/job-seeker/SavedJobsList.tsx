@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 
 import { ListSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState } from "@/components/ui";
+import { appToast } from "@/lib/toast";
 import { getSavedJobs, unsaveJob } from "@/services/saved-jobs.service";
 
 const getJobId = (job: unknown) =>
@@ -28,6 +29,10 @@ export default function SavedJobsList() {
     mutationFn: unsaveJob,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
+      appToast.success("Job removed from saved jobs.");
+    },
+    onError: () => {
+      appToast.error("Unable to remove saved job.");
     },
   });
 

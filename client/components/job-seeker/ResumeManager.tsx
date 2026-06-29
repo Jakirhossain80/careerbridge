@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 
 import { ListSkeleton } from "@/components/skeletons";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { appToast } from "@/lib/toast";
 import {
   deleteResume,
   getResumes,
@@ -32,18 +33,30 @@ export default function ResumeManager() {
     onSuccess: async () => {
       setMessage("Resume uploaded.");
       await invalidate();
+      appToast.success("Resume uploaded successfully.");
     },
-    onError: () => setMessage("Failed to upload resume."),
+    onError: () => {
+      setMessage("Failed to upload resume.");
+      appToast.error("Failed to upload resume.");
+    },
   });
 
   const defaultMutation = useMutation({
     mutationFn: setDefaultResume,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      appToast.success("Default resume updated.");
+    },
+    onError: () => appToast.error("Unable to update default resume."),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteResume,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      appToast.success("Resume deleted successfully.");
+    },
+    onError: () => appToast.error("Unable to delete resume."),
   });
 
   return (

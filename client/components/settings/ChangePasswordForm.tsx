@@ -11,6 +11,7 @@ import SettingsCard from "@/components/settings/SettingsCard";
 import { Button } from "@/components/ui";
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { changePassword } from "@/lib/firebase";
+import { appToast } from "@/lib/toast";
 import {
   changePasswordSchema,
   type ChangePasswordFormValues,
@@ -137,8 +138,11 @@ export default function ChangePasswordForm({
       });
       reset(defaultValues);
       setSuccessMessage("Password updated successfully.");
+      appToast.success("Password updated successfully.");
     } catch (error) {
-      setErrorMessage(getChangePasswordErrorMessage(error));
+      const message = getChangePasswordErrorMessage(error);
+      setErrorMessage(message);
+      appToast.error(message);
     }
   }
 

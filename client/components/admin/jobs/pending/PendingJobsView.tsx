@@ -15,6 +15,7 @@ import Button from "@/components/ui/Button";
 import ErrorState from "@/components/ui/ErrorState";
 import { useAdminJobMutations, usePendingJobs } from "@/hooks/admin/useAdminJobs";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminJob,
   AdminJobApprovalStatus,
@@ -289,9 +290,12 @@ export default function PendingJobsView() {
             setStatusAction(null);
             setFeedbackMessage("Job archived successfully.");
             setActionError("");
+            appToast.success("Job archived successfully.");
           },
           onError: (error) => {
-            setActionError(getApiErrorMessage(error) || "Unable to archive job.");
+            const message = getApiErrorMessage(error) || "Unable to archive job.";
+            setActionError(message);
+            appToast.error(message);
           },
         },
       );
@@ -308,9 +312,12 @@ export default function PendingJobsView() {
           setStatusAction(null);
           setFeedbackMessage("Job status updated successfully.");
           setActionError("");
+          appToast.success("Job status updated successfully.");
         },
         onError: (error) => {
-          setActionError(getApiErrorMessage(error) || "Unable to update job status.");
+          const message = getApiErrorMessage(error) || "Unable to update job status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -329,11 +336,12 @@ export default function PendingJobsView() {
           setApprovalAction(null);
           setFeedbackMessage("Job review decision saved successfully.");
           setActionError("");
+          appToast.success("Job review decision saved successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to save job review decision.",
-          );
+          const message = getApiErrorMessage(error) || "Unable to save job review decision.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
@@ -346,6 +354,7 @@ export default function PendingJobsView() {
     setFeedbackMessage(
       "Request changes workflow is prepared and will activate when the backend endpoint is available.",
     );
+    appToast.info("Request changes workflow is prepared.");
   }
 
   return (

@@ -19,6 +19,7 @@ import {
   loginWithGooglePopup,
   registerWithEmailAndVerification,
 } from "@/lib/firebase";
+import { appToast } from "@/lib/toast";
 
 type RegisterRole = "job_seeker" | "employer";
 
@@ -163,11 +164,14 @@ export default function RegisterPage() {
 
       // TODO: Persist selectedRole when a user profile API or Firestore profile
       // writer is added. The auth utility currently stores Firebase Auth data.
+      appToast.success("Account created successfully.");
       router.push("/verify-email");
     } catch (error) {
+      const message = getFriendlyAuthErrorMessage(error);
       setErrors({
-        form: getFriendlyAuthErrorMessage(error),
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsCreatingAccount(false);
     }
@@ -183,15 +187,19 @@ export default function RegisterPage() {
       // TODO: Persist selectedRole when a user profile API or Firestore profile
       // writer is added for Google registration.
       if (!user.emailVerified) {
+        appToast.info("Please verify your email to continue.");
         router.push("/verify-email");
         return;
       }
 
+      appToast.success("Signed in successfully.");
       router.push("/dashboard");
     } catch (error) {
+      const message = getFriendlyAuthErrorMessage(error);
       setErrors({
-        form: getFriendlyAuthErrorMessage(error),
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsContinuingWithGoogle(false);
     }

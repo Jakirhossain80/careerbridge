@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { confirmPasswordResetWithCode } from "@/lib/firebase";
+import { appToast } from "@/lib/toast";
 
 type ResetPasswordErrors = {
   password?: string;
@@ -144,10 +145,13 @@ function ResetPasswordPageContent() {
       setPasswordResetComplete(true);
       setPassword("");
       setConfirmPassword("");
+      appToast.success("Password reset successfully.");
     } catch (error) {
+      const message = getFriendlyAuthErrorMessage(error);
       setErrors({
-        form: getFriendlyAuthErrorMessage(error),
+        form: message,
       });
+      appToast.error(message);
     } finally {
       setIsResettingPassword(false);
     }

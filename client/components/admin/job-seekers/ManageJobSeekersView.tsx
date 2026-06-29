@@ -17,6 +17,7 @@ import {
   useAdminJobSeekerStats,
 } from "@/hooks/admin/useAdminJobSeekers";
 import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import type {
   AdminJobSeeker,
   AdminJobSeekerFilters,
@@ -204,11 +205,13 @@ export default function ManageJobSeekersView() {
           setStatusAction(null);
           setFeedbackMessage("Job seeker status updated successfully.");
           setActionError("");
+          appToast.success("Job seeker status updated successfully.");
         },
         onError: (error) => {
-          setActionError(
-            getApiErrorMessage(error) || "Unable to update job seeker status.",
-          );
+          const message =
+            getApiErrorMessage(error) || "Unable to update job seeker status.";
+          setActionError(message);
+          appToast.error(message);
         },
       },
     );
