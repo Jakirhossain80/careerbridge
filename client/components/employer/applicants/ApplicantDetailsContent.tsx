@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Search } from "lucide-react";
@@ -11,7 +12,7 @@ import CoverLetterCard from "@/components/employer/applicants/CoverLetterCard";
 import InternalNotesCard from "@/components/employer/applicants/InternalNotesCard";
 import ResumePreviewCard from "@/components/employer/applicants/ResumePreviewCard";
 import StatusHistoryCard from "@/components/employer/applicants/StatusHistoryCard";
-import { Badge, Button, Card, EmptyState, Input } from "@/components/ui";
+import { Badge, Button, Card, ConfirmationModal, EmptyState, Input } from "@/components/ui";
 import {
   addApplicationNote,
   getApplicationById,
@@ -63,6 +64,7 @@ export default function ApplicantDetailsContent() {
   const queryClient = useQueryClient();
   const applicationId = params.applicationId;
   const applicantsHref = buildApplicantsHref(searchParams);
+  const [pendingStatus, setPendingStatus] = useState<ApplicationStatus | null>(null);
 
   const applicationQuery = useQuery({
     queryKey: ["application", applicationId],
@@ -82,6 +84,7 @@ export default function ApplicantDetailsContent() {
       queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
       queryClient.invalidateQueries({ queryKey: ["shortlisted-applicants"] });
+      setPendingStatus(null);
     },
   });
 
@@ -198,9 +201,7 @@ export default function ApplicantDetailsContent() {
           <ApplicationActionBar
             status={application.status}
             isUpdating={updateStatusMutation.isPending}
-            onStatusChange={(status) =>
-              updateStatusMutation.mutate({ applicationId, status })
-            }
+            onStatusChange={setPendingStatus}
           />
 
           {application.careerSummary ? (
@@ -231,6 +232,30 @@ export default function ApplicantDetailsContent() {
           <StatusHistoryCard history={application.statusHistory} />
         </aside>
       </div>
+      <ConfirmationModal
+        open={Boolean(pendingStatus)}
+        title={
+          pendingStatus
+            ? `${applicationStatusLabels[pendingStatus]} applicant?`
+            : "Update applicant status?"
+        }
+        description={`This will update ${application.applicantName}'s application status to ${
+          pendingStatus ? applicationStatusLabels[pendingStatus].toLowerCase() : "the selected status"
+        }.`}
+        confirmLabel={
+          pendingStatus
+            ? `Mark ${applicationStatusLabels[pendingStatus]}`
+            : "Update Status"
+        }
+        variant={pendingStatus === "rejected" ? "destructive" : "warning"}
+        isLoading={updateStatusMutation.isPending}
+        onCancel={() => setPendingStatus(null)}
+        onConfirm={() => {
+          if (pendingStatus) {
+            updateStatusMutation.mutate({ applicationId, status: pendingStatus });
+          }
+        }}
+      />
     </div>
   );
 }

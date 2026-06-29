@@ -10,7 +10,7 @@ import ShortlistedApplicantCard from "@/components/employer/applicants/Shortlist
 import ShortlistedApplicantsFilters from "@/components/employer/applicants/ShortlistedApplicantsFilters";
 import ShortlistedStatsCards from "@/components/employer/applicants/ShortlistedStatsCards";
 import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
-import { Button, EmptyState, Pagination } from "@/components/ui";
+import { Button, ConfirmationModal, EmptyState, Pagination } from "@/components/ui";
 import {
   getEmployerApplications,
   updateApplicationStatus,
@@ -22,6 +22,7 @@ import type {
   EmployerApplicationsResponse,
   EmployerApplicationsSortBy,
 } from "@/types/application.types";
+import { applicationStatusLabels } from "@/types/application.types";
 
 const pageSize = 5;
 const sortValues: EmployerApplicationsSortBy[] = [
@@ -141,6 +142,10 @@ export default function ShortlistedApplicantsContent() {
     useState<EmployerApplicationsSortBy>(getInitialSort(searchParams.get("sortBy")));
   const [page, setPage] = useState(getInitialPage(searchParams.get("page")));
   const [isExporting, setIsExporting] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    application: EmployerApplication;
+    status: ApplicationStatus;
+  } | null>(null);
 
   const filters = useMemo<EmployerApplicationsQueryParams>(
     () => ({
@@ -202,6 +207,7 @@ export default function ShortlistedApplicantsContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shortlisted-applicants"] });
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
+      setPendingStatusChange(null);
     },
   });
 
@@ -395,9 +401,15 @@ export default function ShortlistedApplicantsContent() {
               }
               onDownloadResume={handleDownloadResume}
               onScheduleInterview={handleScheduleInterview}
-              onStatusChange={(applicationId, status) =>
-                updateStatusMutation.mutate({ applicationId, status })
-              }
+              onStatusChange={(applicationId, status) => {
+                const application = applications.find(
+                  (item) => item._id === applicationId,
+                );
+
+                if (application) {
+                  setPendingStatusChange({ application, status });
+                }
+              }}
             />
           ))}
 
@@ -418,6 +430,37 @@ export default function ShortlistedApplicantsContent() {
           View all applicants
         </Link>
       </div>
+      <ConfirmationModal
+        open={Boolean(pendingStatusChange)}
+        title={
+          pendingStatusChange
+            ? `${applicationStatusLabels[pendingStatusChange.status]} applicant?`
+            : "Update applicant status?"
+        }
+        description={`This will update ${
+          pendingStatusChange?.application.applicantName ?? "the applicant"
+        }'s application status to ${
+          pendingStatusChange
+            ? applicationStatusLabels[pendingStatusChange.status].toLowerCase()
+            : "the selected status"
+        }.`}
+        confirmLabel={
+          pendingStatusChange
+            ? `Mark ${applicationStatusLabels[pendingStatusChange.status]}`
+            : "Update Status"
+        }
+        variant={pendingStatusChange?.status === "rejected" ? "destructive" : "warning"}
+        isLoading={updateStatusMutation.isPending}
+        onCancel={() => setPendingStatusChange(null)}
+        onConfirm={() => {
+          if (pendingStatusChange) {
+            updateStatusMutation.mutate({
+              applicationId: pendingStatusChange.application._id,
+              status: pendingStatusChange.status,
+            });
+          }
+        }}
+      />
     </div>
   );
 }

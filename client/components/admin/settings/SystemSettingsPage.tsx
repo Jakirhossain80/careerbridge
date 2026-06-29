@@ -30,6 +30,7 @@ import SettingsCard from "@/components/settings/SettingsCard";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import ErrorState from "@/components/ui/ErrorState";
 import Input from "@/components/ui/Input";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
@@ -338,6 +339,10 @@ export default function SystemSettingsPage() {
   const { resetMutation, updateMutation } = useAdminSettingsMutations();
   const [successMessage, setSuccessMessage] = useState("");
   const [actionError, setActionError] = useState("");
+  const [pendingSaveValues, setPendingSaveValues] =
+    useState<AdminSettingsFormValues | null>(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   const methods = useForm<AdminSettingsFormValues>({
     resolver: zodResolver(adminSettingsSchema),
@@ -358,11 +363,13 @@ export default function SystemSettingsPage() {
     updateMutation.mutate(values, {
       onSuccess: (settings) => {
         reset(settings);
+        setPendingSaveValues(null);
         setSuccessMessage("System settings saved successfully.");
         appToast.success("System settings saved successfully.");
       },
       onError: (error) => {
         const message = getApiErrorMessage(error) || "Unable to save settings.";
+        setPendingSaveValues(null);
         setActionError(message);
         appToast.error(message);
       },
@@ -375,6 +382,7 @@ export default function SystemSettingsPage() {
     resetMutation.mutate(undefined, {
       onSuccess: (settings) => {
         reset(settings);
+        setResetConfirmOpen(false);
         setSuccessMessage("System settings reset to defaults.");
         appToast.success("System settings reset to defaults.");
       },
@@ -388,6 +396,7 @@ export default function SystemSettingsPage() {
 
   function handleDiscard() {
     reset(settingsQuery.data ?? defaultSettings);
+    setDiscardConfirmOpen(false);
     setSuccessMessage("");
     setActionError("");
   }
@@ -415,7 +424,12 @@ export default function SystemSettingsPage() {
   return (
     <main className="p-4 pb-28 sm:p-6 sm:pb-28">
       <FormProvider {...methods}>
-        <form className="mx-auto flex max-w-7xl flex-col gap-5" onSubmit={handleSubmit(handleSave)}>
+        <form
+          className="mx-auto flex max-w-7xl flex-col gap-5"
+          onSubmit={handleSubmit(() => {
+            setPendingSaveValues(methods.getValues());
+          })}
+        >
           <header className="rounded-lg border border-slate-200 bg-surface p-5 shadow-sm dark:border-slate-700">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -504,14 +518,47 @@ export default function SystemSettingsPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">{isDirty ? "You have unsaved changes." : "All system settings are up to date."}</p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button type="button" variant="outline" leftIcon={<RefreshCcw className="size-4" aria-hidden="true" />} onClick={handleResetDefaults} isLoading={resetMutation.isPending}>Reset Defaults</Button>
-                <Button type="button" variant="outline" leftIcon={<Undo2 className="size-4" aria-hidden="true" />} onClick={handleDiscard} disabled={!isDirty || updateMutation.isPending}>Discard Changes</Button>
+                <Button type="button" variant="outline" leftIcon={<RefreshCcw className="size-4" aria-hidden="true" />} onClick={() => setResetConfirmOpen(true)} isLoading={resetMutation.isPending}>Reset Defaults</Button>
+                <Button type="button" variant="outline" leftIcon={<Undo2 className="size-4" aria-hidden="true" />} onClick={() => setDiscardConfirmOpen(true)} disabled={!isDirty || updateMutation.isPending}>Discard Changes</Button>
                 <Button type="submit" leftIcon={<Save className="size-4" aria-hidden="true" />} isLoading={updateMutation.isPending}>Save Changes</Button>
               </div>
             </div>
           </footer>
         </form>
       </FormProvider>
+      <ConfirmationModal
+        open={Boolean(pendingSaveValues)}
+        title="Save system settings?"
+        description="These changes will update platform-wide configuration for users, employers, jobs, and authentication behavior."
+        confirmLabel="Save Settings"
+        variant="warning"
+        isLoading={updateMutation.isPending}
+        onCancel={() => setPendingSaveValues(null)}
+        onConfirm={() => {
+          if (pendingSaveValues) {
+            handleSave(pendingSaveValues);
+          }
+        }}
+      />
+      <ConfirmationModal
+        open={resetConfirmOpen}
+        title="Reset system settings?"
+        description="System settings will be restored to the configured defaults."
+        confirmLabel="Reset Defaults"
+        variant="destructive"
+        isLoading={resetMutation.isPending}
+        onCancel={() => setResetConfirmOpen(false)}
+        onConfirm={handleResetDefaults}
+      />
+      <ConfirmationModal
+        open={discardConfirmOpen}
+        title="Discard settings changes?"
+        description="Unsaved edits on this settings page will be lost."
+        confirmLabel="Discard Changes"
+        variant="destructive"
+        onCancel={() => setDiscardConfirmOpen(false)}
+        onConfirm={handleDiscard}
+      />
     </main>
   );
 }

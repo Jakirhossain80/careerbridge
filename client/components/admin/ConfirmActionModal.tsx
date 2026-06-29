@@ -1,7 +1,6 @@
 "use client";
 
-import Button from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 
 type ConfirmActionModalProps = {
   open: boolean;
@@ -25,25 +24,15 @@ export default function ConfirmActionModal({
   onConfirm,
 }: ConfirmActionModalProps) {
   return (
-    <Modal
+    <ConfirmationModal
       open={open}
-      onClose={onClose}
       title={title}
       description={description}
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button
-            variant={destructive ? "danger" : "primary"}
-            onClick={onConfirm}
-            isLoading={isLoading}
-          >
-            {confirmLabel}
-          </Button>
-        </>
-      }
+      confirmLabel={confirmLabel}
+      variant={destructive ? "destructive" : "default"}
+      isLoading={isLoading}
+      onCancel={onClose}
+      onConfirm={onConfirm}
     />
   );
 }

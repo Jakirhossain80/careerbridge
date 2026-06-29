@@ -12,7 +12,7 @@ import InterviewTable from "@/components/employer/interviews/InterviewTable";
 import ScheduleInterviewModal from "@/components/employer/interviews/ScheduleInterviewModal";
 import UpcomingInterviewCard from "@/components/employer/interviews/UpcomingInterviewCard";
 import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
-import { Button, Card, EmptyState, Pagination } from "@/components/ui";
+import { Button, Card, ConfirmationModal, EmptyState, Pagination } from "@/components/ui";
 import type { InterviewFormValues } from "@/lib/validations/interview.schema";
 import {
   createInterview,
@@ -109,6 +109,9 @@ export default function InterviewManagementContent() {
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(
     null,
   );
+  const [interviewToCancel, setInterviewToCancel] = useState<Interview | null>(
+    null,
+  );
 
   const filters = useMemo<InterviewFiltersParams>(
     () => ({
@@ -194,6 +197,7 @@ export default function InterviewManagementContent() {
     mutationFn: deleteInterview,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employer-interviews"] });
+      setInterviewToCancel(null);
     },
   });
 
@@ -407,7 +411,7 @@ export default function InterviewManagementContent() {
                 onEdit={(interview) => openScheduleModal(interview)}
                 onReschedule={handleReschedule}
                 onComplete={handleComplete}
-                onCancel={(interview) => cancelMutation.mutate(interview._id)}
+                onCancel={setInterviewToCancel}
               />
               <Pagination
                 currentPage={page}
@@ -429,6 +433,22 @@ export default function InterviewManagementContent() {
           setSelectedInterview(null);
         }}
         onSubmit={handleSubmit}
+      />
+      <ConfirmationModal
+        open={Boolean(interviewToCancel)}
+        title="Cancel interview?"
+        description={`The interview with ${
+          interviewToCancel?.candidateName ?? "this candidate"
+        } will be cancelled.`}
+        confirmLabel="Cancel Interview"
+        variant="destructive"
+        isLoading={cancelMutation.isPending}
+        onCancel={() => setInterviewToCancel(null)}
+        onConfirm={() => {
+          if (interviewToCancel) {
+            cancelMutation.mutate(interviewToCancel._id);
+          }
+        }}
       />
     </div>
   );

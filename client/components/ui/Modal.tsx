@@ -13,6 +13,8 @@ type ModalProps = {
   children?: ReactNode;
   footer?: ReactNode;
   closeOnOverlayClick?: boolean;
+  closeOnEscape?: boolean;
+  closeButtonDisabled?: boolean;
   className?: string;
 };
 
@@ -28,6 +30,8 @@ export default function Modal({
   children,
   footer,
   closeOnOverlayClick = true,
+  closeOnEscape = true,
+  closeButtonDisabled = false,
   className,
 }: ModalProps) {
   const generatedId = useId();
@@ -40,14 +44,14 @@ export default function Modal({
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (closeOnEscape && event.key === "Escape") {
         onClose();
       }
     }
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, open]);
+  }, [closeOnEscape, onClose, open]);
 
   if (!open) {
     return null;
@@ -93,6 +97,7 @@ export default function Modal({
             size="sm"
             className="-mr-2 -mt-1 size-9 p-0"
             onClick={onClose}
+            disabled={closeButtonDisabled}
             aria-label="Close modal"
           >
             <X className="size-4" aria-hidden="true" />

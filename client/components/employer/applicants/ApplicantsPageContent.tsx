@@ -9,7 +9,7 @@ import ApplicantCard from "@/components/employer/applicants/ApplicantCard";
 import ApplicantFilters from "@/components/employer/applicants/ApplicantFilters";
 import ApplicantProfileModal from "@/components/employer/applicants/ApplicantProfileModal";
 import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
-import { Button, Card, EmptyState, Pagination } from "@/components/ui";
+import { Button, Card, ConfirmationModal, EmptyState, Pagination } from "@/components/ui";
 import {
   getEmployerApplications,
   updateApplicationStatus,
@@ -22,6 +22,7 @@ import type {
   EmployerApplicationsSortBy,
   EmployerApplicationsStatusFilter,
 } from "@/types/application.types";
+import { applicationStatusLabels } from "@/types/application.types";
 
 const pageSize = 5;
 
@@ -107,6 +108,10 @@ export default function ApplicantsPageContent() {
   const [page, setPage] = useState(1);
   const [selectedApplication, setSelectedApplication] =
     useState<EmployerApplication | null>(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    application: EmployerApplication;
+    status: ApplicationStatus;
+  } | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const filters = useMemo<EmployerApplicationsQueryParams>(
@@ -157,6 +162,7 @@ export default function ApplicantsPageContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
+      setPendingStatusChange(null);
     },
   });
 
@@ -325,12 +331,15 @@ export default function ApplicantsPageContent() {
                   }
                   onViewProfile={handleViewProfile}
                   onDownloadResume={handleDownloadResume}
-                  onStatusChange={(applicationId, nextStatus) =>
-                    updateStatusMutation.mutate({
-                      applicationId,
-                      status: nextStatus,
-                    })
-                  }
+                  onStatusChange={(applicationId, nextStatus) => {
+                    const application = applications.find(
+                      (item) => item._id === applicationId,
+                    );
+
+                    if (application) {
+                      setPendingStatusChange({ application, status: nextStatus });
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -350,6 +359,37 @@ export default function ApplicantsPageContent() {
         open={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         onDownloadResume={handleDownloadResume}
+      />
+      <ConfirmationModal
+        open={Boolean(pendingStatusChange)}
+        title={
+          pendingStatusChange
+            ? `${applicationStatusLabels[pendingStatusChange.status]} applicant?`
+            : "Update applicant status?"
+        }
+        description={`This will update ${
+          pendingStatusChange?.application.applicantName ?? "the applicant"
+        }'s application status to ${
+          pendingStatusChange
+            ? applicationStatusLabels[pendingStatusChange.status].toLowerCase()
+            : "the selected status"
+        }.`}
+        confirmLabel={
+          pendingStatusChange
+            ? `Mark ${applicationStatusLabels[pendingStatusChange.status]}`
+            : "Update Status"
+        }
+        variant={pendingStatusChange?.status === "rejected" ? "destructive" : "warning"}
+        isLoading={updateStatusMutation.isPending}
+        onCancel={() => setPendingStatusChange(null)}
+        onConfirm={() => {
+          if (pendingStatusChange) {
+            updateStatusMutation.mutate({
+              applicationId: pendingStatusChange.application._id,
+              status: pendingStatusChange.status,
+            });
+          }
+        }}
       />
     </div>
   );

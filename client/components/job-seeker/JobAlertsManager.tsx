@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import JobAlertForm from "@/components/job-seeker/JobAlertForm";
 import { ListSkeleton } from "@/components/skeletons";
-import { Badge, Button, Card, EmptyState, Modal } from "@/components/ui";
+import { Badge, Button, Card, ConfirmationModal, EmptyState, Modal } from "@/components/ui";
 import { appToast } from "@/lib/toast";
 import {
   createJobAlert,
@@ -21,6 +21,7 @@ import type { JobAlertFormValues } from "@/lib/validations/job-alert.schema";
 export default function JobAlertsManager() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingAlert, setEditingAlert] = useState<JobAlert | undefined>();
+  const [alertToDelete, setAlertToDelete] = useState<JobAlert | null>(null);
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["job-alerts"],
@@ -49,6 +50,7 @@ export default function JobAlertsManager() {
     mutationFn: deleteJobAlert,
     onSuccess: () => {
       invalidate();
+      setAlertToDelete(null);
       appToast.success("Job alert deleted successfully.");
     },
     onError: () => appToast.error("Unable to delete job alert."),
@@ -135,7 +137,7 @@ export default function JobAlertsManager() {
                 </Button>
                 <Button
                   variant="danger"
-                  onClick={() => deleteMutation.mutate(alert._id)}
+                  onClick={() => setAlertToDelete(alert)}
                   leftIcon={<Trash2 className="size-4" />}
                 >
                   Delete
@@ -160,6 +162,20 @@ export default function JobAlertsManager() {
           onSubmit={handleSubmit}
         />
       </Modal>
+      <ConfirmationModal
+        open={Boolean(alertToDelete)}
+        title="Delete job alert?"
+        description={`The ${alertToDelete?.title ?? "selected"} alert will be removed and matching job notifications will stop.`}
+        confirmLabel="Delete Alert"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
+        onCancel={() => setAlertToDelete(null)}
+        onConfirm={() => {
+          if (alertToDelete) {
+            deleteMutation.mutate(alertToDelete._id);
+          }
+        }}
+      />
     </div>
   );
 }

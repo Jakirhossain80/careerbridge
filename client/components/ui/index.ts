@@ -7,6 +7,12 @@ export type { ButtonProps, ButtonSize, ButtonVariant } from "./Button";
 export { default as Card, CardContent, CardFooter, CardHeader } from "./Card";
 export type { CardProps, CardSectionProps } from "./Card";
 
+export { default as ConfirmationModal } from "./ConfirmationModal";
+export type {
+  ConfirmationModalProps,
+  ConfirmationVariant,
+} from "./ConfirmationModal";
+
 export { default as EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
 

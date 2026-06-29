@@ -5,7 +5,7 @@ import { FileText, Star, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ListSkeleton } from "@/components/skeletons";
-import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { Badge, Button, Card, ConfirmationModal, EmptyState } from "@/components/ui";
 import { appToast } from "@/lib/toast";
 import {
   deleteResume,
@@ -13,12 +13,14 @@ import {
   setDefaultResume,
   uploadResume,
 } from "@/services/resumes.service";
+import type { ResumeFile } from "@/types/resume.types";
 
 const formatSize = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 
 export default function ResumeManager() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
+  const [resumeToDelete, setResumeToDelete] = useState<ResumeFile | null>(null);
   const queryClient = useQueryClient();
   const { data: resumes = [], isLoading } = useQuery({
     queryKey: ["job-seeker-resumes"],
@@ -54,6 +56,7 @@ export default function ResumeManager() {
     mutationFn: deleteResume,
     onSuccess: () => {
       invalidate();
+      setResumeToDelete(null);
       appToast.success("Resume deleted successfully.");
     },
     onError: () => appToast.error("Unable to delete resume."),
@@ -130,7 +133,7 @@ export default function ResumeManager() {
                 </Button>
                 <Button
                   variant="danger"
-                  onClick={() => deleteMutation.mutate(resume._id)}
+                  onClick={() => setResumeToDelete(resume)}
                   leftIcon={<Trash2 className="size-4" />}
                 >
                   Delete
@@ -140,6 +143,24 @@ export default function ResumeManager() {
           </Card>
         ))}
       </div>
+      <ConfirmationModal
+        open={Boolean(resumeToDelete)}
+        title="Delete resume?"
+        description="This removes the resume from your CareerBridge profile and it will no longer be available for applications."
+        confirmLabel="Delete Resume"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
+        onCancel={() => setResumeToDelete(null)}
+        onConfirm={() => {
+          if (resumeToDelete) {
+            deleteMutation.mutate(resumeToDelete._id);
+          }
+        }}
+      >
+        <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-900">
+          <p className="font-semibold">{resumeToDelete?.fileName ?? "Selected resume"}</p>
+        </div>
+      </ConfirmationModal>
     </div>
   );
 }

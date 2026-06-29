@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Save } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
-import { Button, Card, Input, Textarea } from "@/components/ui";
+import { Button, Card, ConfirmationModal, Input, Textarea } from "@/components/ui";
 import EditEducationSection from "@/components/job-seeker/profile/EditEducationSection";
 import EditExperienceSection from "@/components/job-seeker/profile/EditExperienceSection";
 import EditProfilePhotoCard from "@/components/job-seeker/profile/EditProfilePhotoCard";
@@ -145,6 +145,7 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   const defaultValues = useMemo(() => toFormValues(profile), [profile]);
 
@@ -184,13 +185,16 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
   const errors = form.formState.errors;
 
   function handleCancel() {
-    if (
-      form.formState.isDirty &&
-      !window.confirm("Discard your unsaved profile changes?")
-    ) {
+    if (form.formState.isDirty) {
+      setDiscardConfirmOpen(true);
       return;
     }
 
+    router.push("/job-seeker/profile");
+  }
+
+  function confirmDiscard() {
+    setDiscardConfirmOpen(false);
     router.push("/job-seeker/profile");
   }
 
@@ -200,7 +204,8 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
   });
 
   return (
-    <form id="job-seeker-edit-profile-form" onSubmit={onSubmit} className="space-y-6">
+    <>
+      <form id="job-seeker-edit-profile-form" onSubmit={onSubmit} className="space-y-6">
       <Card
         className="bg-surface"
         contentClassName="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
@@ -385,6 +390,16 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
           </Button>
         </div>
       </div>
-    </form>
+      </form>
+      <ConfirmationModal
+        open={discardConfirmOpen}
+        title="Discard profile changes?"
+        description="Your unsaved profile edits will be lost."
+        confirmLabel="Discard Changes"
+        variant="destructive"
+        onCancel={() => setDiscardConfirmOpen(false)}
+        onConfirm={confirmDiscard}
+      />
+    </>
   );
 }

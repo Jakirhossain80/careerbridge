@@ -1,10 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Undo2 } from "lucide-react";
 
 import { DetailPageSkeleton } from "@/components/skeletons";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, ConfirmationModal } from "@/components/ui";
 import { ApplicationStatusBadge } from "@/components/job-seeker/status";
 import { appToast } from "@/lib/toast";
 import {
@@ -19,6 +20,7 @@ const getObjectValue = (value: unknown, key: string) =>
 
 export default function ApplicationDetails({ applicationId }: { applicationId: string }) {
   const queryClient = useQueryClient();
+  const [confirmWithdrawOpen, setConfirmWithdrawOpen] = useState(false);
   const { data: application, isLoading } = useQuery({
     queryKey: ["application", applicationId],
     queryFn: () => getApplicationDetails(applicationId),
@@ -29,6 +31,7 @@ export default function ApplicationDetails({ applicationId }: { applicationId: s
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
       await queryClient.invalidateQueries({ queryKey: ["applied-jobs"] });
+      setConfirmWithdrawOpen(false);
       appToast.success("Application withdrawn successfully.");
     },
     onError: () => {
@@ -39,9 +42,12 @@ export default function ApplicationDetails({ applicationId }: { applicationId: s
   if (isLoading) return <DetailPageSkeleton />;
   if (!application) return <Card>Application not found.</Card>;
 
+  const title = getObjectValue(application.jobId, "title") || "this job";
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <Card header={<h2 className="text-xl font-bold">{getObjectValue(application.jobId, "title") || "Application details"}</h2>}>
+    <>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <Card header={<h2 className="text-xl font-bold">{title}</h2>}>
         <div className="space-y-6">
           <section>
             <h3 className="font-semibold">Cover letter</h3>
@@ -84,7 +90,7 @@ export default function ApplicationDetails({ applicationId }: { applicationId: s
               className="w-full"
               disabled={application.status === "withdrawn"}
               isLoading={withdrawMutation.isPending}
-              onClick={() => withdrawMutation.mutate(application._id)}
+              onClick={() => setConfirmWithdrawOpen(true)}
               leftIcon={<Undo2 className="size-4" />}
             >
               Withdraw application
@@ -92,6 +98,17 @@ export default function ApplicationDetails({ applicationId }: { applicationId: s
           </div>
         </Card>
       </aside>
-    </div>
+      </div>
+      <ConfirmationModal
+        open={confirmWithdrawOpen}
+        title="Withdraw application?"
+        description={`Your application for ${title} will be marked as withdrawn.`}
+        confirmLabel="Withdraw Application"
+        variant="destructive"
+        isLoading={withdrawMutation.isPending}
+        onCancel={() => setConfirmWithdrawOpen(false)}
+        onConfirm={() => withdrawMutation.mutate(application._id)}
+      />
+    </>
   );
 }

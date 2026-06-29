@@ -14,7 +14,7 @@ import InterviewInfoCard from "@/components/employer/interviews/InterviewInfoCar
 import InterviewStatusBadge from "@/components/employer/interviews/InterviewStatusBadge";
 import ScheduleInterviewModal from "@/components/employer/interviews/ScheduleInterviewModal";
 import { DetailPageSkeleton } from "@/components/skeletons";
-import { Button, Card, EmptyState, Modal } from "@/components/ui";
+import { Card, ConfirmationModal, EmptyState } from "@/components/ui";
 import type {
   InterviewFeedbackFormValues,
   InterviewFormValues,
@@ -239,30 +239,16 @@ export default function InterviewDetailsContent() {
         onSubmit={handleReschedule}
       />
 
-      <Modal
+      <ConfirmationModal
         open={isCancelModalOpen}
-        onClose={() => setIsCancelModalOpen(false)}
-        title="Cancel Interview"
+        title="Cancel interview?"
         description={`Cancel the interview with ${interview.candidateName}? This will update the interview status.`}
-        footer={
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsCancelModalOpen(false)}
-            >
-              Keep Interview
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              isLoading={statusMutation.isPending && selectedStatus === "cancelled"}
-              onClick={() => handleStatusChange("cancelled")}
-            >
-              Cancel Interview
-            </Button>
-          </>
-        }
+        confirmLabel="Cancel Interview"
+        cancelLabel="Keep Interview"
+        variant="destructive"
+        isLoading={statusMutation.isPending && selectedStatus === "cancelled"}
+        onCancel={() => setIsCancelModalOpen(false)}
+        onConfirm={() => handleStatusChange("cancelled")}
       />
     </div>
   );
