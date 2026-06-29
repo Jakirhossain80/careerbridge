@@ -2,12 +2,16 @@ import { Menu, Search } from "lucide-react";
 
 type DashboardTopbarProps = {
   onMenuClick: () => void;
+  isMenuOpen?: boolean;
+  menuControlsId?: string;
   title?: string;
   searchPlaceholder?: string;
 };
 
 export default function DashboardTopbar({
   onMenuClick,
+  isMenuOpen = false,
+  menuControlsId,
   title = "Overview",
   searchPlaceholder = "Search placeholder",
 }: DashboardTopbarProps) {
@@ -19,6 +23,8 @@ export default function DashboardTopbar({
             type="button"
             className="rounded-md p-2 text-muted transition hover:bg-background hover:text-foreground lg:hidden"
             aria-label="Open dashboard menu"
+            aria-expanded={isMenuOpen}
+            aria-controls={menuControlsId}
             onClick={onMenuClick}
           >
             <Menu size={21} aria-hidden="true" />

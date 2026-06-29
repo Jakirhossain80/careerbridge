@@ -57,6 +57,7 @@ export const employerDashboardLinks: DashboardNavItem[] = [
 ];
 
 type DashboardSidebarProps = {
+  id?: string;
   isOpen: boolean;
   onClose: () => void;
   navItems?: DashboardNavItem[];
@@ -66,6 +67,7 @@ type DashboardSidebarProps = {
 };
 
 export default function DashboardSidebar({
+  id,
   isOpen,
   onClose,
   navItems = dashboardLinks,
@@ -87,6 +89,8 @@ export default function DashboardSidebar({
       />
 
       <aside
+        id={id}
+        aria-label="Dashboard navigation"
         className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 transition-transform lg:static lg:z-auto lg:translate-x-0 ${
           isAdmin ? "bg-blue-50" : "bg-surface"
         } ${
@@ -94,7 +98,7 @@ export default function DashboardSidebar({
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-          <Link href="/dashboard" className="font-heading text-xl font-bold">
+          <Link href="/dashboard" className="font-heading text-xl font-bold" onClick={onClose}>
             CareerBridge
           </Link>
           <button

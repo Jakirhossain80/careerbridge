@@ -9,12 +9,16 @@ type JobSeekerTopbarProps = {
   search: string;
   onSearchChange: (value: string) => void;
   onMenuClick: () => void;
+  isMenuOpen?: boolean;
+  menuControlsId?: string;
 };
 
 export default function JobSeekerTopbar({
   search,
   onSearchChange,
   onMenuClick,
+  isMenuOpen = false,
+  menuControlsId,
 }: JobSeekerTopbarProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-surface/95 backdrop-blur">
@@ -24,6 +28,8 @@ export default function JobSeekerTopbar({
             type="button"
             className="rounded-md p-2 text-muted transition hover:bg-background hover:text-foreground lg:hidden"
             aria-label="Open job seeker menu"
+            aria-expanded={isMenuOpen}
+            aria-controls={menuControlsId}
             onClick={onMenuClick}
           >
             <Menu size={21} aria-hidden="true" />

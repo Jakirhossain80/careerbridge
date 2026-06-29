@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
 import DashboardSidebar from "@/components/layout/DashboardSidebar";
 import DashboardTopbar from "@/components/layout/DashboardTopbar";
+import useMobileSidebar from "@/hooks/useMobileSidebar";
 import type { DashboardNavItem } from "@/components/layout/DashboardSidebar";
 
 type DashboardShellProps = {
@@ -25,13 +25,15 @@ export default function DashboardShell({
   workspaceLabel,
   sidebarVariant = "default",
 }: DashboardShellProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { isOpen, closeSidebar, openSidebar } = useMobileSidebar();
+  const sidebarId = "dashboard-sidebar";
 
   return (
     <div className="min-h-screen bg-background text-foreground lg:flex">
       <DashboardSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+        id={sidebarId}
+        isOpen={isOpen}
+        onClose={closeSidebar}
         navItems={navItems}
         roleLabel={roleLabel}
         workspaceLabel={workspaceLabel}
@@ -39,7 +41,9 @@ export default function DashboardShell({
       />
       <div className="min-w-0 flex-1">
         <DashboardTopbar
-          onMenuClick={() => setIsSidebarOpen(true)}
+          isMenuOpen={isOpen}
+          menuControlsId={sidebarId}
+          onMenuClick={openSidebar}
           title={title}
           searchPlaceholder={searchPlaceholder}
         />

@@ -29,11 +29,13 @@ const jobSeekerNavItems = [
 ];
 
 type JobSeekerSidebarProps = {
+  id?: string;
   isOpen: boolean;
   onClose: () => void;
 };
 
 export default function JobSeekerSidebar({
+  id,
   isOpen,
   onClose,
 }: JobSeekerSidebarProps) {
@@ -50,12 +52,18 @@ export default function JobSeekerSidebar({
       />
 
       <aside
+        id={id}
+        aria-label="Job seeker dashboard navigation"
         className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-surface transition-transform lg:static lg:z-auto lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-          <Link href="/job-seeker/dashboard" className="font-heading text-xl font-bold">
+          <Link
+            href="/job-seeker/dashboard"
+            className="font-heading text-xl font-bold"
+            onClick={onClose}
+          >
             CareerBridge
           </Link>
           <button
