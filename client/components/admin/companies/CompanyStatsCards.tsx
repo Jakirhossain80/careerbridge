@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import { BriefcaseBusiness, Building2, Flag, TimerReset } from "lucide-react";
 
+import { StatsCardSkeleton } from "@/components/skeletons";
 import Card from "@/components/ui/Card";
 import type { AdminCompanyStats } from "@/types/admin-company.types";
 
@@ -49,6 +50,10 @@ export default function CompanyStatsCards({
   stats,
   loading = false,
 }: CompanyStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => {

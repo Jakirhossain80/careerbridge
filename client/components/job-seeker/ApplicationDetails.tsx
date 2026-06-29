@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Undo2 } from "lucide-react";
 
+import { DetailPageSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
 import { ApplicationStatusBadge } from "@/components/job-seeker/status";
 import {
@@ -30,7 +31,7 @@ export default function ApplicationDetails({ applicationId }: { applicationId: s
     },
   });
 
-  if (isLoading) return <Card>Loading application...</Card>;
+  if (isLoading) return <DetailPageSkeleton />;
   if (!application) return <Card>Application not found.</Card>;
 
   return (

@@ -8,6 +8,7 @@ import { ArrowLeft, Download, FileDown } from "lucide-react";
 import ApplicantCard from "@/components/employer/applicants/ApplicantCard";
 import ApplicantFilters from "@/components/employer/applicants/ApplicantFilters";
 import ApplicantProfileModal from "@/components/employer/applicants/ApplicantProfileModal";
+import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
 import { Button, Card, EmptyState, Pagination } from "@/components/ui";
 import {
   getEmployerApplications,
@@ -165,6 +166,8 @@ export default function ApplicantsPageContent() {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min((page - 1) * pageSize + applications.length, total);
   const statusCounts = buildStatusCounts(applicantsQuery.data);
+  const activeSearch = search.trim();
+  const hasActiveFilters = status !== "all" || sortBy !== "matchScore";
 
   function resetPage(nextAction: () => void) {
     nextAction();
@@ -192,6 +195,18 @@ export default function ApplicantsPageContent() {
     applications
       .filter((application) => application.resumeUrl)
       .forEach((application) => handleDownloadResume(application));
+  }
+
+  function clearSearch() {
+    setSearch("");
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatus("all");
+    setSortBy("matchScore");
+    setPage(1);
   }
 
   return (
@@ -286,10 +301,16 @@ export default function ApplicantsPageContent() {
             </Button>
           </div>
         ) : applications.length === 0 ? (
-          <EmptyState
-            title="No applicants found"
-            description="Try adjusting your search or filters."
-          />
+          activeSearch ? (
+            <SearchEmptyState query={activeSearch} onClear={clearSearch} />
+          ) : hasActiveFilters ? (
+            <FilterEmptyState onClear={clearFilters} />
+          ) : (
+            <EmptyState
+              title="No applicants found"
+              description="Applicants will appear here after candidates apply to your jobs."
+            />
+          )
         ) : (
           <>
             <div className="space-y-3">

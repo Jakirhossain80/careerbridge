@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, Undo2 } from "lucide-react";
 
+import { ListSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState } from "@/components/ui";
 import { ApplicationStatusBadge } from "@/components/job-seeker/status";
 import { getAppliedJobs, withdrawApplication } from "@/services/applications.service";
@@ -30,7 +31,7 @@ export default function AppliedJobsList() {
 
   const applications = data?.applications ?? [];
 
-  if (isLoading) return <Card>Loading applications...</Card>;
+  if (isLoading) return <ListSkeleton count={4} showIcon={false} />;
 
   if (!applications.length) {
     return (

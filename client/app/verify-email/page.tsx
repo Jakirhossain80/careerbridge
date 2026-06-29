@@ -12,8 +12,7 @@ import { getDashboardPathForRole } from "@/lib/authRedirects";
 import { useAuth } from "@/hooks/useAuth";
 
 const getDashboardRedirectPath = () => {
-  // Replace this with the role-based dashboard path when dashboard routes exist.
-  return getDashboardPathForRole();
+  return getDashboardPathForRole() ?? "/dashboard";
 };
 
 export default function VerifyEmailPage() {

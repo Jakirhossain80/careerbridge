@@ -4,31 +4,11 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 
-import { Button, Card, LoadingSkeleton } from "@/components/ui";
+import { FormSkeleton } from "@/components/skeletons";
+import { Button, Card } from "@/components/ui";
 import EditProfileForm from "@/components/job-seeker/profile/EditProfileForm";
 import { jobSeekerProfileQueryKeys } from "@/components/job-seeker/profile/MyProfileContent";
 import { getJobSeekerProfile } from "@/services/job-seeker-profile.service";
-
-function EditProfileLoadingState() {
-  return (
-    <main className="px-4 py-6 sm:px-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">Loading profile editor...</p>
-        <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
-          <div className="space-y-6">
-            <LoadingSkeleton variant="card" rows={4} />
-            <LoadingSkeleton variant="card" rows={4} />
-          </div>
-          <div className="space-y-6">
-            <LoadingSkeleton variant="card" rows={5} />
-            <LoadingSkeleton variant="card" rows={5} />
-            <LoadingSkeleton variant="card" rows={5} />
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
 
 export default function EditProfileContent() {
   const profileQuery = useQuery({
@@ -37,7 +17,13 @@ export default function EditProfileContent() {
   });
 
   if (profileQuery.isLoading) {
-    return <EditProfileLoadingState />;
+    return (
+      <main className="px-4 py-6 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <FormSkeleton sections={3} fieldsPerSection={4} />
+        </div>
+      </main>
+    );
   }
 
   if (profileQuery.isError) {

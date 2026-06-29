@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Download, Eye, FileText, Upload } from "lucide-react";
+import { Download, Eye, FileText } from "lucide-react";
 
+import { ProfileSectionEmptyState } from "@/components/empty-states";
 import { Badge, Button, Card } from "@/components/ui";
 import type { JobSeekerResumeSummary } from "@/types/job-seeker-profile.types";
 
@@ -76,17 +77,11 @@ export default function ProfileResumeCard({ resume }: ProfileResumeCardProps) {
           </Link>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-muted">
-          <p>No resume uploaded yet.</p>
-          <Link href="/job-seeker/resume-manager" className="mt-3 inline-flex">
-            <Button
-              size="sm"
-              leftIcon={<Upload className="size-4" aria-hidden="true" />}
-            >
-              Upload Resume
-            </Button>
-          </Link>
-        </div>
+        <ProfileSectionEmptyState
+          title="No resume uploaded yet."
+          actionLabel="Upload Resume"
+          actionHref="/job-seeker/resume-manager"
+        />
       )}
     </Card>
   );

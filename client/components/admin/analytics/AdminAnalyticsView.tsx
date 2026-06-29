@@ -35,6 +35,7 @@ import {
 import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
 import DashboardSection from "@/components/dashboard/DashboardSection";
+import { DashboardEmptyState } from "@/components/empty-states";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
@@ -130,6 +131,12 @@ function TrendChart({ data }: { data: AdminAnalyticsOverview["trends"] }) {
       description="User, employer, company, job, application, interview, and blog activity over the selected period."
       action={<TrendingUp className="size-5 text-primary" aria-hidden="true" />}
     >
+      {data.length === 0 ? (
+        <DashboardEmptyState
+          title="No growth data available"
+          description="Growth trends will appear when activity is recorded for this period."
+        />
+      ) : (
       <div className="h-80">
         <RechartsResponsiveContainer width="100%" height="100%">
           <RechartsAreaChart data={data} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
@@ -143,6 +150,7 @@ function TrendChart({ data }: { data: AdminAnalyticsOverview["trends"] }) {
           </RechartsAreaChart>
         </RechartsResponsiveContainer>
       </div>
+      )}
     </DashboardSection>
   );
 }
@@ -158,6 +166,13 @@ function CategoryDistributionChart({
       description="Share of job postings by category."
       action={<PieChart className="size-5 text-primary" aria-hidden="true" />}
     >
+      {data.length === 0 ? (
+        <DashboardEmptyState
+          title="No category distribution available"
+          description="Category distribution will appear after jobs are categorized."
+        />
+      ) : (
+      <>
       <div className="h-80">
         <RechartsResponsiveContainer width="100%" height="100%">
           <RechartsPieChart>
@@ -181,6 +196,8 @@ function CategoryDistributionChart({
           </div>
         ))}
       </div>
+      </>
+      )}
     </DashboardSection>
   );
 }
@@ -192,6 +209,12 @@ function HiringFunnel({ data }: { data: AdminAnalyticsOverview["hiringFunnel"] }
       description="Candidate movement from submitted applications to completed hires."
       action={<BarChart3 className="size-5 text-primary" aria-hidden="true" />}
     >
+      {data.length === 0 ? (
+        <DashboardEmptyState
+          title="No hiring funnel data available"
+          description="Funnel stages will appear when applications move through hiring."
+        />
+      ) : (
       <div className="space-y-4">
         {data.map((stage) => (
           <div key={stage.label}>
@@ -208,6 +231,7 @@ function HiringFunnel({ data }: { data: AdminAnalyticsOverview["hiringFunnel"] }
           </div>
         ))}
       </div>
+      )}
     </DashboardSection>
   );
 }
@@ -218,6 +242,12 @@ function LocationChart({ data }: { data: AdminAnalyticsOverview["locationDistrib
       title="Top Locations"
       description="Job posting concentration by location."
     >
+      {data.length === 0 ? (
+        <DashboardEmptyState
+          title="No location data available"
+          description="Location analytics will appear after jobs include locations."
+        />
+      ) : (
       <div className="h-80">
         <RechartsResponsiveContainer width="100%" height="100%">
           <RechartsBarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 0 }}>
@@ -229,6 +259,7 @@ function LocationChart({ data }: { data: AdminAnalyticsOverview["locationDistrib
           </RechartsBarChart>
         </RechartsResponsiveContainer>
       </div>
+      )}
     </DashboardSection>
   );
 }
@@ -445,7 +476,12 @@ export default function AdminAnalyticsView() {
           <div className="grid gap-5 xl:grid-cols-3">
             <DashboardSection title="Most Active Employers" description="Employers ranked by job and application activity.">
               <div className="space-y-3">
-                {data.topEmployers.slice(0, 6).map((employer) => (
+                {data.topEmployers.length === 0 ? (
+                  <DashboardEmptyState
+                    title="No employer activity yet"
+                    description="Employer activity will appear after employers publish jobs."
+                  />
+                ) : data.topEmployers.slice(0, 6).map((employer) => (
                   <div key={employer.employerId ?? employer.employer} className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
                     <div>
                       <p className="font-medium text-foreground">{employer.employer}</p>
@@ -459,7 +495,12 @@ export default function AdminAnalyticsView() {
 
             <DashboardSection title="Most Applied Jobs" description="Jobs ranked by application volume.">
               <div className="space-y-3">
-                {data.topJobs.slice(0, 6).map((job) => (
+                {data.topJobs.length === 0 ? (
+                  <DashboardEmptyState
+                    title="No applied jobs yet"
+                    description="Job rankings will appear after candidates submit applications."
+                  />
+                ) : data.topJobs.slice(0, 6).map((job) => (
                   <div key={job.jobId} className="rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -476,7 +517,12 @@ export default function AdminAnalyticsView() {
 
             <DashboardSection title="Blog Analytics" description="Published and high-engagement editorial content.">
               <div className="space-y-3">
-                {data.topBlogs.slice(0, 6).map((blog) => (
+                {data.topBlogs.length === 0 ? (
+                  <DashboardEmptyState
+                    title="No blog analytics yet"
+                    description="Blog analytics will appear after editorial content is published."
+                  />
+                ) : data.topBlogs.slice(0, 6).map((blog) => (
                   <div key={blog.blogId} className="rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-medium text-foreground">{blog.title}</p>

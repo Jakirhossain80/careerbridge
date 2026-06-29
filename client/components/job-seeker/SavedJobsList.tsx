@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 
+import { ListSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState } from "@/components/ui";
 import { getSavedJobs, unsaveJob } from "@/services/saved-jobs.service";
 
@@ -32,7 +33,7 @@ export default function SavedJobsList() {
 
   const savedJobs = data?.savedJobs ?? [];
 
-  if (isLoading) return <Card>Loading saved jobs...</Card>;
+  if (isLoading) return <ListSkeleton count={4} showIcon={false} />;
   if (!savedJobs.length) {
     return (
       <EmptyState

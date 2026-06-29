@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { Mail, RefreshCcw, Save, Undo2 } from "lucide-react";
 
+import { FormSkeleton } from "@/components/skeletons";
 import SettingsCard from "@/components/settings/SettingsCard";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import { Button, Card } from "@/components/ui";
@@ -107,11 +108,8 @@ export default function EmailPreferencesForm() {
   if (preferencesQuery.isLoading) {
     return (
       <main className="px-4 py-6 sm:px-6 lg:px-8" aria-live="polite" aria-busy="true">
-        <div className="mx-auto max-w-4xl space-y-6">
-          <Card contentClassName="p-6">
-            <p className="text-sm font-semibold text-muted">Loading email preferences...</p>
-          </Card>
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
+        <div className="mx-auto max-w-4xl">
+          <FormSkeleton sections={1} fieldsPerSection={6} />
         </div>
       </main>
     );

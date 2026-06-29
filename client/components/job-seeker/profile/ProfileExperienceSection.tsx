@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, Plus } from "lucide-react";
 
+import { ProfileSectionEmptyState } from "@/components/empty-states";
 import { Button, Card } from "@/components/ui";
 import type { JobSeekerProfileExperience } from "@/types/job-seeker-profile.types";
 
@@ -78,12 +79,11 @@ export default function ProfileExperienceSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-5 text-sm text-muted">
-          <p>No experience added yet.</p>
-          <Link href="/job-seeker/profile/edit" className="mt-3 inline-flex">
-            <Button size="sm">Add Experience</Button>
-          </Link>
-        </div>
+        <ProfileSectionEmptyState
+          title="No experience added yet."
+          actionLabel="Add Experience"
+          actionHref="/job-seeker/profile/edit"
+        />
       )}
     </Card>
   );

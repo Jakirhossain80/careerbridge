@@ -8,8 +8,9 @@ import AdminStatsGrid from "@/components/admin/dashboard/AdminStatsGrid";
 import PendingApprovalsPanel from "@/components/admin/dashboard/PendingApprovalsPanel";
 import PlatformGrowthChart from "@/components/admin/dashboard/PlatformGrowthChart";
 import RecentSystemActivityTable from "@/components/admin/dashboard/RecentSystemActivityTable";
+import { DashboardEmptyState } from "@/components/empty-states";
+import { DashboardSkeleton } from "@/components/skeletons";
 import ErrorState from "@/components/ui/ErrorState";
-import { EmptyState, LoadingSkeleton } from "@/components/ui";
 import {
   adminDashboardQueryKeys,
   getAdminDashboard,
@@ -29,27 +30,7 @@ type ApprovalAction = {
 };
 
 function DashboardLoadingState() {
-  return (
-    <main className="px-4 py-6 sm:px-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">
-          Loading admin dashboard...
-        </p>
-        <LoadingSkeleton variant="card" rows={1} />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-        </div>
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <LoadingSkeleton variant="card" rows={2} />
-          <LoadingSkeleton variant="card" rows={2} />
-        </div>
-        <LoadingSkeleton variant="table" rows={4} columns={4} />
-      </div>
-    </main>
-  );
+  return <DashboardSkeleton />;
 }
 
 function exportActivityLogs(activity: Array<Record<string, string>>) {
@@ -146,7 +127,7 @@ export default function AdminDashboardContent() {
     return (
       <main className="px-4 py-6 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <EmptyState
+          <DashboardEmptyState
             title="No admin dashboard data available yet"
             description="Platform activity will appear here once users, employers, jobs, and reports are created."
           />

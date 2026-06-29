@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import { ProfileSectionEmptyState } from "@/components/empty-states";
 import { Badge, Button, Card } from "@/components/ui";
 
 type ProfileSkillsCardProps = {
@@ -62,12 +63,11 @@ export default function ProfileSkillsCard({
           </Link>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-muted">
-          <p>No skills added yet.</p>
-          <Link href="/job-seeker/profile/edit" className="mt-3 inline-flex">
-            <Button size="sm">Update Skills</Button>
-          </Link>
-        </div>
+        <ProfileSectionEmptyState
+          title="No skills added yet."
+          actionLabel="Update Skills"
+          actionHref="/job-seeker/profile/edit"
+        />
       )}
     </Card>
   );

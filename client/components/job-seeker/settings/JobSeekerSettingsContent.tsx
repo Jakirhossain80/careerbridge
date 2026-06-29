@@ -15,6 +15,7 @@ import JobSeekerSettingsTabs, {
 import NotificationSettingsForm from "@/components/job-seeker/settings/NotificationSettingsForm";
 import PrivacySettingsForm from "@/components/job-seeker/settings/PrivacySettingsForm";
 import SecuritySettingsCard from "@/components/job-seeker/settings/SecuritySettingsCard";
+import { FormSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
 import { mockUserSettings } from "@/data/mock-user-settings";
 import { getApiErrorMessage } from "@/lib/api";
@@ -128,12 +129,8 @@ export default function JobSeekerSettingsContent() {
   if (settingsQuery.isLoading) {
     return (
       <main className="px-4 py-6 sm:px-6 lg:px-8" aria-live="polite" aria-busy="true">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <Card contentClassName="p-6">
-            <p className="text-sm font-semibold text-muted">Loading settings...</p>
-          </Card>
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-          <div className="h-48 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
+        <div className="mx-auto max-w-7xl">
+          <FormSkeleton sections={2} fieldsPerSection={4} />
         </div>
       </main>
     );

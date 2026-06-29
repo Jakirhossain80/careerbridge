@@ -13,6 +13,7 @@ import InterviewEvaluationForm from "@/components/employer/interviews/InterviewE
 import InterviewInfoCard from "@/components/employer/interviews/InterviewInfoCard";
 import InterviewStatusBadge from "@/components/employer/interviews/InterviewStatusBadge";
 import ScheduleInterviewModal from "@/components/employer/interviews/ScheduleInterviewModal";
+import { DetailPageSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState, Modal } from "@/components/ui";
 import type {
   InterviewFeedbackFormValues,
@@ -41,23 +42,9 @@ function buildInterviewsHref(searchParams: URLSearchParams) {
 
 function InterviewDetailsLoadingState() {
   return (
-    <div className="space-y-6">
-      <Card contentClassName="p-5 sm:p-6">
-        <p className="text-sm font-semibold text-muted">
-          Loading interview details...
-        </p>
-      </Card>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="space-y-6">
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-        </div>
-        <div className="space-y-6">
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-        </div>
-      </div>
-    </div>
+    <DetailPageSkeleton
+      className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]"
+    />
   );
 }
 

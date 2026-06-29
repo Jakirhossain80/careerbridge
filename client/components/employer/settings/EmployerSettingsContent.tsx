@@ -15,6 +15,7 @@ import ProfilePhotoCard from "@/components/employer/settings/ProfilePhotoCard";
 import SecuritySettingsCard from "@/components/employer/settings/SecuritySettingsCard";
 import SettingsTabs, { type SettingsTab } from "@/components/employer/settings/SettingsTabs";
 import TeamSettingsPanel from "@/components/employer/settings/TeamSettingsPanel";
+import { FormSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
 import { mockEmployerSettings } from "@/data/mock-employer-settings";
 import {
@@ -123,13 +124,7 @@ export default function EmployerSettingsContent() {
   if (settingsQuery.isLoading) {
     return (
       <div className="mx-auto max-w-7xl space-y-6" aria-live="polite" aria-busy="true">
-        <Card contentClassName="p-6">
-          <p className="text-sm font-semibold text-muted">Loading settings...</p>
-        </Card>
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="h-80 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-          <div className="h-80 animate-pulse rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-        </div>
+        <FormSkeleton sections={2} fieldsPerSection={4} />
       </div>
     );
   }

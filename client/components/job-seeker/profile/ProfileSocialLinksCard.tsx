@@ -1,5 +1,6 @@
 import { ExternalLink, GitBranch, Globe, Network } from "lucide-react";
 
+import { ProfileSectionEmptyState } from "@/components/empty-states";
 import { Card } from "@/components/ui";
 import type { JobSeekerProfile } from "@/types/job-seeker-profile.types";
 
@@ -53,9 +54,7 @@ export default function ProfileSocialLinksCard({
           })}
         </div>
       ) : (
-        <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-muted">
-          No social links added yet.
-        </p>
+        <ProfileSectionEmptyState title="No social links added yet." />
       )}
     </Card>
   );

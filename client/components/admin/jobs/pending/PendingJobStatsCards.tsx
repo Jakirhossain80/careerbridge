@@ -1,6 +1,7 @@
 import { CheckCircle2, Clock3, ShieldAlert, Timer } from "lucide-react";
 
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
+import { StatsCardSkeleton } from "@/components/skeletons";
 import type { AdminJob } from "@/types/admin-job.types";
 import type { AdminMeta } from "@/types/admin.types";
 
@@ -36,6 +37,10 @@ export default function PendingJobStatsCards({
   meta,
   loading = false,
 }: PendingJobStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   const highRiskCount = jobs.filter(isHighRisk).length;
   const approvedToday = jobs.filter(
     (job) => job.approvalStatus === "approved" && isToday(job.updatedAt),

@@ -5,6 +5,7 @@ import { Bell, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import JobAlertForm from "@/components/job-seeker/JobAlertForm";
+import { ListSkeleton } from "@/components/skeletons";
 import { Badge, Button, Card, EmptyState, Modal } from "@/components/ui";
 import {
   createJobAlert,
@@ -65,7 +66,7 @@ export default function JobAlertsManager() {
         </div>
       </Card>
 
-      {isLoading ? <Card>Loading alerts...</Card> : null}
+      {isLoading ? <ListSkeleton count={3} /> : null}
       {!isLoading && !alerts.length ? (
         <EmptyState
           title="No job alerts created yet."

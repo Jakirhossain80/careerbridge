@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bell, CheckCheck, RefreshCcw } from "lucide-react";
+import { CheckCheck, RefreshCcw } from "lucide-react";
 
 import DeleteNotificationConfirmModal from "@/components/job-seeker/notifications/DeleteNotificationConfirmModal";
 import NotificationFilters from "@/components/notifications/NotificationFilters";
 import NotificationList, {
   type NotificationGroup,
 } from "@/components/notifications/NotificationList";
-import { Badge, Button, Card, EmptyState, LoadingSkeleton, Pagination } from "@/components/ui";
+import { NotificationsEmptyState } from "@/components/empty-states";
+import { Badge, Button, Card, LoadingSkeleton, Pagination } from "@/components/ui";
 import { useNotificationMutations } from "@/hooks/notifications/useNotificationMutations";
 import { useNotifications } from "@/hooks/notifications/useNotifications";
 import { getApiErrorMessage } from "@/lib/api";
@@ -225,11 +226,7 @@ export default function NotificationsPageContent() {
         ) : null}
 
         {!notificationsQuery.isLoading && !notificationsQuery.isError && notifications.length === 0 ? (
-          <EmptyState
-            title="No notifications yet."
-            description="Application updates, interview schedules, job decisions, and job alerts will appear here."
-            icon={<Bell className="size-6" aria-hidden="true" />}
-          />
+          <NotificationsEmptyState />
         ) : null}
 
         {groups.length > 0 ? (

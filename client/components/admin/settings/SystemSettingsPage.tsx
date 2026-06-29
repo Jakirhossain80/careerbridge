@@ -25,6 +25,7 @@ import {
 
 import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
+import { DashboardEmptyState } from "@/components/empty-states";
 import SettingsCard from "@/components/settings/SettingsCard";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import Button from "@/components/ui/Button";
@@ -290,7 +291,10 @@ function AuditLogPanel({ settings }: { settings?: AdminSystemSettings }) {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted">No audit entries yet.</p>
+        <DashboardEmptyState
+          title="No audit entries yet"
+          description="Configuration changes will appear here after settings are updated."
+        />
       )}
       <Button variant="ghost" className="mt-4 px-0" disabled>View All</Button>
     </Card>

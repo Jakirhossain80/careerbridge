@@ -31,7 +31,7 @@ function ResumeManagerLoadingState() {
   return (
     <main className="px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">Loading resumes...</p>
+        <LoadingSkeleton className="h-8 w-64" />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
           <div className="space-y-6">
             <LoadingSkeleton variant="card" className="min-h-72" />

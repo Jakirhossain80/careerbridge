@@ -1,10 +1,12 @@
-import JobSeekerShell from "@/components/job-seeker/JobSeekerShell";
-import ProfileView from "@/components/job-seeker/ProfileView";
+import type { Metadata } from "next";
+
+import UniversalProfileRedirect from "@/components/utility/UniversalProfileRedirect";
+
+export const metadata: Metadata = {
+  title: "Profile | CareerBridge",
+  description: "Open your CareerBridge profile workspace.",
+};
 
 export default function ProfilePage() {
-  return (
-    <JobSeekerShell>
-      <ProfileView />
-    </JobSeekerShell>
-  );
+  return <UniversalProfileRedirect />;
 }

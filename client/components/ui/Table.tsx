@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import TableEmptyState from "@/components/empty-states/TableEmptyState";
 import LoadingSkeleton from "./LoadingSkeleton";
 
 type TableColumn<T> = {
@@ -121,9 +122,9 @@ export default function Table<T>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-10 text-center text-sm text-muted"
+                  className="px-4 py-6"
                 >
-                  {emptyMessage}
+                  <TableEmptyState message={emptyMessage} />
                 </td>
               </tr>
             ) : null}

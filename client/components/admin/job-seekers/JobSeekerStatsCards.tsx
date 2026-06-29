@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import { BriefcaseBusiness, ShieldAlert, TrendingUp, Users } from "lucide-react";
 
+import { StatsCardSkeleton } from "@/components/skeletons";
 import Card from "@/components/ui/Card";
 import type { AdminJobSeekerStats } from "@/types/admin-job-seeker.types";
 
@@ -51,6 +52,10 @@ export default function JobSeekerStatsCards({
   stats,
   loading = false,
 }: JobSeekerStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => {

@@ -2,6 +2,7 @@
 
 import { BadgePercent, CheckCircle2, Clock3, TimerReset } from "lucide-react";
 
+import { StatsCardSkeleton } from "@/components/skeletons";
 import Card from "@/components/ui/Card";
 import type { PendingEmployerStats } from "@/types/admin-employer-verification";
 
@@ -51,6 +52,10 @@ export default function PendingEmployerStatsCards({
   stats,
   loading = false,
 }: PendingEmployerStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {statsConfig.map((item) => {

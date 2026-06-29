@@ -8,6 +8,8 @@ import { BriefcaseBusiness, Crown, RefreshCcw } from "lucide-react";
 import RecommendedJobsFilters from "@/components/job-seeker/recommended-jobs/RecommendedJobsFilters";
 import RecommendedJobsHeader from "@/components/job-seeker/recommended-jobs/RecommendedJobsHeader";
 import RecommendedJobsList from "@/components/job-seeker/recommended-jobs/RecommendedJobsList";
+import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
+import { JobCardSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState, Pagination, SearchBar } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/api";
 import { getRecommendedJobs } from "@/services/recommended-jobs.service";
@@ -90,6 +92,16 @@ export default function RecommendedJobsContent() {
 
   const data = recommendedJobsQuery.data;
   const jobs = data?.jobs ?? [];
+  const activeSearch = filters.search?.trim();
+  const hasActiveFilters = Boolean(
+      filters.category ||
+      filters.location ||
+      filters.employmentType ||
+      filters.workMode ||
+      filters.experienceLevel ||
+      filters.salaryMin ||
+      filters.salaryMax,
+  );
 
   function updateFilters(updates: Partial<RecommendedJobsQueryParams>) {
     setFilters((current) => ({
@@ -159,7 +171,7 @@ export default function RecommendedJobsContent() {
 
             <div className="min-w-0">
               {recommendedJobsQuery.isLoading ? (
-                <Card>Loading recommended jobs...</Card>
+                <JobCardSkeleton count={3} />
               ) : null}
 
               {recommendedJobsQuery.isError ? (
@@ -185,13 +197,30 @@ export default function RecommendedJobsContent() {
               {!recommendedJobsQuery.isLoading &&
               !recommendedJobsQuery.isError &&
               jobs.length === 0 ? (
-                <EmptyState
-                  title="No recommended jobs found."
-                  description="Update your profile skills and preferences to improve job recommendations."
-                  actionLabel="Edit Profile"
-                  actionHref="/job-seeker/profile/edit"
-                  icon={<BriefcaseBusiness className="size-6" aria-hidden="true" />}
-                />
+                activeSearch ? (
+                  <SearchEmptyState
+                    query={activeSearch}
+                    onClear={() => {
+                      setSearchDraft("");
+                      updateFilters({ search: undefined });
+                    }}
+                  />
+                ) : hasActiveFilters ? (
+                  <FilterEmptyState
+                    onClear={() => {
+                      setSearchDraft("");
+                      setFilters(initialFilters);
+                    }}
+                  />
+                ) : (
+                  <EmptyState
+                    title="No recommended jobs found."
+                    description="Update your profile skills and preferences to improve job recommendations."
+                    actionLabel="Edit Profile"
+                    actionHref="/job-seeker/profile/edit"
+                    icon={<BriefcaseBusiness className="size-6" aria-hidden="true" />}
+                  />
+                )
               ) : null}
 
               {jobs.length > 0 ? (

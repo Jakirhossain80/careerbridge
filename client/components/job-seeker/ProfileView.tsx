@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Edit, FileText, MapPin } from "lucide-react";
 
+import { ProfileSkeleton } from "@/components/skeletons";
 import { Badge, Button, Card } from "@/components/ui";
 import { getJobSeekerProfile } from "@/services/job-seeker.service";
 
@@ -14,7 +15,7 @@ export default function ProfileView() {
   });
 
   if (isLoading) {
-    return <Card>Loading profile...</Card>;
+    return <ProfileSkeleton />;
   }
 
   if (error || !profile) {

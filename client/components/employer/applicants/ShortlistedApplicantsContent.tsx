@@ -9,6 +9,7 @@ import { Download, FileDown, SlidersHorizontal } from "lucide-react";
 import ShortlistedApplicantCard from "@/components/employer/applicants/ShortlistedApplicantCard";
 import ShortlistedApplicantsFilters from "@/components/employer/applicants/ShortlistedApplicantsFilters";
 import ShortlistedStatsCards from "@/components/employer/applicants/ShortlistedStatsCards";
+import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
 import { Button, EmptyState, Pagination } from "@/components/ui";
 import {
   getEmployerApplications,
@@ -210,6 +211,9 @@ export default function ShortlistedApplicantsContent() {
   const totalPages = data?.totalPages ?? 1;
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min((page - 1) * pageSize + applications.length, total);
+  const activeSearch = search.trim();
+  const hasActiveFilters =
+    Boolean(jobId || dateFrom || dateTo) || sortBy !== "matchScore";
 
   const jobOptions = useMemo(() => {
     const jobs = new Map<string, string>();
@@ -232,6 +236,11 @@ export default function ShortlistedApplicantsContent() {
     setDateFrom("");
     setDateTo("");
     setSortBy("matchScore");
+    setPage(1);
+  }
+
+  function clearSearch() {
+    setSearch("");
     setPage(1);
   }
 
@@ -361,12 +370,18 @@ export default function ShortlistedApplicantsContent() {
           </Button>
         </div>
       ) : applications.length === 0 ? (
-        <EmptyState
-          title="No shortlisted applicants found"
-          description="Shortlisted candidates will appear here after you mark applicants as shortlisted."
-          actionLabel="View All Applicants"
-          actionHref="/employer/applicants"
-        />
+        activeSearch ? (
+          <SearchEmptyState query={activeSearch} onClear={clearSearch} />
+        ) : hasActiveFilters ? (
+          <FilterEmptyState onClear={clearFilters} />
+        ) : (
+          <EmptyState
+            title="No shortlisted applicants found"
+            description="Shortlisted candidates will appear here after you mark applicants as shortlisted."
+            actionLabel="View All Applicants"
+            actionHref="/employer/applicants"
+          />
+        )
       ) : (
         <section className="space-y-4">
           {applications.map((application) => (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GraduationCap, Plus } from "lucide-react";
 
+import { ProfileSectionEmptyState } from "@/components/empty-states";
 import { Button, Card } from "@/components/ui";
 import type { JobSeekerProfileEducation } from "@/types/job-seeker-profile.types";
 
@@ -51,12 +52,11 @@ export default function ProfileEducationCard({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-muted">
-          <p>No education added yet.</p>
-          <Link href="/job-seeker/profile/edit" className="mt-3 inline-flex">
-            <Button size="sm">Add Education</Button>
-          </Link>
-        </div>
+        <ProfileSectionEmptyState
+          title="No education added yet."
+          actionLabel="Add Education"
+          actionHref="/job-seeker/profile/edit"
+        />
       )}
     </Card>
   );

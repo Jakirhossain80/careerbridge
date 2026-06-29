@@ -11,6 +11,7 @@ import InterviewStatsCard from "@/components/employer/interviews/InterviewStatsC
 import InterviewTable from "@/components/employer/interviews/InterviewTable";
 import ScheduleInterviewModal from "@/components/employer/interviews/ScheduleInterviewModal";
 import UpcomingInterviewCard from "@/components/employer/interviews/UpcomingInterviewCard";
+import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
 import { Button, Card, EmptyState, Pagination } from "@/components/ui";
 import type { InterviewFormValues } from "@/lib/validations/interview.schema";
 import {
@@ -203,6 +204,13 @@ export default function InterviewManagementContent() {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min((page - 1) * pageSize + interviews.length, total);
   const upcomingInterview = getNextUpcoming(data?.interviews ?? []);
+  const activeSearch = search.trim();
+  const hasActiveFilters =
+    Boolean(dateFrom || dateTo) ||
+    jobTitle !== "all" ||
+    status !== "all" ||
+    interviewType !== "all" ||
+    sortBy !== "dateAsc";
 
   function resetPage(nextAction: () => void) {
     nextAction();
@@ -233,6 +241,22 @@ export default function InterviewManagementContent() {
         setSortBy(nextFilters.sortBy);
       }
     });
+  }
+
+  function clearSearch() {
+    setSearch("");
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
+    setJobTitle("all");
+    setStatus("all");
+    setInterviewType("all");
+    setSortBy("dateAsc");
+    setPage(1);
   }
 
   function openScheduleModal(interview?: Interview | null) {
@@ -358,12 +382,18 @@ export default function InterviewManagementContent() {
               </Button>
             </Card>
           ) : interviews.length === 0 ? (
-            <EmptyState
-              title="No interviews found"
-              description="Scheduled interviews will appear here."
-              actionLabel="Schedule New Interview"
-              onAction={() => openScheduleModal()}
-            />
+            activeSearch ? (
+              <SearchEmptyState query={activeSearch} onClear={clearSearch} />
+            ) : hasActiveFilters ? (
+              <FilterEmptyState onClear={clearFilters} />
+            ) : (
+              <EmptyState
+                title="No interviews found"
+                description="Scheduled interviews will appear here."
+                actionLabel="Schedule New Interview"
+                onAction={() => openScheduleModal()}
+              />
+            )
           ) : viewMode === "calendar" ? (
             <InterviewCalendarView
               interviews={interviews}

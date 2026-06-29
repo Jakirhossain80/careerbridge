@@ -1,6 +1,7 @@
 import { AlertTriangle, BriefcaseBusiness, CheckCircle2, Clock3 } from "lucide-react";
 
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
+import { StatsCardSkeleton } from "@/components/skeletons";
 import type { AdminApplicationStats } from "@/types/admin-application";
 
 type ApplicationStatsCardsProps = {
@@ -12,6 +13,10 @@ export default function ApplicationStatsCards({
   stats,
   loading = false,
 }: ApplicationStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardMetricCard

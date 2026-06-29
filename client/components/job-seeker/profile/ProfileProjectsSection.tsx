@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink, GitBranch, Plus } from "lucide-react";
 
+import { ProfileSectionEmptyState } from "@/components/empty-states";
 import { Badge, Button, Card } from "@/components/ui";
 import type { JobSeekerProfileProject } from "@/types/job-seeker-profile.types";
 
@@ -83,12 +84,11 @@ export default function ProfileProjectsSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-5 text-sm text-muted">
-          <p>No projects added yet.</p>
-          <Link href="/job-seeker/profile/edit" className="mt-3 inline-flex">
-            <Button size="sm">Add Project</Button>
-          </Link>
-        </div>
+        <ProfileSectionEmptyState
+          title="No projects added yet."
+          actionLabel="Add Project"
+          actionHref="/job-seeker/profile/edit"
+        />
       )}
     </Card>
   );

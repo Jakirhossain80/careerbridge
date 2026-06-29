@@ -1,6 +1,7 @@
 import { CalendarClock, Eye, FileText, Send } from "lucide-react";
 
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
+import { StatsCardSkeleton } from "@/components/skeletons";
 import type { AdminBlogStats } from "@/types/admin-blog";
 
 type BlogStatsCardsProps = {
@@ -9,6 +10,10 @@ type BlogStatsCardsProps = {
 };
 
 export default function BlogStatsCards({ stats, loading = false }: BlogStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardMetricCard

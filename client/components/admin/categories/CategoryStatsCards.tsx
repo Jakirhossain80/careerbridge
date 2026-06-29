@@ -1,6 +1,7 @@
 import { BriefcaseBusiness, FolderTree, Star, TrendingUp } from "lucide-react";
 
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
+import { StatsCardSkeleton } from "@/components/skeletons";
 import type { AdminCategoryStats } from "@/types/admin-category";
 
 type CategoryStatsCardsProps = {
@@ -12,6 +13,10 @@ export default function CategoryStatsCards({
   stats,
   loading = false,
 }: CategoryStatsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton />;
+  }
+
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardMetricCard

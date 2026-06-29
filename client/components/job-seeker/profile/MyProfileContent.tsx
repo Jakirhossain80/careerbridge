@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, ExternalLink } from "lucide-react";
 
-import { Button, Card, LoadingSkeleton, Modal } from "@/components/ui";
+import { ProfileSkeleton } from "@/components/skeletons";
+import { Button, Card, Modal } from "@/components/ui";
 import ProfileEducationCard from "@/components/job-seeker/profile/ProfileEducationCard";
 import ProfileExperienceSection from "@/components/job-seeker/profile/ProfileExperienceSection";
 import ProfileHeader from "@/components/job-seeker/profile/ProfileHeader";
@@ -25,28 +26,6 @@ export const jobSeekerProfileQueryKeys = {
   stats: ["job-seeker-profile-stats"] as const,
   resumes: ["job-seeker-resumes"] as const,
 };
-
-function MyProfileLoadingState() {
-  return (
-    <main className="px-4 py-6 sm:px-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">Loading profile...</p>
-        <LoadingSkeleton variant="card" className="min-h-64" />
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6">
-            <LoadingSkeleton variant="card" />
-            <LoadingSkeleton variant="card" />
-          </div>
-          <div className="space-y-6">
-            <LoadingSkeleton variant="card" />
-            <LoadingSkeleton variant="card" />
-            <LoadingSkeleton variant="card" />
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
 
 export default function MyProfileContent() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -89,7 +68,13 @@ export default function MyProfileContent() {
   }
 
   if (profileQuery.isLoading) {
-    return <MyProfileLoadingState />;
+    return (
+      <main className="px-4 py-6 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <ProfileSkeleton />
+        </div>
+      </main>
+    );
   }
 
   if (profileQuery.isError || !profileQuery.data) {

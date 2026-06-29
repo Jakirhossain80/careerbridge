@@ -1,6 +1,7 @@
 import { AlertTriangle, BriefcaseBusiness, TrendingUp } from "lucide-react";
 
 import DashboardMetricCard from "@/components/dashboard/DashboardMetricCard";
+import { StatsCardSkeleton } from "@/components/skeletons";
 import type { AdminJob } from "@/types/admin-job.types";
 import type { AdminMeta } from "@/types/admin.types";
 
@@ -19,6 +20,10 @@ export default function JobInsightsCards({
   meta,
   loading = false,
 }: JobInsightsCardsProps) {
+  if (loading) {
+    return <StatsCardSkeleton count={3} className="grid gap-4 lg:grid-cols-3" />;
+  }
+
   const pendingReview = jobs.filter(
     (job) => job.approvalStatus === "pending_review" || job.status === "pending",
   ).length;

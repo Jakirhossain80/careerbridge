@@ -11,6 +11,8 @@ import JobSeekerInterviewCard from "@/components/job-seeker/interviews/JobSeeker
 import JobSeekerInterviewFilters from "@/components/job-seeker/interviews/JobSeekerInterviewFilters";
 import JobSeekerInterviewStats from "@/components/job-seeker/interviews/JobSeekerInterviewStats";
 import RequestRescheduleModal from "@/components/job-seeker/interviews/RequestRescheduleModal";
+import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
+import { PageHeaderSkeleton, StatsCardSkeleton } from "@/components/skeletons";
 import { Button, Card, EmptyState, LoadingSkeleton, Pagination } from "@/components/ui";
 import type { InterviewRescheduleFormValues } from "@/lib/validations/interview.schema";
 import {
@@ -59,14 +61,8 @@ function InterviewsLoadingState() {
   return (
     <main className="px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">Loading interviews...</p>
-        <LoadingSkeleton variant="card" rows={1} />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-        </div>
+        <PageHeaderSkeleton />
+        <StatsCardSkeleton />
         <LoadingSkeleton variant="card" rows={4} />
       </div>
     </main>
@@ -215,6 +211,12 @@ export default function JobSeekerInterviewsContent() {
   const nextInterview = getNextInterview(interviews);
   const upcomingInterviews = interviews.filter((interview) => !isPastInterview(interview));
   const pastInterviews = interviews.filter(isPastInterview);
+  const activeSearch = search.trim();
+  const hasActiveFilters =
+    status !== "all" ||
+    interviewType !== "all" ||
+    period !== "all" ||
+    sortBy !== "upcoming_first";
 
   function resetPage(nextAction: () => void) {
     nextAction();
@@ -239,6 +241,20 @@ export default function JobSeekerInterviewsContent() {
         setSortBy(nextFilters.sortBy);
       }
     });
+  }
+
+  function clearSearch() {
+    setSearch("");
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatus("all");
+    setInterviewType("all");
+    setPeriod("all");
+    setSortBy("upcoming_first");
+    setPage(1);
   }
 
   function handleJoinMeeting(interview: JobSeekerInterview) {
@@ -386,12 +402,18 @@ export default function JobSeekerInterviewsContent() {
             </Button>
           </Card>
         ) : interviews.length === 0 ? (
-          <EmptyState
-            title="No interviews found."
-            description="When employers invite you to interviews, they will appear here."
-            actionLabel="View Applied Jobs"
-            actionHref="/profile/applications"
-          />
+          activeSearch ? (
+            <SearchEmptyState query={activeSearch} onClear={clearSearch} />
+          ) : hasActiveFilters ? (
+            <FilterEmptyState onClear={clearFilters} />
+          ) : (
+            <EmptyState
+              title="No interviews found."
+              description="When employers invite you to interviews, they will appear here."
+              actionLabel="View Applied Jobs"
+              actionHref="/profile/applications"
+            />
+          )
         ) : viewMode === "calendar" ? (
           <JobSeekerInterviewCalendarView
             interviews={interviews}

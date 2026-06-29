@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Star, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { ListSkeleton } from "@/components/skeletons";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import {
   deleteResume,
@@ -78,7 +79,7 @@ export default function ResumeManager() {
         {message ? <p className="mt-4 text-sm text-slate-600">{message}</p> : null}
       </Card>
 
-      {isLoading ? <Card>Loading resumes...</Card> : null}
+      {isLoading ? <ListSkeleton count={3} /> : null}
       {!isLoading && resumes.length === 0 ? (
         <EmptyState
           title="No resumes uploaded yet."

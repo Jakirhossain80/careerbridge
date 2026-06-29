@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { StatsCardSkeleton } from "@/components/skeletons";
 import { Button, LoadingSkeleton } from "@/components/ui";
 import DashboardMetricCard from "@/components/job-seeker/dashboard/DashboardMetricCard";
 import JobSeekerNotificationsCard from "@/components/job-seeker/dashboard/JobSeekerNotificationsCard";
@@ -28,14 +29,8 @@ function DashboardLoadingState() {
   return (
     <main className="px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">Loading dashboard...</p>
         <LoadingSkeleton variant="card" rows={1} />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-          <LoadingSkeleton variant="card" rows={1} />
-        </div>
+        <StatsCardSkeleton count={6} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" />
         <LoadingSkeleton variant="table" rows={4} columns={4} />
       </div>
     </main>

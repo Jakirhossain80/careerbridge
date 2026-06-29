@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BriefcaseBusiness, RefreshCcw } from "lucide-react";
+import { BriefcaseBusiness, RefreshCcw } from "lucide-react";
 
 import DeleteNotificationConfirmModal from "@/components/job-seeker/notifications/DeleteNotificationConfirmModal";
 import JobSeekerNotificationsHeader from "@/components/job-seeker/notifications/JobSeekerNotificationsHeader";
@@ -12,7 +12,9 @@ import NotificationFilters from "@/components/notifications/NotificationFilters"
 import NotificationList, {
   type NotificationGroup,
 } from "@/components/notifications/NotificationList";
-import { Button, Card, EmptyState, LoadingSkeleton, Pagination } from "@/components/ui";
+import { NotificationsEmptyState } from "@/components/empty-states";
+import { ListSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
+import { Button, Card, Pagination } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/api";
 import {
   deleteNotification,
@@ -137,10 +139,8 @@ function NotificationsLoadingState() {
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <p className="text-sm font-medium text-muted">Loading notifications...</p>
-        <LoadingSkeleton variant="card" rows={1} />
-        <LoadingSkeleton variant="card" rows={1} />
-        <LoadingSkeleton variant="card" rows={4} />
+        <PageHeaderSkeleton />
+        <ListSkeleton count={5} />
       </div>
     </main>
   );
@@ -324,13 +324,7 @@ export default function JobSeekerNotificationsContent() {
         ) : null}
 
         {!notificationsQuery.isError && notifications.length === 0 ? (
-          <EmptyState
-            title="No notifications yet."
-            description="Application updates, interview invitations, and job alerts will appear here."
-            actionLabel="Browse Jobs"
-            actionHref="/jobs"
-            icon={<Bell className="size-6" aria-hidden="true" />}
-          />
+          <NotificationsEmptyState />
         ) : null}
 
         {groups.length > 0 ? (
