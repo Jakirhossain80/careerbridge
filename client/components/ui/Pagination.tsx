@@ -26,7 +26,7 @@ export default function Pagination({
 
   return (
     <nav
-      className={cn("flex items-center justify-between gap-3", className)}
+      className={cn("flex flex-wrap items-center justify-between gap-3", className)}
       aria-label="Pagination"
     >
       <Button

@@ -34,8 +34,12 @@ export default function MyJobsTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+    <div
+      className="overflow-x-auto overscroll-x-contain"
+      tabIndex={0}
+      aria-label="Posted jobs table"
+    >
+      <table className="min-w-full w-max divide-y divide-slate-200 dark:divide-slate-700">
         <thead className="bg-slate-50 dark:bg-slate-800">
           <tr>
             {[

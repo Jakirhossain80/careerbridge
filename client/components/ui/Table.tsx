@@ -20,6 +20,8 @@ type TableProps<T> = {
   onRowClick?: (item: T, index: number) => void;
   getRowKey?: (item: T, index: number) => string | number;
   className?: string;
+  tableClassName?: string;
+  scrollLabel?: string;
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -34,6 +36,8 @@ export default function Table<T>({
   onRowClick,
   getRowKey,
   className,
+  tableClassName,
+  scrollLabel = "Table data",
 }: TableProps<T>) {
   const hasRows = data.length > 0;
 
@@ -44,8 +48,17 @@ export default function Table<T>({
         className,
       )}
     >
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+      <div
+        className="overflow-x-auto overscroll-x-contain"
+        tabIndex={0}
+        aria-label={scrollLabel}
+      >
+        <table
+          className={cn(
+            "min-w-full w-max divide-y divide-slate-200 dark:divide-slate-700",
+            tableClassName,
+          )}
+        >
           <thead className="bg-slate-50 dark:bg-slate-800">
             <tr>
               {columns.map((column) => (
