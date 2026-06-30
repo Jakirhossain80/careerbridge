@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   BLOG_STATUS,
@@ -107,6 +107,7 @@ blogSchema.index({ featured: 1, status: 1 });
 blogSchema.index({ author: 1, status: 1 });
 
 export const Blog =
-  (models.Blog as Model<IBlog> | undefined) ?? model<IBlog>("Blog", blogSchema);
+  (mongoose.models.Blog as Model<IBlog> | undefined) ??
+  model<IBlog>("Blog", blogSchema);
 
 export default Blog;

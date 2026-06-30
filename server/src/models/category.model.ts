@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model } from "mongoose";
+import mongoose, { Schema, model, type Model } from "mongoose";
 
 import {
   CATEGORY_STATUS,
@@ -49,7 +49,7 @@ const categorySchema = new Schema<ICategory>(
 categorySchema.index({ status: 1, name: 1 });
 
 export const Category =
-  (models.Category as Model<ICategory> | undefined) ??
+  (mongoose.models.Category as Model<ICategory> | undefined) ??
   model<ICategory>("Category", categorySchema);
 
 export default Category;

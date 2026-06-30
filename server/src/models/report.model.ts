@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   REPORT_STATUS,
@@ -119,7 +119,7 @@ reportSchema.index({ severity: 1, status: 1 });
 reportSchema.index({ targetType: 1, targetId: 1 });
 
 export const Report =
-  (models.Report as Model<IReport> | undefined) ??
+  (mongoose.models.Report as Model<IReport> | undefined) ??
   model<IReport>("Report", reportSchema);
 
 export default Report;

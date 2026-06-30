@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 export interface IResume {
   jobSeekerId: Types.ObjectId;
@@ -28,7 +28,7 @@ const resumeSchema = new Schema<IResume>(
 resumeSchema.index({ jobSeekerId: 1, isDefault: 1 });
 
 export const Resume =
-  (models.Resume as Model<IResume> | undefined) ??
+  (mongoose.models.Resume as Model<IResume> | undefined) ??
   model<IResume>("Resume", resumeSchema);
 
 export default Resume;

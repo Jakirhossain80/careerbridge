@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   INTERVIEW_STATUS,
@@ -73,7 +73,7 @@ interviewSchema.index({ employerId: 1, dateTime: 1 });
 interviewSchema.index({ applicantId: 1, dateTime: 1 });
 
 export const Interview =
-  (models.Interview as Model<IInterview> | undefined) ??
+  (mongoose.models.Interview as Model<IInterview> | undefined) ??
   model<IInterview>("Interview", interviewSchema);
 
 export default Interview;

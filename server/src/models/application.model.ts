@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   APPLICATION_STATUS,
@@ -123,7 +123,7 @@ applicationSchema.index({ employerId: 1, status: 1 });
 applicationSchema.index({ companyId: 1, status: 1 });
 
 export const Application =
-  (models.Application as Model<IApplication> | undefined) ??
+  (mongoose.models.Application as Model<IApplication> | undefined) ??
   model<IApplication>("Application", applicationSchema);
 
 export default Application;

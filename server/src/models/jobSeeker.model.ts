@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 export interface IJobSeekerEducation {
   degree?: string;
@@ -88,7 +88,7 @@ const jobSeekerSchema = new Schema<IJobSeeker>(
 );
 
 export const JobSeeker =
-  (models.JobSeeker as Model<IJobSeeker> | undefined) ??
+  (mongoose.models.JobSeeker as Model<IJobSeeker> | undefined) ??
   model<IJobSeeker>("JobSeeker", jobSeekerSchema);
 
 export default JobSeeker;

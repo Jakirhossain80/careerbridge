@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 export interface IJobAlert {
   jobSeekerId: Types.ObjectId;
@@ -32,7 +32,7 @@ const jobAlertSchema = new Schema<IJobAlert>(
 jobAlertSchema.index({ jobSeekerId: 1, isActive: 1 });
 
 export const JobAlert =
-  (models.JobAlert as Model<IJobAlert> | undefined) ??
+  (mongoose.models.JobAlert as Model<IJobAlert> | undefined) ??
   model<IJobAlert>("JobAlert", jobAlertSchema);
 
 export default JobAlert;

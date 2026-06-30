@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   NOTIFICATION_ENTITY_TYPE,
@@ -113,7 +113,7 @@ notificationSchema.index({ entityType: 1, entityId: 1 });
 notificationSchema.index({ userId: 1, isRead: 1 });
 
 export const Notification =
-  (models.Notification as Model<INotification> | undefined) ??
+  (mongoose.models.Notification as Model<INotification> | undefined) ??
   model<INotification>("Notification", notificationSchema);
 
 export default Notification;

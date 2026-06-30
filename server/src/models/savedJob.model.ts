@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 export interface ISavedJob {
   userId: Types.ObjectId;
@@ -30,7 +30,7 @@ const savedJobSchema = new Schema<ISavedJob>(
 savedJobSchema.index({ userId: 1, jobId: 1 }, { unique: true });
 
 export const SavedJob =
-  (models.SavedJob as Model<ISavedJob> | undefined) ??
+  (mongoose.models.SavedJob as Model<ISavedJob> | undefined) ??
   model<ISavedJob>("SavedJob", savedJobSchema);
 
 export default SavedJob;

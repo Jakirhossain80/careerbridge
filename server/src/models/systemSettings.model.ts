@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 export interface ISystemSettingsAuditLog {
   user?: Types.ObjectId;
@@ -92,7 +92,7 @@ const systemSettingsSchema = new Schema<ISystemSettings>(
 );
 
 export const SystemSettings =
-  (models.SystemSettings as Model<ISystemSettings> | undefined) ??
+  (mongoose.models.SystemSettings as Model<ISystemSettings> | undefined) ??
   model<ISystemSettings>("SystemSettings", systemSettingsSchema);
 
 export default SystemSettings;

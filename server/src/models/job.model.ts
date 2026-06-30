@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   JOB_STATUS,
@@ -198,6 +198,7 @@ jobSchema.index({ employerId: 1, status: 1 });
 jobSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 export const Job =
-  (models.Job as Model<IJob> | undefined) ?? model<IJob>("Job", jobSchema);
+  (mongoose.models.Job as Model<IJob> | undefined) ??
+  model<IJob>("Job", jobSchema);
 
 export default Job;

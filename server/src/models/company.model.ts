@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model, type Types } from "mongoose";
+import mongoose, { Schema, model, type Model, type Types } from "mongoose";
 
 import {
   COMPANY_VERIFICATION_STATUS,
@@ -125,7 +125,7 @@ companySchema.index({ ownerId: 1 }, { unique: true });
 companySchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 export const Company =
-  (models.Company as Model<ICompany> | undefined) ??
+  (mongoose.models.Company as Model<ICompany> | undefined) ??
   model<ICompany>("Company", companySchema);
 
 export default Company;
