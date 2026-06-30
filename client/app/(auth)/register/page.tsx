@@ -20,6 +20,7 @@ import {
   registerWithEmailAndVerification,
 } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
+import { syncAuthenticatedUser } from "@/services/auth.service";
 import { ValidationMessage } from "@/components/ui";
 
 type RegisterRole = "job_seeker" | "employer";
@@ -193,6 +194,7 @@ export default function RegisterPage() {
         return;
       }
 
+      await syncAuthenticatedUser();
       appToast.success("Signed in successfully.");
       router.push("/dashboard");
     } catch (error) {

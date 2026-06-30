@@ -14,6 +14,7 @@ import {
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { loginWithEmailAndPassword, loginWithGooglePopup } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
+import { syncAuthenticatedUser } from "@/services/auth.service";
 import { ValidationMessage } from "@/components/ui";
 
 type LoginErrors = {
@@ -130,6 +131,7 @@ function LoginPageContent() {
         return;
       }
 
+      await syncAuthenticatedUser();
       appToast.success("Signed in successfully.");
       router.push(redirectPath);
     } catch (error) {

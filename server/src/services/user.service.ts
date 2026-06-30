@@ -18,6 +18,22 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
   );
 
   if (existingUser) {
+    let shouldSave = false;
+
+    if (existingUser.firebaseUid !== userData.firebaseUid) {
+      existingUser.firebaseUid = userData.firebaseUid;
+      shouldSave = true;
+    }
+
+    if (!existingUser.photoURL && userData.photoURL) {
+      existingUser.photoURL = userData.photoURL;
+      shouldSave = true;
+    }
+
+    if (shouldSave) {
+      await existingUser.save();
+    }
+
     return existingUser;
   }
 

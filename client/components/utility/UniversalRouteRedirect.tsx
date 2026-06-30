@@ -10,6 +10,7 @@ import { Button, Card } from "@/components/ui";
 import PageLoader from "@/components/ui/PageLoader";
 import { useAuth } from "@/hooks/useAuth";
 import type { DashboardRole } from "@/lib/authRedirects";
+import { syncAuthenticatedUser } from "@/services/auth.service";
 
 type UniversalRouteRedirectProps = {
   getPathForRole: (role?: DashboardRole | null) => string | null;
@@ -49,16 +50,16 @@ function UniversalRouteRedirectContent({
     }
 
     let isMounted = true;
-    const currentUser = user;
 
     async function resolveRole() {
       setIsResolvingRole(true);
       setError("");
 
       try {
-        const token = await currentUser.getIdTokenResult();
-        const tokenRole = token.claims.role;
-        const resolvedRole = isDashboardRole(tokenRole) ? tokenRole : null;
+        const syncedUser = await syncAuthenticatedUser();
+        const resolvedRole = isDashboardRole(syncedUser.role)
+          ? syncedUser.role
+          : null;
         const redirectPath = getPathForRole(resolvedRole);
 
         if (!isMounted) {
@@ -66,6 +67,16 @@ function UniversalRouteRedirectContent({
         }
 
         setRole(resolvedRole);
+
+        if (syncedUser.status === "blocked" || syncedUser.status === "suspended") {
+          router.replace("/account-blocked");
+          return;
+        }
+
+        if (syncedUser.status === "pending") {
+          router.replace("/account-pending");
+          return;
+        }
 
         if (redirectPath) {
           router.replace(redirectPath);
