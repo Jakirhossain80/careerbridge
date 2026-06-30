@@ -60,8 +60,9 @@ export default function JobSeekerSidebar({
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
           <Link
-            href="/job-seeker/dashboard"
+            href="/"
             className="font-heading text-xl font-bold"
+            aria-label="Go to CareerBridge home page"
             onClick={onClose}
           >
             CareerBridge

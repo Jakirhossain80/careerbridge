@@ -1,5 +1,6 @@
 export type AdminRole = "job_seeker" | "employer" | "admin" | "super_admin";
 export type AdminUserStatus = "active" | "pending" | "suspended" | "blocked";
+export type AdminAuthProvider = "google" | "password";
 export type AdminApprovalStatus = "pending" | "approved" | "rejected" | "blocked";
 export type AdminJobStatus =
   | "draft"
@@ -52,6 +53,10 @@ export type AdminUser = {
   avatar?: string;
   role: AdminRole;
   status: AdminUserStatus;
+  authProvider?: AdminAuthProvider;
+  emailVerified?: boolean;
+  lastLoginAt?: string | null;
+  isDeleted?: boolean;
   phone?: string;
   location?: string;
   headline?: string;

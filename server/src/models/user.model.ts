@@ -1,8 +1,10 @@
 import mongoose, { Schema, model, type Model } from "mongoose";
 
 import {
+  AUTH_PROVIDERS,
   USER_ROLES,
   USER_STATUS,
+  type AuthProvider,
   type UserRole,
   type UserStatus,
 } from "../constants/model.constants.js";
@@ -14,6 +16,10 @@ export interface IUser {
   photoURL?: string;
   role: UserRole;
   status: UserStatus;
+  authProvider: AuthProvider;
+  emailVerified: boolean;
+  lastLoginAt: Date | null;
+  isDeleted: boolean;
   profileCompleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -54,6 +60,24 @@ const userSchema = new Schema<IUser>(
       default: USER_STATUS.ACTIVE,
       index: true,
     },
+    authProvider: {
+      type: String,
+      enum: Object.values(AUTH_PROVIDERS),
+      default: AUTH_PROVIDERS.PASSWORD,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     profileCompleted: {
       type: Boolean,
       default: false,
@@ -65,6 +89,7 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ role: 1, status: 1 });
+userSchema.index({ isDeleted: 1, status: 1 });
 
 export const User =
   (mongoose.models.User as Model<IUser> | undefined) ??

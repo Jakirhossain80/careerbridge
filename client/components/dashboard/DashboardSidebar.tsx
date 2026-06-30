@@ -75,20 +75,21 @@ export default function DashboardSidebar({
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-700">
           <Link
-            href="/dashboard"
+            href="/"
             className={cn(
               "min-w-0 font-heading text-xl font-bold tracking-tight text-foreground",
               collapsed && "sr-only",
             )}
+            aria-label="Go to CareerBridge home page"
           >
             {brand}
           </Link>
 
           {collapsed ? (
             <Link
-              href="/dashboard"
+              href="/"
               className="hidden size-10 items-center justify-center rounded-md bg-primary text-sm font-bold text-white lg:flex"
-              aria-label="CareerBridge dashboard"
+              aria-label="Go to CareerBridge home page"
             >
               CB
             </Link>

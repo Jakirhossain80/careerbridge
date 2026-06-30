@@ -18,7 +18,7 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [canViewPage, setCanViewPage] = useState(false);
 
@@ -51,12 +51,53 @@ export default function ProtectedRoute({
         return;
       }
 
+      let syncedUser = profile;
+
+      try {
+        syncedUser = syncedUser ?? (await refreshProfile());
+      } catch {
+        setCanViewPage(false);
+        setIsCheckingAuth(false);
+        router.replace("/unauthorized");
+        return;
+      }
+
+      if (!syncedUser || syncedUser.isDeleted) {
+        setCanViewPage(false);
+        setIsCheckingAuth(false);
+        router.replace("/unauthorized");
+        return;
+      }
+
+      if (syncedUser.status === "blocked" || syncedUser.status === "suspended") {
+        setCanViewPage(false);
+        setIsCheckingAuth(false);
+        router.replace("/account-blocked");
+        return;
+      }
+
+      if (syncedUser.status === "pending") {
+        setCanViewPage(false);
+        setIsCheckingAuth(false);
+        router.replace("/account-pending");
+        return;
+      }
+
       setCanViewPage(true);
       setIsCheckingAuth(false);
     };
 
     void checkAccess();
-  }, [loading, loginPath, pathname, router, user, verifyEmailPath]);
+  }, [
+    loading,
+    loginPath,
+    pathname,
+    profile,
+    refreshProfile,
+    router,
+    user,
+    verifyEmailPath,
+  ]);
 
   if (isCheckingAuth || !canViewPage) {
     return (

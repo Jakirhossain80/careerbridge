@@ -1,14 +1,22 @@
-import { USER_ROLES, USER_STATUS } from "../constants/model.constants.js";
+import {
+  AUTH_PROVIDERS,
+  USER_ROLES,
+  USER_STATUS,
+  type AuthProvider,
+} from "../constants/model.constants.js";
 import {
   createUser,
   findUserByFirebaseUidOrEmail,
 } from "../repositories/user.repository.js";
+import AppError from "../utils/AppError.js";
 
 type SyncFirebaseUserInput = {
   firebaseUid: string;
   name: string;
   email: string;
   photoURL?: string;
+  authProvider: AuthProvider;
+  emailVerified: boolean;
 };
 
 export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
@@ -18,6 +26,10 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
   );
 
   if (existingUser) {
+    if (existingUser.isDeleted) {
+      throw new AppError("Forbidden: account has been deleted", 403);
+    }
+
     let shouldSave = false;
 
     if (existingUser.firebaseUid !== userData.firebaseUid) {
@@ -29,6 +41,27 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
       existingUser.photoURL = userData.photoURL;
       shouldSave = true;
     }
+
+    if (!existingUser.authProvider) {
+      existingUser.authProvider = userData.authProvider ?? AUTH_PROVIDERS.PASSWORD;
+      shouldSave = true;
+    } else if (existingUser.authProvider !== userData.authProvider) {
+      existingUser.authProvider = userData.authProvider;
+      shouldSave = true;
+    }
+
+    if (existingUser.emailVerified !== userData.emailVerified) {
+      existingUser.emailVerified = userData.emailVerified;
+      shouldSave = true;
+    }
+
+    if (existingUser.isDeleted === undefined) {
+      existingUser.isDeleted = false;
+      shouldSave = true;
+    }
+
+    existingUser.lastLoginAt = new Date();
+    shouldSave = true;
 
     if (shouldSave) {
       await existingUser.save();
@@ -44,6 +77,10 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
     photoURL: userData.photoURL,
     role: USER_ROLES.JOB_SEEKER,
     status: USER_STATUS.ACTIVE,
+    authProvider: userData.authProvider,
+    emailVerified: userData.emailVerified,
+    lastLoginAt: new Date(),
+    isDeleted: false,
     profileCompleted: false,
   });
 };

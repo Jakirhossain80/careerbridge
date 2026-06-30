@@ -8,6 +8,10 @@ export type CreateUserInput = Pick<
   | "photoURL"
   | "role"
   | "status"
+  | "authProvider"
+  | "emailVerified"
+  | "lastLoginAt"
+  | "isDeleted"
   | "profileCompleted"
 >;
 

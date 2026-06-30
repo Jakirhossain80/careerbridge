@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 
 export type AuthUserRole = "job_seeker" | "employer" | "admin" | "super_admin";
 export type AuthUserStatus = "active" | "pending" | "suspended" | "blocked";
+export type AuthProvider = "google" | "password";
 
 export type SyncedAuthUser = {
   _id: string;
@@ -11,6 +12,10 @@ export type SyncedAuthUser = {
   photoURL?: string;
   role: AuthUserRole;
   status: AuthUserStatus;
+  authProvider: AuthProvider;
+  emailVerified: boolean;
+  lastLoginAt: string | null;
+  isDeleted: boolean;
   profileCompleted: boolean;
   createdAt?: string;
   updatedAt?: string;

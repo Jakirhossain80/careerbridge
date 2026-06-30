@@ -9,6 +9,7 @@ export type AuthenticatedFirebaseUser = DecodedIdToken & {
   mongoUserId?: string;
   role?: UserRole;
   status?: UserStatus;
+  isDeleted?: boolean;
 };
 
 declare global {
@@ -35,13 +36,14 @@ export const verifyFirebaseToken: RequestHandler = async (req, res, next) => {
         { firebaseUid: decodedToken.uid },
         ...(decodedToken.email ? [{ email: decodedToken.email.toLowerCase() }] : []),
       ],
-    }).select("_id role status");
+    }).select("_id role status isDeleted");
 
     req.user = {
       ...decodedToken,
       mongoUserId: user?._id.toString(),
       role: user?.role ?? (decodedToken.role as UserRole | undefined),
       status: user?.status ?? (decodedToken.status as UserStatus | undefined),
+      isDeleted: user?.isDeleted ?? false,
     };
     next();
   } catch {

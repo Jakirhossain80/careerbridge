@@ -13,6 +13,11 @@ export const USER_STATUS = {
   BLOCKED: "blocked",
 } as const;
 
+export const AUTH_PROVIDERS = {
+  GOOGLE: "google",
+  PASSWORD: "password",
+} as const;
+
 export const COMPANY_VERIFICATION_STATUS = {
   PENDING: "pending",
   APPROVED: "approved",
@@ -107,6 +112,7 @@ export const REPORT_STATUS = {
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 export type UserStatus = (typeof USER_STATUS)[keyof typeof USER_STATUS];
+export type AuthProvider = (typeof AUTH_PROVIDERS)[keyof typeof AUTH_PROVIDERS];
 export type CompanyVerificationStatus =
   (typeof COMPANY_VERIFICATION_STATUS)[keyof typeof COMPANY_VERIFICATION_STATUS];
 export type CategoryStatus =

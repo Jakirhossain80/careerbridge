@@ -5,6 +5,11 @@ import { errorResponse } from "../utils/apiResponse.js";
 export const checkUserStatus: RequestHandler = (req, res, next) => {
   const status = req.user?.status as UserStatus | undefined;
 
+  if (req.user?.isDeleted) {
+    errorResponse(res, "Forbidden: account has been deleted", null, 403);
+    return;
+  }
+
   if (status === USER_STATUS.ACTIVE) {
     next();
     return;

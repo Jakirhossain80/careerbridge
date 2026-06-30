@@ -98,7 +98,12 @@ export default function DashboardSidebar({
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-          <Link href="/dashboard" className="font-heading text-xl font-bold" onClick={onClose}>
+          <Link
+            href="/"
+            className="font-heading text-xl font-bold"
+            aria-label="Go to CareerBridge home page"
+            onClick={onClose}
+          >
             CareerBridge
           </Link>
           <button
