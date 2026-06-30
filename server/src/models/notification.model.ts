@@ -61,7 +61,6 @@ const notificationSchema = new Schema<INotification>(
       type: String,
       enum: Object.values(NOTIFICATION_TYPE),
       required: true,
-      index: true,
     },
     entityType: {
       type: String,

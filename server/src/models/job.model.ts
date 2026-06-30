@@ -82,7 +82,6 @@ const jobSchema = new Schema<IJob>(
       type: String,
       trim: true,
       lowercase: true,
-      index: true,
     },
     description: {
       type: String,

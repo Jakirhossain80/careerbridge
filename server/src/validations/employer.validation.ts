@@ -62,33 +62,34 @@ export const companyUpdateSchema = companyCreateSchema.partial().refine(
   "At least one company field is required"
 );
 
-export const jobCreateSchema = z
-  .object({
-    title: requiredString.max(180),
-    description: requiredString,
-    responsibilities: stringArraySchema,
-    requirements: stringArraySchema,
-    skills: stringArraySchema,
-    category: optionalString,
-    industry: optionalString,
-    jobType: z.enum(Object.values(JOB_TYPE) as [string, ...string[]]),
-    workplaceType: z.enum(Object.values(WORK_MODE) as [string, ...string[]]),
-    location: optionalString,
-    salaryMin: z.coerce.number().min(0).optional(),
-    salaryMax: z.coerce.number().min(0).optional(),
-    currency: trimmedString.length(3).toUpperCase().default("USD"),
-    experienceLevel: optionalString,
-    vacancies: z.coerce.number().int().min(1).default(1),
-    deadline: z.coerce.date(),
-    status: z
-      .enum([
-        JOB_STATUS.DRAFT,
-        JOB_STATUS.PUBLISHED,
-        JOB_STATUS.ACTIVE,
-      ] as [string, ...string[]])
-      .default(JOB_STATUS.PUBLISHED),
-    featured: z.coerce.boolean().default(false),
-  })
+const baseJobSchema = z.object({
+  title: requiredString.max(180),
+  description: requiredString,
+  responsibilities: stringArraySchema,
+  requirements: stringArraySchema,
+  skills: stringArraySchema,
+  category: optionalString,
+  industry: optionalString,
+  jobType: z.enum(Object.values(JOB_TYPE) as [string, ...string[]]),
+  workplaceType: z.enum(Object.values(WORK_MODE) as [string, ...string[]]),
+  location: optionalString,
+  salaryMin: z.coerce.number().min(0).optional(),
+  salaryMax: z.coerce.number().min(0).optional(),
+  currency: trimmedString.length(3).toUpperCase().default("USD"),
+  experienceLevel: optionalString,
+  vacancies: z.coerce.number().int().min(1).default(1),
+  deadline: z.coerce.date(),
+  status: z
+    .enum([
+      JOB_STATUS.DRAFT,
+      JOB_STATUS.PUBLISHED,
+      JOB_STATUS.ACTIVE,
+    ] as [string, ...string[]])
+    .default(JOB_STATUS.PUBLISHED),
+  featured: z.coerce.boolean().default(false),
+});
+
+export const jobCreateSchema = baseJobSchema
   .refine(
     (value) =>
       value.salaryMin === undefined ||
@@ -98,7 +99,7 @@ export const jobCreateSchema = z
   )
   .refine((value) => value.deadline > new Date(), "deadline must be in future");
 
-export const jobUpdateSchema = jobCreateSchema
+export const jobUpdateSchema = baseJobSchema
   .partial()
   .extend({
     status: z

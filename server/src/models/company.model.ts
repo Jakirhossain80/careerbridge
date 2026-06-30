@@ -35,7 +35,6 @@ const companySchema = new Schema<ICompany>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     ownerEmail: {
       type: String,
@@ -58,7 +57,6 @@ const companySchema = new Schema<ICompany>(
       type: String,
       trim: true,
       lowercase: true,
-      index: true,
     },
     logo: {
       type: String,
