@@ -60,6 +60,7 @@ export default function PublicNavbar() {
         <Link
           href="/"
           className="font-heading text-xl font-bold tracking-tight text-foreground"
+          aria-label="Go to home page"
         >
           CareerBridge
         </Link>
