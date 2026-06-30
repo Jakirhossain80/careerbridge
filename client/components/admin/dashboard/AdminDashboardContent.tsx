@@ -10,7 +10,9 @@ import PlatformGrowthChart from "@/components/admin/dashboard/PlatformGrowthChar
 import RecentSystemActivityTable from "@/components/admin/dashboard/RecentSystemActivityTable";
 import { DashboardEmptyState } from "@/components/empty-states";
 import { DashboardSkeleton } from "@/components/skeletons";
+import Badge from "@/components/ui/Badge";
 import ErrorState from "@/components/ui/ErrorState";
+import { useAuth } from "@/hooks/useAuth";
 import {
   adminDashboardQueryKeys,
   getAdminDashboard,
@@ -29,15 +31,32 @@ type ApprovalAction = {
   action: "approve" | "reject";
 };
 
+function formatRole(role?: string) {
+  return role ? role.replace(/_/g, " ") : "Admin";
+}
+
+function getDisplayName(
+  profileName?: string,
+  firebaseName?: string | null,
+  email?: string | null,
+) {
+  const name = profileName?.trim() || firebaseName?.trim();
+
+  if (name) return name;
+  if (email) return email.split("@")[0];
+  return "Admin";
+}
+
 function DashboardLoadingState() {
   return <DashboardSkeleton />;
 }
 
-function exportActivityLogs(activity: Array<Record<string, string>>) {
-  const headers = ["Action", "Entity", "Status", "Timestamp"];
+function exportActivityLogs(activity: Array<Record<string, string | undefined>>) {
+  const headers = ["Action", "Entity", "Description", "Status", "Timestamp"];
   const rows = activity.map((item) => [
     item.action,
     item.entity,
+    item.description,
     item.status,
     item.timestamp,
   ]);
@@ -59,6 +78,7 @@ function exportActivityLogs(activity: Array<Record<string, string>>) {
 
 export default function AdminDashboardContent() {
   const queryClient = useQueryClient();
+  const { user, profile } = useAuth();
   const [successMessage, setSuccessMessage] = useState("");
 
   const dashboardQuery = useQuery({
@@ -114,6 +134,12 @@ export default function AdminDashboardContent() {
   }
 
   const data = dashboardQuery.data;
+  const displayName = getDisplayName(
+    profile?.name,
+    user?.displayName,
+    profile?.email ?? user?.email,
+  );
+  const roleLabel = formatRole(profile?.role);
   const isEmpty =
     data.metrics.length === 0 &&
     data.platformGrowth.length === 0 &&
@@ -144,10 +170,16 @@ export default function AdminDashboardContent() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             System Overview
           </h1>
-          <p className="max-w-3xl text-sm text-muted">
-            Welcome back, Super Admin. Here&apos;s what&apos;s happening on
-            CareerBridge today.
-          </p>
+          <div className="flex max-w-3xl flex-col gap-2 sm:flex-row sm:items-center">
+            <p className="text-sm text-muted">
+              Welcome back,{" "}
+              <span className="font-semibold text-foreground">{displayName}</span>.
+              Here&apos;s what&apos;s happening on CareerBridge today.
+            </p>
+            <Badge variant="primary" className="w-fit capitalize">
+              {roleLabel}
+            </Badge>
+          </div>
         </section>
 
         {successMessage ? (
@@ -181,6 +213,7 @@ export default function AdminDashboardContent() {
               data.recentActivity.map((item) => ({
                 action: item.action,
                 entity: item.entity,
+                description: item.description,
                 status: item.status,
                 timestamp: item.timestamp,
               })),

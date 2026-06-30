@@ -13,10 +13,16 @@ type RecentSystemActivityTableProps = {
 };
 
 function formatDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Time unavailable";
+  }
+
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 const columns: Array<TableColumn<AdminActivityItem>> = [
@@ -27,6 +33,9 @@ const columns: Array<TableColumn<AdminActivityItem>> = [
       <div>
         <p className="font-medium text-foreground">{item.action}</p>
         <p className="mt-1 text-xs text-muted">{item.entity}</p>
+        {item.description ? (
+          <p className="mt-1 text-xs text-muted">{item.description}</p>
+        ) : null}
       </div>
     ),
   },

@@ -20,6 +20,7 @@ export type PendingApprovalItem = {
   subtitle?: string;
   logo?: string;
   createdAt?: string;
+  status?: string;
 };
 
 export type AdminActivityItem = {
@@ -30,6 +31,7 @@ export type AdminActivityItem = {
   status: "pending" | "flagged" | "approved" | "blocked" | "resolved" | "info";
   detailsLabel?: string;
   detailsHref?: string;
+  description?: string;
 };
 
 export type AdminDashboardData = {

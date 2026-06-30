@@ -100,7 +100,11 @@ export default function DashboardSidebar({
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
           <Link
             href="/"
-            className="font-heading text-xl font-bold"
+            className={`font-heading text-xl font-bold tracking-tight ${
+              isAdmin
+                ? "rounded-md bg-white px-2 py-1 text-primary shadow-sm ring-1 ring-blue-200"
+                : "text-foreground"
+            }`}
             aria-label="Go to CareerBridge home page"
             onClick={onClose}
           >

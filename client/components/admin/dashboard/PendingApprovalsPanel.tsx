@@ -19,6 +19,14 @@ function getDetailsHref(item: PendingApprovalItem) {
     : `/admin/jobs/${item._id}`;
 }
 
+function formatDate(value?: string) {
+  if (!value) return "date unavailable";
+
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(new Date(value));
+}
+
 export default function PendingApprovalsPanel({
   approvals,
   actionId,
@@ -43,11 +51,14 @@ export default function PendingApprovalsPanel({
                     <h3 className="truncate text-sm font-semibold text-foreground">
                       {item.title}
                     </h3>
-                    <AdminStatusBadge status="pending" />
+                    <AdminStatusBadge status={item.status ?? "pending"} />
                   </div>
                   <p className="mt-1 text-xs capitalize text-muted">
                     {item.type}
                     {item.subtitle ? ` - ${item.subtitle}` : ""}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    Submitted {formatDate(item.createdAt)}
                   </p>
                 </div>
                 <Link

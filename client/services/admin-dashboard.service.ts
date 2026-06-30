@@ -3,11 +3,13 @@
 import { mockAdminDashboardData } from "@/data/mock-admin-dashboard";
 import {
   adminQueryKeys,
+  getAdminBlogs,
   getAdminEmployers,
   getAdminJobs,
   getAdminReports as listAdminReports,
   getAdminStats,
 } from "@/services/admin.service";
+import { getAdminAnalyticsOverview } from "@/services/admin-analytics.service";
 import type {
   AdminDashboardData,
   AdminActivityItem,
@@ -15,10 +17,13 @@ import type {
   PlatformGrowthPoint,
 } from "@/types/admin-dashboard.types";
 import type {
+  AdminBlog,
   AdminEmployer,
   AdminJob,
   AdminListParams,
+  AdminReport,
 } from "@/types/admin.types";
+import type { AdminAnalyticsTrendPoint } from "@/types/analytics.types";
 
 export const adminDashboardQueryKeys = {
   dashboard: ["admin-dashboard"] as const,
@@ -49,6 +54,12 @@ function getDetailsHref(type: string, id: string) {
   return undefined;
 }
 
+function getUserActivityLabel(status?: string) {
+  if (status === "employer") return "New employer registration";
+  if (status === "admin" || status === "super_admin") return "New admin account";
+  return "New user registration";
+}
+
 function mapRecentActivity(
   activity: Awaited<ReturnType<typeof getAdminStats>>["recentActivity"],
 ): AdminActivityItem[] {
@@ -56,7 +67,7 @@ function mapRecentActivity(
     _id: item.id,
     action:
       item.type === "user"
-        ? "New user registration"
+        ? getUserActivityLabel(item.status)
         : item.type === "job"
           ? "New job posting"
           : item.type === "application"
@@ -70,6 +81,39 @@ function mapRecentActivity(
   }));
 }
 
+function mapReportActivity(item: AdminReport): AdminActivityItem {
+  return {
+    _id: `report-${item._id}`,
+    action: "Report submitted",
+    entity:
+      item.targetLabel ??
+      item.reportedEntityLabel ??
+      item.reason.replace(/_/g, " "),
+    description: item.reporterName ?? item.reporterEmail,
+    timestamp: item.createdAt ?? item.updatedAt ?? new Date().toISOString(),
+    status: toStatus(item.status),
+    detailsLabel: "Review",
+    detailsHref: `/admin/reports/${item._id}`,
+  };
+}
+
+function mapBlogActivity(item: AdminBlog): AdminActivityItem {
+  return {
+    _id: `blog-${item._id}`,
+    action: item.status === "published" ? "Blog published" : "Blog activity",
+    entity: item.title,
+    description: item.category,
+    timestamp:
+      item.publishedAt ??
+      item.updatedAt ??
+      item.createdAt ??
+      new Date().toISOString(),
+    status: toStatus(item.status),
+    detailsLabel: "View",
+    detailsHref: `/admin/blogs/${item._id}/edit`,
+  };
+}
+
 function mapPendingEmployer(item: AdminEmployer): PendingApprovalItem {
   return {
     _id: item._id,
@@ -77,6 +121,7 @@ function mapPendingEmployer(item: AdminEmployer): PendingApprovalItem {
     title: item.companyName ?? item.name,
     subtitle: item.ownerEmail ?? item.ownerId?.email ?? item.industry,
     createdAt: item.createdAt,
+    status: item.verificationStatus ?? item.status ?? "pending",
   };
 }
 
@@ -87,6 +132,7 @@ function mapPendingJob(item: AdminJob): PendingApprovalItem {
     title: item.title,
     subtitle: item.companyName ?? item.category,
     createdAt: item.createdAt,
+    status: item.status,
   };
 }
 
@@ -127,6 +173,28 @@ function buildPlatformGrowth(
     : mockAdminDashboardData.platformGrowth;
 }
 
+function buildPlatformGrowthFromAnalytics(
+  trends: AdminAnalyticsTrendPoint[],
+  fallbackActivity: Awaited<ReturnType<typeof getAdminStats>>["recentActivity"],
+): PlatformGrowthPoint[] {
+  const points = trends.map((point) => ({
+    label: point.label,
+    newUsers: point.users,
+    jobPostings: point.jobs,
+  }));
+
+  return points.length ? points : buildPlatformGrowth(fallbackActivity);
+}
+
+function sortRecentActivity(activity: AdminActivityItem[]) {
+  return [...activity]
+    .sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    )
+    .slice(0, 10);
+}
+
 export async function getPendingEmployers() {
   const response = await getAdminEmployers({
     status: "pending",
@@ -159,14 +227,50 @@ export async function getAdminReports(params: AdminListParams = {}) {
 }
 
 export async function getAdminDashboard(): Promise<AdminDashboardData> {
-  const [stats, activeJobs, pendingEmployers, pendingJobs] = await Promise.all([
-    getAdminStats(),
-    getAdminJobs({ status: "active", page: 1, limit: 1, sortBy: "-createdAt" }),
-    getPendingEmployers(),
-    getPendingJobs(),
-  ]);
+  const [stats, activeJobs, publishedJobs, pendingEmployers, pendingJobs] =
+    await Promise.all([
+      getAdminStats(),
+      getAdminJobs({
+        status: "active",
+        page: 1,
+        limit: 1,
+        sortBy: "-createdAt",
+      }),
+      getAdminJobs({
+        status: "published",
+        page: 1,
+        limit: 1,
+        sortBy: "-createdAt",
+      }),
+      getPendingEmployers(),
+      getPendingJobs(),
+    ]);
 
-  const recentActivity = mapRecentActivity(stats.recentActivity);
+  const [analyticsResult, pendingReportsResult, blogsResult] =
+    await Promise.allSettled([
+      getAdminAnalyticsOverview({ dateRange: "last_12_months" }),
+      listAdminReports({
+        status: "pending",
+        page: 1,
+        limit: 5,
+        sortBy: "-createdAt",
+      }),
+      getAdminBlogs({ page: 1, limit: 5, sortBy: "-updatedAt" }),
+    ]);
+
+  const analytics =
+    analyticsResult.status === "fulfilled" ? analyticsResult.value : undefined;
+  const pendingReports =
+    pendingReportsResult.status === "fulfilled"
+      ? pendingReportsResult.value.reports
+      : [];
+  const blogs = blogsResult.status === "fulfilled" ? blogsResult.value.blogs : [];
+  const recentActivity = sortRecentActivity([
+    ...mapRecentActivity(stats.recentActivity),
+    ...pendingReports.map(mapReportActivity),
+    ...blogs.map(mapBlogActivity),
+  ]);
+  const activeJobCount = activeJobs.meta.total + publishedJobs.meta.total;
 
   return {
     metrics: [
@@ -189,7 +293,7 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
       {
         key: "active-jobs",
         label: "Active Jobs",
-        value: activeJobs.meta.total || stats.totalJobs,
+        value: activeJobCount,
         change: `${stats.pendingJobs.toLocaleString()} awaiting approval`,
         trend: stats.pendingJobs > 0 ? "up" : "neutral",
         tone: "tertiary",
@@ -203,7 +307,10 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
         tone: "danger",
       },
     ],
-    platformGrowth: buildPlatformGrowth(stats.recentActivity),
+    platformGrowth: buildPlatformGrowthFromAnalytics(
+      analytics?.trends ?? [],
+      stats.recentActivity,
+    ),
     pendingApprovals: [
       ...pendingEmployers.map(mapPendingEmployer),
       ...pendingJobs.map(mapPendingJob),
