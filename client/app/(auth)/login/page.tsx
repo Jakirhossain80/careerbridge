@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import {
+  FormEvent,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -11,10 +18,12 @@ import {
   EyeOff,
   Loader2,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
+import { getDashboardPathForRole } from "@/lib/authRedirects";
 import { loginWithEmailAndPassword, loginWithGooglePopup } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
-import { syncAuthenticatedUser } from "@/services/auth.service";
+import type { SyncedAuthUser } from "@/services/auth.service";
 import { ValidationMessage } from "@/components/ui";
 
 type LoginErrors = {
@@ -51,6 +60,7 @@ function LoginPageFallback() {
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -63,6 +73,30 @@ function LoginPageContent() {
     const requestedPath = searchParams.get("redirect");
     return requestedPath?.startsWith("/") ? requestedPath : "/dashboard";
   }, [searchParams]);
+
+  const resolveRedirectPath = useCallback((syncedUser?: SyncedAuthUser | null) => {
+    if (redirectPath !== "/dashboard") {
+      return redirectPath;
+    }
+
+    return getDashboardPathForRole(syncedUser?.role ?? profile?.role) ?? "/dashboard";
+  }, [profile?.role, redirectPath]);
+
+  useEffect(() => {
+    if (loading || !user || isSigningIn || isSigningInWithGoogle) {
+      return;
+    }
+
+    router.replace(resolveRedirectPath(profile));
+  }, [
+    isSigningIn,
+    isSigningInWithGoogle,
+    loading,
+    profile,
+    resolveRedirectPath,
+    router,
+    user,
+  ]);
 
   const validateForm = () => {
     const nextErrors: LoginErrors = {};
@@ -105,8 +139,9 @@ function LoginPageContent() {
         return;
       }
 
+      const syncedUser = await refreshProfile();
       appToast.success("Signed in successfully.");
-      router.push(redirectPath);
+      router.push(resolveRedirectPath(syncedUser));
     } catch (error) {
       const message = getFriendlyAuthErrorMessage(error);
       setErrors({
@@ -131,9 +166,9 @@ function LoginPageContent() {
         return;
       }
 
-      await syncAuthenticatedUser();
+      const syncedUser = await refreshProfile();
       appToast.success("Signed in successfully.");
-      router.push(redirectPath);
+      router.push(resolveRedirectPath(syncedUser));
     } catch (error) {
       const message = getFriendlyAuthErrorMessage(error);
       setErrors({

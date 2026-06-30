@@ -16,6 +16,10 @@ export type SyncedAuthUser = {
   updatedAt?: string;
 };
 
+export const authQueryKeys = {
+  currentUser: ["auth", "current-user"] as const,
+};
+
 type ApiResponse<TData> = {
   success: boolean;
   message: string;

@@ -1,5 +1,12 @@
-import Link from "next/link";
+"use client";
 
+import { useState } from "react";
+import Link from "next/link";
+import { ChevronDown, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+
+import { useAuth } from "@/hooks/useAuth";
+import { getDashboardPathForRole } from "@/lib/authRedirects";
+import { appToast } from "@/lib/toast";
 import ActiveNavLink from "./ActiveNavLink";
 
 const navigationLinks = [
@@ -10,7 +17,40 @@ const navigationLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
+function getInitials(name?: string | null, email?: string | null) {
+  const source = name?.trim() || email?.trim() || "User";
+  const nameParts = source
+    .replace(/@.*$/, "")
+    .split(/\s|[._-]/)
+    .filter(Boolean);
+
+  return nameParts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
 export default function PublicNavbar() {
+  const { user, profile, loading, isAuthenticated, logout } = useAuth();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  const displayName = profile?.name ?? user?.displayName ?? user?.email ?? "User";
+  const email = profile?.email ?? user?.email;
+  const avatarUrl = profile?.photoURL ?? user?.photoURL;
+  const initials = getInitials(displayName, email);
+  const dashboardPath = getDashboardPathForRole(profile?.role) ?? "/dashboard";
+
+  const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+
+    try {
+      await logout();
+      appToast.success("Signed out successfully.");
+    } catch {
+      appToast.error("Unable to sign out. Please try again.");
+    }
+  };
+
   return (
     <header className="border-b border-slate-200 bg-surface">
       <nav
@@ -30,12 +70,96 @@ export default function PublicNavbar() {
               {link.label}
             </ActiveNavLink>
           ))}
-          <Link
-            href="/login"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Login
-          </Link>
+          {loading ? (
+            <span
+              className="size-9 animate-pulse rounded-full bg-slate-200"
+              aria-label="Loading account"
+            />
+          ) : isAuthenticated ? (
+            <>
+              <Link
+                href={dashboardPath}
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+              >
+                <LayoutDashboard className="size-4" aria-hidden="true" />
+                Dashboard
+              </Link>
+              <div
+                className="relative"
+                onMouseEnter={() => setIsUserMenuOpen(true)}
+                onMouseLeave={() => setIsUserMenuOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen((value) => !value)}
+                  className="flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-2 text-slate-700 transition hover:border-primary/40 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                  aria-label="Open account menu"
+                >
+                  <span className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-white">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        className="size-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : initials ? (
+                      initials
+                    ) : (
+                      <UserRound className="size-4" aria-hidden="true" />
+                    )}
+                  </span>
+                  <ChevronDown className="size-4" aria-hidden="true" />
+                </button>
+
+                {isUserMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 z-30 mt-0.5 w-64 rounded-md border border-slate-200 bg-white p-2 text-slate-900 shadow-lg shadow-slate-950/10"
+                  >
+                    <div className="border-b border-slate-100 px-3 py-2">
+                      <p className="truncate text-sm font-semibold">
+                        {displayName}
+                      </p>
+                      {email ? (
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                          {email}
+                        </p>
+                      ) : null}
+                    </div>
+                    <Link
+                      href={dashboardPath}
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition hover:bg-slate-50"
+                    >
+                      <LayoutDashboard className="size-4" aria-hidden="true" />
+                      Dashboard
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50"
+                    >
+                      <LogOut className="size-4" aria-hidden="true" />
+                      Logout
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </nav>
     </header>

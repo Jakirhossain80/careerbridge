@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminRouteGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -16,8 +16,9 @@ export default function AdminRouteGuard({ children }: { children: ReactNode }) {
     }
 
     const checkRole = async () => {
-      const token = await user.getIdTokenResult();
-      const role = token.claims.role;
+      const syncedUser = profile ?? (await refreshProfile());
+      const token = syncedUser ? null : await user.getIdTokenResult();
+      const role = syncedUser?.role ?? token?.claims.role;
 
       if (role === "admin" || role === "super_admin") {
         setAllowed(true);
@@ -29,7 +30,7 @@ export default function AdminRouteGuard({ children }: { children: ReactNode }) {
     };
 
     void checkRole();
-  }, [loading, router, user]);
+  }, [loading, profile, refreshProfile, router, user]);
 
   if (!allowed) {
     return (

@@ -10,7 +10,6 @@ import { Button, Card } from "@/components/ui";
 import PageLoader from "@/components/ui/PageLoader";
 import { useAuth } from "@/hooks/useAuth";
 import type { DashboardRole } from "@/lib/authRedirects";
-import { syncAuthenticatedUser } from "@/services/auth.service";
 
 type UniversalRouteRedirectProps = {
   getPathForRole: (role?: DashboardRole | null) => string | null;
@@ -39,7 +38,7 @@ function UniversalRouteRedirectContent({
   fallbackMessage,
 }: UniversalRouteRedirectProps) {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const [isResolvingRole, setIsResolvingRole] = useState(true);
   const [role, setRole] = useState<DashboardRole | null>(null);
   const [error, setError] = useState("");
@@ -56,7 +55,12 @@ function UniversalRouteRedirectContent({
       setError("");
 
       try {
-        const syncedUser = await syncAuthenticatedUser();
+        const syncedUser = profile ?? (await refreshProfile());
+
+        if (!syncedUser) {
+          throw new Error("Missing synced user profile.");
+        }
+
         const resolvedRole = isDashboardRole(syncedUser.role)
           ? syncedUser.role
           : null;
@@ -98,7 +102,7 @@ function UniversalRouteRedirectContent({
     return () => {
       isMounted = false;
     };
-  }, [getPathForRole, loading, router, user]);
+  }, [getPathForRole, loading, profile, refreshProfile, router, user]);
 
   if (loading || isResolvingRole) {
     return <PageLoader title={loadingTitle} message={loadingMessage} />;
