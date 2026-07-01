@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 
+import DashboardLogoutButton from "@/components/layout/DashboardLogoutButton";
+
 export type DashboardNavItem = {
   label: string;
   href: string;
@@ -91,18 +93,22 @@ export default function DashboardSidebar({
       <aside
         id={id}
         aria-label="Dashboard navigation"
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 transition-transform lg:static lg:z-auto lg:translate-x-0 ${
-          isAdmin ? "bg-blue-50" : "bg-surface"
+        className={`fixed inset-y-0 left-0 z-40 flex max-h-screen w-72 flex-col overflow-hidden border-r transition-transform lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 ${
+          isAdmin ? "border-slate-800 bg-slate-950" : "border-slate-200 bg-surface"
         } ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
+        <div
+          className={`flex h-16 shrink-0 items-center justify-between border-b px-5 ${
+            isAdmin ? "border-slate-800" : "border-slate-200"
+          }`}
+        >
           <Link
             href="/"
             className={`font-heading text-xl font-bold tracking-tight ${
               isAdmin
-                ? "rounded-md bg-white px-2 py-1 text-primary shadow-sm ring-1 ring-blue-200"
+                ? "text-white"
                 : "text-foreground"
             }`}
             aria-label="Go to CareerBridge home page"
@@ -112,7 +118,11 @@ export default function DashboardSidebar({
           </Link>
           <button
             type="button"
-            className="rounded-md p-2 text-muted transition hover:bg-background hover:text-foreground lg:hidden"
+            className={`rounded-md p-2 transition lg:hidden ${
+              isAdmin
+                ? "text-slate-300 hover:bg-slate-900 hover:text-white"
+                : "text-muted hover:bg-background hover:text-foreground"
+            }`}
             aria-label="Close dashboard menu"
             onClick={onClose}
           >
@@ -120,7 +130,10 @@ export default function DashboardSidebar({
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-5" aria-label="Dashboard">
+        <nav
+          className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-5"
+          aria-label="Dashboard"
+        >
           {navItems.map((link) => {
             const Icon = link.icon;
             const isDashboardRoot =
@@ -139,7 +152,7 @@ export default function DashboardSidebar({
                   isActive
                     ? "bg-primary text-white"
                     : isAdmin
-                      ? "text-slate-600 hover:bg-white hover:text-slate-950"
+                      ? "text-slate-300 hover:bg-slate-900 hover:text-white"
                       : "text-muted hover:bg-background hover:text-foreground"
                 }`}
               >
@@ -150,13 +163,26 @@ export default function DashboardSidebar({
           })}
         </nav>
 
-        <div className="border-t border-slate-200 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <div
+          className={`shrink-0 border-t p-4 ${
+            isAdmin ? "border-slate-800" : "border-slate-200"
+          }`}
+        >
+          <p
+            className={`text-xs font-semibold uppercase tracking-wide ${
+              isAdmin ? "text-slate-400" : "text-muted"
+            }`}
+          >
             {roleLabel ?? "Workspace"}
           </p>
-          <p className="mt-1 text-sm font-medium text-foreground">
+          <p
+            className={`mt-1 text-sm font-medium ${
+              isAdmin ? "text-white" : "text-foreground"
+            }`}
+          >
             {workspaceLabel}
           </p>
+          <DashboardLogoutButton variant={variant} />
         </div>
       </aside>
     </>

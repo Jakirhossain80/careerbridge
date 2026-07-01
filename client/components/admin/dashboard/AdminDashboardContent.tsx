@@ -1,18 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  BriefcaseBusiness,
+  Flag,
+  Settings,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
 import AdminDashboardFooter from "@/components/admin/dashboard/AdminDashboardFooter";
 import AdminStatsGrid from "@/components/admin/dashboard/AdminStatsGrid";
 import PendingApprovalsPanel from "@/components/admin/dashboard/PendingApprovalsPanel";
 import PlatformGrowthChart from "@/components/admin/dashboard/PlatformGrowthChart";
 import RecentSystemActivityTable from "@/components/admin/dashboard/RecentSystemActivityTable";
+import DashboardSection from "@/components/dashboard/DashboardSection";
 import { DashboardEmptyState } from "@/components/empty-states";
 import { DashboardSkeleton } from "@/components/skeletons";
 import Badge from "@/components/ui/Badge";
 import ErrorState from "@/components/ui/ErrorState";
 import { useAuth } from "@/hooks/useAuth";
+import { getRoleLabel } from "@/lib/role-labels";
 import {
   adminDashboardQueryKeys,
   getAdminDashboard,
@@ -30,10 +40,6 @@ type ApprovalAction = {
   item: PendingApprovalItem;
   action: "approve" | "reject";
 };
-
-function formatRole(role?: string) {
-  return role ? role.replace(/_/g, " ") : "Admin";
-}
 
 function getDisplayName(
   profileName?: string,
@@ -75,6 +81,34 @@ function exportActivityLogs(activity: Array<Record<string, string | undefined>>)
   link.click();
   URL.revokeObjectURL(url);
 }
+
+const superAdminQuickActions = [
+  {
+    label: "Manage Users",
+    href: "/admin/users",
+    icon: Users,
+  },
+  {
+    label: "Review Pending Employers",
+    href: "/admin/employers/pending",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Review Pending Jobs",
+    href: "/admin/jobs/pending",
+    icon: BriefcaseBusiness,
+  },
+  {
+    label: "View Reports",
+    href: "/admin/reports",
+    icon: Flag,
+  },
+  {
+    label: "System Settings",
+    href: "/admin/settings",
+    icon: Settings,
+  },
+];
 
 export default function AdminDashboardContent() {
   const queryClient = useQueryClient();
@@ -139,7 +173,11 @@ export default function AdminDashboardContent() {
     user?.displayName,
     profile?.email ?? user?.email,
   );
-  const roleLabel = formatRole(profile?.role);
+  const roleLabel = getRoleLabel(profile?.role);
+  const isSuperAdmin = profile?.role === "super_admin";
+  const dashboardLabel = isSuperAdmin
+    ? "Super Admin Dashboard"
+    : "Admin Dashboard";
   const isEmpty =
     data.metrics.length === 0 &&
     data.platformGrowth.length === 0 &&
@@ -166,7 +204,7 @@ export default function AdminDashboardContent() {
     <main className="px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-primary">Admin Dashboard</p>
+          <p className="text-sm font-semibold text-primary">{dashboardLabel}</p>
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             System Overview
           </h1>
@@ -176,7 +214,7 @@ export default function AdminDashboardContent() {
               <span className="font-semibold text-foreground">{displayName}</span>.
               Here&apos;s what&apos;s happening on CareerBridge today.
             </p>
-            <Badge variant="primary" className="w-fit capitalize">
+            <Badge variant="primary" className="w-fit">
               {roleLabel}
             </Badge>
           </div>
@@ -189,6 +227,32 @@ export default function AdminDashboardContent() {
         ) : null}
 
         <AdminStatsGrid metrics={data.metrics} />
+
+        {isSuperAdmin ? (
+          <DashboardSection
+            title="Super Admin Quick Actions"
+            description="Platform-wide moderation and operations shortcuts."
+          >
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {superAdminQuickActions.map((action) => {
+                const Icon = action.icon;
+
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="flex min-h-20 items-center gap-3 rounded-md border border-slate-200 bg-background px-4 py-3 text-sm font-semibold text-foreground transition hover:border-primary/40 hover:bg-blue-50 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Icon className="size-4" aria-hidden="true" />
+                    </span>
+                    <span>{action.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </DashboardSection>
+        ) : null}
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <PlatformGrowthChart data={data.platformGrowth} />

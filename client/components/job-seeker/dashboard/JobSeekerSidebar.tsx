@@ -15,6 +15,8 @@ import {
   X,
 } from "lucide-react";
 
+import DashboardLogoutButton from "@/components/layout/DashboardLogoutButton";
+
 const jobSeekerNavItems = [
   { label: "Dashboard", href: "/job-seeker/dashboard", icon: LayoutDashboard },
   { label: "Recommended Jobs", href: "/job-seeker/recommended-jobs", icon: Sparkles },
@@ -112,6 +114,7 @@ export default function JobSeekerSidebar({
           <p className="mt-1 text-sm font-medium text-foreground">
             Profile and applications
           </p>
+          <DashboardLogoutButton />
         </div>
       </aside>
     </>

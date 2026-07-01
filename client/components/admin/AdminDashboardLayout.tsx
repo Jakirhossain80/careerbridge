@@ -20,6 +20,8 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DashboardShell from "@/components/layout/DashboardShell";
 import type { DashboardNavItem } from "@/components/layout/DashboardSidebar";
 import AdminRouteGuard from "@/components/admin/AdminRouteGuard";
+import { useAuth } from "@/hooks/useAuth";
+import { getSidebarRoleLabel } from "@/lib/role-labels";
 
 export const adminDashboardLinks: DashboardNavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -40,13 +42,17 @@ export const adminDashboardLinks: DashboardNavItem[] = [
 ];
 
 export default function AdminDashboardLayout({ children }: { children: ReactNode }) {
+  const { profile } = useAuth();
+  const isSuperAdmin = profile?.role === "super_admin";
+  const consoleTitle = isSuperAdmin ? "Super Admin Console" : "Admin Console";
+
   return (
     <ProtectedRoute>
       <AdminRouteGuard>
         <DashboardShell
           navItems={adminDashboardLinks}
-          roleLabel="Admin"
-          title="Admin Console"
+          roleLabel={getSidebarRoleLabel(profile?.role)}
+          title={consoleTitle}
           searchPlaceholder="Search users, jobs, reports"
           workspaceLabel="Platform Operations"
           sidebarVariant="admin"
