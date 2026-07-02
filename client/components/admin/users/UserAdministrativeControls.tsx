@@ -39,9 +39,11 @@ export default function UserAdministrativeControls({
   onBlockToggle,
 }: UserAdministrativeControlsProps) {
   const self = isSelf(user, currentFirebaseUid, currentEmail);
-  const isTargetSuperAdmin = user.role === "super_admin";
+  const isTargetAdminRole = user.role === "admin" || user.role === "super_admin";
+  const canEditUserInfo =
+    self || currentAdminRole === "super_admin" || !isTargetAdminRole;
   const canModerate =
-    !self && (currentAdminRole === "super_admin" || !isTargetSuperAdmin);
+    !self && (currentAdminRole === "super_admin" || !isTargetAdminRole);
   const canManageRole =
     !self &&
     (currentAdminRole === "super_admin" ||
@@ -64,6 +66,7 @@ export default function UserAdministrativeControls({
         <Button
           type="button"
           variant="outline"
+          disabled={!canEditUserInfo || isMutating}
           onClick={onEdit}
           leftIcon={<Pencil className="size-4" aria-hidden="true" />}
         >
@@ -125,7 +128,7 @@ export default function UserAdministrativeControls({
           View Related Activity
         </Button>
       </div>
-      {self || isTargetSuperAdmin ? (
+      {self || isTargetAdminRole ? (
         <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           Sensitive actions are limited by account ownership and super admin
           protection rules.

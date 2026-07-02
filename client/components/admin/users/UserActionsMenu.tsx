@@ -40,9 +40,11 @@ export default function UserActionsMenu({
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const self = isSelf(user, currentFirebaseUid, currentEmail);
-  const isTargetSuperAdmin = user.role === "super_admin";
+  const isTargetAdminRole = user.role === "admin" || user.role === "super_admin";
+  const canEditUserInfo =
+    self || currentAdminRole === "super_admin" || !isTargetAdminRole;
   const canModerate =
-    !self && (currentAdminRole === "super_admin" || !isTargetSuperAdmin);
+    !self && (currentAdminRole === "super_admin" || !isTargetAdminRole);
   const canManageRole =
     currentAdminRole === "super_admin" || (user.role !== "admin" && user.role !== "super_admin");
 
@@ -82,19 +84,30 @@ export default function UserActionsMenu({
           <Link
             role="menuitem"
             href={`/admin/users/${user._id}`}
-            className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="block px-3 py-2 text-sm text-left font-medium text-slate-700 hover:bg-slate-50"
             onClick={() => setOpen(false)}
           >
             View User Details
           </Link>
-          <Link
-            role="menuitem"
-            href={`/admin/users/${user._id}`}
-            className="block px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            onClick={() => setOpen(false)}
-          >
-            Edit User Information
-          </Link>
+          {canEditUserInfo ? (
+            <Link
+              role="menuitem"
+              href={`/admin/users/${user._id}`}
+              className="block px-3 py-2 text-sm text-left font-medium text-slate-700 hover:bg-slate-50"
+              onClick={() => setOpen(false)}
+            >
+              Edit User Information
+            </Link>
+          ) : (
+            <button
+              type="button"
+              role="menuitem"
+              disabled
+              className="block w-full px-3 py-2 text-left text-sm font-medium text-slate-400 disabled:cursor-not-allowed"
+            >
+              Edit User Information
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"

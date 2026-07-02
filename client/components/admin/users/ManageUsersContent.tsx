@@ -53,7 +53,7 @@ function tabToRole(tab: AdminUsersTab) {
 
 export default function ManageUsersContent() {
   const queryClient = useQueryClient();
-  const { user: firebaseUser } = useAuth();
+  const { user: firebaseUser, profile } = useAuth();
   const [currentAdminRole, setCurrentAdminRole] = useState<UserRole>();
   const [activeTab, setActiveTab] = useState<AdminUsersTab>("all");
   const [search, setSearch] = useState("");
@@ -73,6 +73,11 @@ export default function ManageUsersContent() {
     let mounted = true;
 
     async function loadRole() {
+      if (profile?.role === "admin" || profile?.role === "super_admin") {
+        setCurrentAdminRole(profile.role);
+        return;
+      }
+
       if (!firebaseUser) return;
       const token = await firebaseUser.getIdTokenResult();
       const roleClaim = token.claims.role;
@@ -89,14 +94,16 @@ export default function ManageUsersContent() {
     return () => {
       mounted = false;
     };
-  }, [firebaseUser]);
+  }, [firebaseUser, profile?.role]);
 
   const filters: AdminListParams = useMemo(() => {
     const tabRole = tabToRole(activeTab);
+    const effectiveRole =
+      currentAdminRole === "admin" && role === "super_admin" ? "all" : role;
 
     return {
       search: search.trim() || undefined,
-      role: role !== "all" ? role : tabRole,
+      role: effectiveRole !== "all" ? effectiveRole : tabRole,
       status: status !== "all" ? status : undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
@@ -104,7 +111,7 @@ export default function ManageUsersContent() {
       limit: 10,
       sortBy: sortMap[sortBy],
     };
-  }, [activeTab, dateFrom, dateTo, page, role, search, sortBy, status]);
+  }, [activeTab, currentAdminRole, dateFrom, dateTo, page, role, search, sortBy, status]);
 
   const usersQuery = useQuery({
     queryKey: adminQueryKeys.users(filters),
@@ -263,6 +270,7 @@ export default function ManageUsersContent() {
       <UsersFilterBar
         search={search}
         role={role}
+        currentAdminRole={currentAdminRole}
         status={status}
         sortBy={sortBy}
         dateFrom={dateFrom}

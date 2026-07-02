@@ -1,6 +1,5 @@
 "use client";
 
-import { mockUserSettings } from "@/data/mock-user-settings";
 import { api } from "@/lib/api";
 import type { UserSettings, UserSettingsPayload } from "@/types/user-settings.types";
 
@@ -10,12 +9,42 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
-let localMockSettings: UserSettings = mockUserSettings;
-
 export const userSettingsQueryKeys = {
   all: ["user-settings"] as const,
   profile: ["job-seeker-profile"] as const,
   dashboard: ["job-seeker-dashboard"] as const,
+};
+
+export const defaultUserSettings: UserSettings = {
+  accountPreferences: {
+    currentEmail: "",
+    newEmail: "",
+    phone: "",
+    linkedProfiles: [],
+    language: "en",
+    timeZone: "Asia/Dhaka",
+  },
+  notificationPreferences: {
+    enableNotifications: true,
+    emailNotifications: true,
+    applicationUpdates: true,
+    interviewNotifications: true,
+    interviewReminders: true,
+    jobAlerts: true,
+    recommendedJobs: true,
+  },
+  privacySettings: {
+    profileVisibility: "recruiters_only",
+    resumeVisibility: "recruiters_only",
+    contactInfoVisible: true,
+    publicSearchVisible: true,
+  },
+  jobPreferences: {
+    preferredCategories: [],
+    preferredLocations: [],
+    preferredEmploymentTypes: [],
+    preferredWorkModes: [],
+  },
 };
 
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
@@ -35,70 +64,75 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
 
 function normalizeSettings(settings: Partial<UserSettings>): UserSettings {
   return {
-    ...mockUserSettings,
+    ...defaultUserSettings,
     ...settings,
     accountPreferences: {
-      ...mockUserSettings.accountPreferences,
+      ...defaultUserSettings.accountPreferences,
       ...settings.accountPreferences,
     },
     notificationPreferences: {
-      ...mockUserSettings.notificationPreferences,
+      ...defaultUserSettings.notificationPreferences,
       ...settings.notificationPreferences,
     },
     privacySettings: {
-      ...mockUserSettings.privacySettings,
+      ...defaultUserSettings.privacySettings,
       ...settings.privacySettings,
     },
     jobPreferences: {
-      ...mockUserSettings.jobPreferences,
+      ...defaultUserSettings.jobPreferences,
       ...settings.jobPreferences,
     },
   };
 }
 
+function emptyToUndefined(value?: string) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function toProfileSettingsPayload(payload: UserSettingsPayload) {
+  const account = payload.accountPreferences;
+  const preferences = payload.jobPreferences;
+
+  return {
+    email: emptyToUndefined(account.newEmail) ?? emptyToUndefined(account.currentEmail),
+    phone: emptyToUndefined(account.phone),
+    language: emptyToUndefined(account.language),
+    timeZone: emptyToUndefined(account.timeZone),
+    linkedProfiles: account.linkedProfiles ?? [],
+    notificationPreferences: payload.notificationPreferences,
+    privacySettings: payload.privacySettings,
+    preferredCategories: preferences?.preferredCategories ?? [],
+    preferredLocations: preferences?.preferredLocations ?? [],
+    preferredJobTypes: preferences?.preferredEmploymentTypes ?? [],
+    preferredWorkModes: preferences?.preferredWorkModes ?? [],
+    expectedSalaryMin: preferences?.expectedSalaryMin,
+    expectedSalaryMax: preferences?.expectedSalaryMax,
+  };
+}
+
 export async function getUserSettings() {
-  try {
-    const response = await api.get<ApiEnvelope<UserSettings> | UserSettings>(
-      "/users/me/settings",
-    );
+  const response = await api.get<ApiEnvelope<UserSettings> | UserSettings>(
+    "/job-seekers/me/settings",
+  );
 
-    return normalizeSettings(unwrap<UserSettings>(response));
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return localMockSettings;
-  }
+  return normalizeSettings(unwrap<UserSettings>(response));
 }
 
 export async function updateUserSettings(payload: UserSettingsPayload) {
-  try {
-    const response = await api.patch<ApiEnvelope<UserSettings> | UserSettings>(
-      "/users/me/settings",
-      payload,
-    );
+  const response = await api.patch<ApiEnvelope<UserSettings> | UserSettings>(
+    "/job-seekers/me/settings",
+    toProfileSettingsPayload(payload),
+  );
 
-    return normalizeSettings(unwrap<UserSettings>(response));
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    localMockSettings = normalizeSettings({
-      ...payload,
-      updatedAt: new Date().toISOString(),
-    });
-
-    return localMockSettings;
-  }
+  return normalizeSettings(unwrap<UserSettings>(response));
 }
 
 export async function updateNotificationSettings(
   payload: UserSettingsPayload["notificationPreferences"],
 ) {
   return updateUserSettings({
-    ...localMockSettings,
+    ...defaultUserSettings,
     notificationPreferences: payload,
   });
 }
@@ -107,7 +141,7 @@ export async function updatePrivacySettings(
   payload: UserSettingsPayload["privacySettings"],
 ) {
   return updateUserSettings({
-    ...localMockSettings,
+    ...defaultUserSettings,
     privacySettings: payload,
   });
 }

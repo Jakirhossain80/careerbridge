@@ -17,7 +17,6 @@ import PrivacySettingsForm from "@/components/job-seeker/settings/PrivacySetting
 import SecuritySettingsCard from "@/components/job-seeker/settings/SecuritySettingsCard";
 import { FormSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
-import { mockUserSettings } from "@/data/mock-user-settings";
 import { getApiErrorMessage } from "@/lib/api";
 import { appToast } from "@/lib/toast";
 import {
@@ -26,6 +25,7 @@ import {
 } from "@/lib/validations/user-settings.schema";
 import {
   deactivateAccount,
+  defaultUserSettings,
   getUserSettings,
   updateUserSettings,
   userSettingsQueryKeys,
@@ -45,7 +45,7 @@ export default function JobSeekerSettingsContent() {
 
   const methods = useForm<UserSettingsFormValues>({
     resolver: zodResolver(userSettingsSchema),
-    defaultValues: mockUserSettings,
+    defaultValues: defaultUserSettings,
     mode: "onBlur",
   });
 
@@ -103,7 +103,7 @@ export default function JobSeekerSettingsContent() {
   });
 
   function handleDiscardChanges() {
-    reset(settingsQuery.data ?? mockUserSettings);
+    reset(settingsQuery.data ?? defaultUserSettings);
     setSuccessMessage("");
     setActionError("");
   }

@@ -251,9 +251,10 @@ const getRequiredParam = (params: ReturnType<typeof idParamSchema.parse>) => {
   return value;
 };
 
-export const stats: RequestHandler = async (_req, res, next) => {
+export const stats: RequestHandler = async (req, res, next) => {
   try {
-    successResponse(res, "Admin stats fetched successfully", await getAdminStats());
+    const actor = await getAuthenticatedAdmin(req.user);
+    successResponse(res, "Admin stats fetched successfully", await getAdminStats(actor));
   } catch (error) {
     handleControllerError(error, res, next);
   }
@@ -261,8 +262,9 @@ export const stats: RequestHandler = async (_req, res, next) => {
 
 export const users: RequestHandler = async (req, res, next) => {
   try {
+    const actor = await getAuthenticatedAdmin(req.user);
     const query = paginationQuerySchema.parse(req.query);
-    successResponse(res, "Users fetched successfully", await listAdminUsers(query));
+    successResponse(res, "Users fetched successfully", await listAdminUsers(actor, query));
   } catch (error) {
     handleControllerError(error, res, next);
   }
@@ -341,8 +343,9 @@ export const updateJobSeekerStatus: RequestHandler = async (req, res, next) => {
 
 export const userDetails: RequestHandler = async (req, res, next) => {
   try {
+    const actor = await getAuthenticatedAdmin(req.user);
     const userId = getRequiredParam(idParamSchema.parse(req.params));
-    successResponse(res, "User fetched successfully", await getAdminUser(userId));
+    successResponse(res, "User fetched successfully", await getAdminUser(actor, userId));
   } catch (error) {
     handleControllerError(error, res, next);
   }

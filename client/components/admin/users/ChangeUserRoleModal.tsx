@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
+import { getRoleLabel } from "@/lib/role-labels";
 import type { AdminUser, UserRole } from "@/types/admin-user.types";
 
 type ChangeUserRoleModalProps = {
@@ -15,12 +16,18 @@ type ChangeUserRoleModalProps = {
   onConfirm: (role: UserRole) => void;
 };
 
-const baseRoleOptions: Array<{ label: string; value: UserRole }> = [
-  { label: "Job Seeker", value: "job_seeker" },
-  { label: "Employer", value: "employer" },
-  { label: "Admin", value: "admin" },
-  { label: "Super Admin", value: "super_admin" },
-];
+const baseAssignableRoles = ["job_seeker", "employer"] as const satisfies readonly UserRole[];
+const superAdminAssignableRoles = [
+  ...baseAssignableRoles,
+  "admin",
+] as const satisfies readonly UserRole[];
+
+function toRoleOptions(roles: readonly UserRole[]) {
+  return roles.map((value) => ({
+    label: getRoleLabel(value),
+    value,
+  }));
+}
 
 export default function ChangeUserRoleModal({
   user,
@@ -33,10 +40,8 @@ export default function ChangeUserRoleModal({
   const roleOptions = useMemo(
     () =>
       currentAdminRole === "super_admin"
-        ? baseRoleOptions
-        : baseRoleOptions.filter(
-            (option) => option.value === "job_seeker" || option.value === "employer",
-          ),
+        ? toRoleOptions(superAdminAssignableRoles)
+        : toRoleOptions(baseAssignableRoles),
     [currentAdminRole],
   );
 

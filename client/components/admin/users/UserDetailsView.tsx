@@ -48,8 +48,19 @@ function UserDetailsLoading() {
   );
 }
 
+function isCurrentUser(
+  user: AdminUser,
+  currentFirebaseUid?: string,
+  currentEmail?: string | null,
+) {
+  return (
+    Boolean(currentFirebaseUid && user.firebaseUid === currentFirebaseUid) ||
+    Boolean(currentEmail && user.email.toLowerCase() === currentEmail.toLowerCase())
+  );
+}
+
 export default function UserDetailsView({ userId }: UserDetailsViewProps) {
-  const { user: firebaseUser } = useAuth();
+  const { user: firebaseUser, profile } = useAuth();
   const [currentAdminRole, setCurrentAdminRole] = useState<UserRole>();
   const [roleUser, setRoleUser] = useState<AdminUser | null>(null);
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
@@ -65,6 +76,11 @@ export default function UserDetailsView({ userId }: UserDetailsViewProps) {
     let mounted = true;
 
     async function loadRole() {
+      if (profile?.role === "admin" || profile?.role === "super_admin") {
+        setCurrentAdminRole(profile.role);
+        return;
+      }
+
       if (!firebaseUser) return;
       const token = await firebaseUser.getIdTokenResult();
       const roleClaim = token.claims.role;
@@ -81,7 +97,7 @@ export default function UserDetailsView({ userId }: UserDetailsViewProps) {
     return () => {
       mounted = false;
     };
-  }, [firebaseUser]);
+  }, [firebaseUser, profile?.role]);
 
   if (userQuery.isLoading) {
     return <UserDetailsLoading />;
@@ -100,6 +116,11 @@ export default function UserDetailsView({ userId }: UserDetailsViewProps) {
   }
 
   const user = userQuery.data;
+  const isAdminLevelUser = user.role === "admin" || user.role === "super_admin";
+  const canEditUserInfo =
+    isCurrentUser(user, firebaseUser?.uid, firebaseUser?.email) ||
+    currentAdminRole === "super_admin" ||
+    !isAdminLevelUser;
   const isMutating =
     updateMutation.isPending ||
     roleMutation.isPending ||
@@ -194,6 +215,7 @@ export default function UserDetailsView({ userId }: UserDetailsViewProps) {
           </a>
           <Button
             type="button"
+            disabled={!canEditUserInfo}
             onClick={() => setEditUser(user)}
             leftIcon={<Pencil className="size-4" aria-hidden="true" />}
           >

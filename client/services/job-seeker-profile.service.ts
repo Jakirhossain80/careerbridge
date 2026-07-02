@@ -1,11 +1,6 @@
 "use client";
 
 import { api } from "@/lib/api";
-import {
-  mockJobSeekerProfile,
-  mockJobSeekerProfileStats,
-  mockJobSeekerResumes,
-} from "@/data/mock-job-seeker-profile";
 import type {
   JobSeekerProfile,
   JobSeekerProfileStats,
@@ -34,60 +29,33 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   return payload as T;
 }
 
-async function withDevelopmentFallback<T>(
-  request: () => Promise<T>,
-  fallback: T,
-) {
-  try {
-    return await request();
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return fallback;
-  }
-}
-
 export async function getJobSeekerProfile() {
-  return withDevelopmentFallback(async () => {
-    const response = await api.get<ApiEnvelope<JobSeekerProfile> | JobSeekerProfile>(
-      "/job-seeker/profile",
-    );
-    return unwrap<JobSeekerProfile>(response);
-  }, mockJobSeekerProfile);
+  const response = await api.get<ApiEnvelope<JobSeekerProfile> | JobSeekerProfile>(
+    "/job-seekers/me",
+  );
+  return unwrap<JobSeekerProfile>(response);
 }
 
 export async function updateJobSeekerProfile(
   payload: JobSeekerProfileUpdatePayload,
 ) {
-  return withDevelopmentFallback(async () => {
-    const response = await api.patch<ApiEnvelope<JobSeekerProfile> | JobSeekerProfile>(
-      "/job-seeker/profile",
-      payload,
-    );
-    return unwrap<JobSeekerProfile>(response);
-  }, {
-    ...mockJobSeekerProfile,
-    ...payload,
-    profileCompletion: payload.profileCompletion ?? mockJobSeekerProfile.profileCompletion,
-  });
+  const response = await api.patch<ApiEnvelope<JobSeekerProfile> | JobSeekerProfile>(
+    "/job-seekers/me",
+    payload,
+  );
+  return unwrap<JobSeekerProfile>(response);
 }
 
 export async function getJobSeekerProfileStats() {
-  return withDevelopmentFallback(async () => {
-    const response = await api.get<
-      ApiEnvelope<JobSeekerProfileStats> | JobSeekerProfileStats
-    >("/job-seeker/profile/stats");
-    return unwrap<JobSeekerProfileStats>(response);
-  }, mockJobSeekerProfileStats);
+  const response = await api.get<
+    ApiEnvelope<JobSeekerProfileStats> | JobSeekerProfileStats
+  >("/job-seekers/me/stats");
+  return unwrap<JobSeekerProfileStats>(response);
 }
 
 export async function getMyResumes() {
-  return withDevelopmentFallback(async () => {
-    const response = await api.get<
-      ApiEnvelope<JobSeekerResumeSummary[]> | JobSeekerResumeSummary[]
-    >("/resumes/me");
-    return unwrap<JobSeekerResumeSummary[]>(response);
-  }, mockJobSeekerResumes);
+  const response = await api.get<
+    ApiEnvelope<JobSeekerResumeSummary[]> | JobSeekerResumeSummary[]
+  >("/job-seekers/resumes");
+  return unwrap<JobSeekerResumeSummary[]>(response);
 }

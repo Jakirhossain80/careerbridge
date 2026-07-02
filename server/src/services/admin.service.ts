@@ -309,13 +309,50 @@ const assertCanManageUser = (actor: AdminActor, target: IUser & { _id: unknown }
   }
 };
 
+const assertCanViewUser = (actor: AdminActor, target: Pick<IUser, "role">) => {
+  if (actor.role !== USER_ROLES.SUPER_ADMIN && target.role === USER_ROLES.SUPER_ADMIN) {
+    throw new AppError("Forbidden: insufficient permissions for this user", 403);
+  }
+};
+
+const applyAdminUserVisibilityFilter = (
+  actor: AdminActor,
+  filter: Record<string, unknown>
+) => {
+  if (actor.role === USER_ROLES.SUPER_ADMIN) {
+    return;
+  }
+
+  if (filter.role && typeof filter.role === "object" && "$in" in filter.role) {
+    filter.role = {
+      $in: (filter.role as { $in: string[] }).$in.filter(
+        (role) => role !== USER_ROLES.SUPER_ADMIN
+      ),
+    };
+    return;
+  }
+
+  if (filter.role === USER_ROLES.SUPER_ADMIN) {
+    filter.role = { $in: [] };
+    return;
+  }
+
+  if (!filter.role) {
+    filter.role = { $ne: USER_ROLES.SUPER_ADMIN };
+  }
+};
+
 const buildSearchRegex = (search?: string) =>
   search ? new RegExp(escapeRegex(search), "i") : undefined;
 
 const isAdminRole = (role: UserRole) =>
   role === USER_ROLES.ADMIN || role === USER_ROLES.SUPER_ADMIN;
 
-export const getAdminStats = async () => {
+export const getAdminStats = async (actor: AdminActor) => {
+  const visibleUserFilter =
+    actor.role === USER_ROLES.SUPER_ADMIN
+      ? {}
+      : { role: { $ne: USER_ROLES.SUPER_ADMIN } };
   const [
     totalUsers,
     totalJobSeekers,
@@ -330,7 +367,7 @@ export const getAdminStats = async () => {
     recentJobs,
     recentApplications,
   ] = await Promise.all([
-    User.countDocuments(),
+    User.countDocuments(visibleUserFilter),
     User.countDocuments({ role: USER_ROLES.JOB_SEEKER }),
     User.countDocuments({ role: USER_ROLES.EMPLOYER }),
     Job.countDocuments(),
@@ -342,9 +379,13 @@ export const getAdminStats = async () => {
         { verificationStatus: COMPANY_VERIFICATION_STATUS.PENDING },
       ],
     }),
-    User.countDocuments({ status: USER_STATUS.BLOCKED }),
+    User.countDocuments({ ...visibleUserFilter, status: USER_STATUS.BLOCKED }),
     Report.countDocuments({ status: REPORT_STATUS.PENDING }),
-    User.find().sort({ createdAt: -1 }).limit(4).select("name email role createdAt").lean(),
+    User.find(visibleUserFilter)
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select("name email role createdAt")
+      .lean(),
     Job.find().sort({ createdAt: -1 }).limit(4).select("title status createdAt").lean(),
     Application.find()
       .sort({ createdAt: -1 })
@@ -396,7 +437,7 @@ export const getAdminStats = async () => {
   };
 };
 
-export const listAdminUsers = async (query: PaginationQuery) => {
+export const listAdminUsers = async (actor: AdminActor, query: PaginationQuery) => {
   const filter: Record<string, unknown> = {};
   const regex = buildSearchRegex(query.search);
 
@@ -430,6 +471,8 @@ export const listAdminUsers = async (query: PaginationQuery) => {
 
     filter.$or = searchConditions;
   }
+
+  applyAdminUserVisibilityFilter(actor, filter);
 
   const skip = (query.page - 1) * query.limit;
   const [users, total] = await Promise.all([
@@ -791,10 +834,11 @@ export const updateAdminJobSeekerStatus = async (
   status: UserStatus
 ) => updateAdminJobSeeker(actor, jobSeekerId, { status });
 
-export const getAdminUser = async (userId: string) => {
+export const getAdminUser = async (actor: AdminActor, userId: string) => {
   const user = await User.findById(userId).lean();
 
   if (!user) throw new AppError("User not found", 404);
+  assertCanViewUser(actor, user);
 
   return user;
 };
@@ -810,6 +854,14 @@ export const updateAdminUser = async (
 
   if (input.status === USER_STATUS.BLOCKED && target._id.toString() === actor.id) {
     throw new AppError("Admins cannot block themselves", 400);
+  }
+
+  if (
+    input.status !== undefined &&
+    input.status !== target.status &&
+    target._id.toString() === actor.id
+  ) {
+    throw new AppError("Admins cannot change their own status", 400);
   }
 
   Object.assign(target, input);
@@ -836,15 +888,22 @@ export const changeAdminUserRole = async (
   const target = await User.findById(userId);
   if (!target) throw new AppError("User not found", 404);
 
+  if (target._id.toString() === actor.id) {
+    throw new AppError("Admins cannot change their own role", 400);
+  }
+
+  if (role === USER_ROLES.SUPER_ADMIN) {
+    throw new AppError(
+      "Super admin assignment is not supported from Manage Users",
+      403
+    );
+  }
+
   if (
     isAdminRole(target.role) ||
     isAdminRole(role)
   ) {
     assertSuperAdmin(actor);
-  }
-
-  if (role === USER_ROLES.SUPER_ADMIN && actor.role !== USER_ROLES.SUPER_ADMIN) {
-    throw new AppError("Only super admins can promote super admins", 403);
   }
 
   target.role = role;

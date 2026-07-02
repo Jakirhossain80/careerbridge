@@ -14,6 +14,7 @@ import type {
 type UsersFilterBarProps = {
   search: string;
   role: UserRole | "all";
+  currentAdminRole?: UserRole;
   status: UserStatus | "all";
   sortBy: AdminUsersSortBy;
   dateFrom: string;
@@ -53,6 +54,7 @@ const sortOptions: Array<{ label: string; value: AdminUsersSortBy }> = [
 export default function UsersFilterBar({
   search,
   role,
+  currentAdminRole,
   status,
   sortBy,
   dateFrom,
@@ -65,6 +67,11 @@ export default function UsersFilterBar({
   onDateToChange,
   onReset,
 }: UsersFilterBarProps) {
+  const visibleRoleOptions =
+    currentAdminRole === "super_admin"
+      ? roleOptions
+      : roleOptions.filter((option) => option.value !== "super_admin");
+
   return (
     <section className="rounded-lg border border-slate-200 bg-surface p-4 shadow-sm">
       <div className="grid gap-3 lg:grid-cols-[minmax(220px,1.4fr)_repeat(5,minmax(140px,1fr))_auto]">
@@ -81,7 +88,7 @@ export default function UsersFilterBar({
           onChange={(event) => onRoleChange(event.target.value as UserRole | "all")}
           className="h-11"
         >
-          {roleOptions.map((option) => (
+          {visibleRoleOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

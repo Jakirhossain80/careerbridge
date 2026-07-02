@@ -186,7 +186,6 @@ export const roleChangeSchema = z.object({
     USER_ROLES.JOB_SEEKER,
     USER_ROLES.EMPLOYER,
     USER_ROLES.ADMIN,
-    USER_ROLES.SUPER_ADMIN,
   ] as [string, ...string[]]),
 });
 

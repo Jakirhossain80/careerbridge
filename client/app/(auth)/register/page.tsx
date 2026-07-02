@@ -19,8 +19,13 @@ import {
   loginWithGooglePopup,
   registerWithEmailAndVerification,
 } from "@/lib/firebase";
+import { getDashboardPathForRole } from "@/lib/authRedirects";
 import { appToast } from "@/lib/toast";
-import { syncAuthenticatedUser } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  clearPendingAuthSyncRole,
+  setPendingAuthSyncRole,
+} from "@/services/auth.service";
 import { ValidationMessage } from "@/components/ui";
 
 type RegisterRole = "job_seeker" | "employer";
@@ -97,6 +102,7 @@ const getPasswordRules = (password: string): PasswordRule[] => [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { refreshProfile } = useAuth();
   const [selectedRole, setSelectedRole] = useState<RegisterRole>("job_seeker");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -184,6 +190,7 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
+      setPendingAuthSyncRole(selectedRole);
       const user = await loginWithGooglePopup();
 
       // TODO: Persist selectedRole when a user profile API or Firestore profile
@@ -194,9 +201,11 @@ export default function RegisterPage() {
         return;
       }
 
-      await syncAuthenticatedUser();
+      const syncedUser = await refreshProfile({ role: selectedRole });
+      const dashboardPath = getDashboardPathForRole(syncedUser?.role) ?? "/dashboard";
+
       appToast.success("Signed in successfully.");
-      router.push("/dashboard");
+      router.push(dashboardPath);
     } catch (error) {
       const message = getFriendlyAuthErrorMessage(error);
       setErrors({
@@ -204,6 +213,7 @@ export default function RegisterPage() {
       });
       appToast.error(message);
     } finally {
+      clearPendingAuthSyncRole();
       setIsContinuingWithGoogle(false);
     }
   };

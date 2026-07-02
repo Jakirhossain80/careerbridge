@@ -3,6 +3,7 @@ import {
   USER_ROLES,
   USER_STATUS,
   type AuthProvider,
+  type UserRole,
 } from "../constants/model.constants.js";
 import {
   createUser,
@@ -17,6 +18,7 @@ type SyncFirebaseUserInput = {
   photoURL?: string;
   authProvider: AuthProvider;
   emailVerified: boolean;
+  requestedRole?: UserRole;
 };
 
 export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
@@ -70,13 +72,17 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
     return existingUser;
   }
 
+  const role = userData.requestedRole ?? USER_ROLES.JOB_SEEKER;
+  const status =
+    role === USER_ROLES.EMPLOYER ? USER_STATUS.PENDING : USER_STATUS.ACTIVE;
+
   return createUser({
     firebaseUid: userData.firebaseUid,
     name: userData.name,
     email: userData.email,
     photoURL: userData.photoURL,
-    role: USER_ROLES.JOB_SEEKER,
-    status: USER_STATUS.ACTIVE,
+    role,
+    status,
     authProvider: userData.authProvider,
     emailVerified: userData.emailVerified,
     lastLoginAt: new Date(),

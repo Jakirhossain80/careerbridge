@@ -10,8 +10,11 @@ import {
   deleteResume,
   getAuthenticatedJobSeeker,
   getMyJobSeekerProfile,
+  getMyJobSeekerProfileStats,
+  getMyJobSeekerSettings,
   getMyResumes,
   setDefaultResume,
+  updateMyJobSeekerSettings,
   updateMyJobSeekerProfile,
 } from "../services/jobSeeker.service.js";
 import { successResponse } from "../utils/apiResponse.js";
@@ -33,6 +36,37 @@ export const updateMe: RequestHandler = async (req, res, next) => {
     const payload = profileUpdateSchema.parse(req.body);
     const profile = await updateMyJobSeekerProfile(jobSeeker, payload);
     successResponse(res, "Job seeker profile updated successfully", profile);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const getProfileStats: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeeker = await getAuthenticatedJobSeeker(req.user);
+    const stats = await getMyJobSeekerProfileStats(jobSeeker);
+    successResponse(res, "Job seeker profile stats fetched successfully", stats);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const getSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeeker = await getAuthenticatedJobSeeker(req.user);
+    const settings = await getMyJobSeekerSettings(jobSeeker);
+    successResponse(res, "Job seeker settings fetched successfully", settings);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeeker = await getAuthenticatedJobSeeker(req.user);
+    const payload = profileUpdateSchema.parse(req.body);
+    const settings = await updateMyJobSeekerSettings(jobSeeker, payload);
+    successResponse(res, "Job seeker settings updated successfully", settings);
   } catch (error) {
     handleControllerError(error, res, next);
   }

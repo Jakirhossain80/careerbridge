@@ -14,7 +14,9 @@ import { getFirebaseAuth, logout as logoutFromFirebase } from "@/lib/firebase";
 import { createQueryClient } from "@/lib/queryClient";
 import {
   authQueryKeys,
+  consumePendingAuthSyncInput,
   syncAuthenticatedUser,
+  type SyncAuthenticatedUserInput,
   type SyncedAuthUser,
 } from "@/services/auth.service";
 
@@ -24,7 +26,9 @@ export type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   logout: () => Promise<void>;
-  refreshProfile: () => Promise<SyncedAuthUser | null>;
+  refreshProfile: (
+    input?: SyncAuthenticatedUserInput
+  ) => Promise<SyncedAuthUser | null>;
 };
 
 export const AuthContext = createContext<AuthContextValue | undefined>(
@@ -37,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [queryClient] = useState(() => createQueryClient());
 
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = useCallback(async (input?: SyncAuthenticatedUserInput) => {
     const currentUser = getFirebaseAuth().currentUser;
 
     if (!currentUser) {
@@ -46,9 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
+    queryClient.removeQueries({ queryKey: authQueryKeys.currentUser });
+
     const syncedUser = await queryClient.fetchQuery({
       queryKey: authQueryKeys.currentUser,
-      queryFn: syncAuthenticatedUser,
+      queryFn: () => syncAuthenticatedUser(input),
       staleTime: 0,
     });
 
@@ -80,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const syncedUser = await queryClient.fetchQuery({
           queryKey: authQueryKeys.currentUser,
-          queryFn: syncAuthenticatedUser,
+          queryFn: () => syncAuthenticatedUser(consumePendingAuthSyncInput()),
           staleTime: 0,
         });
 
