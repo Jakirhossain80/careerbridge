@@ -169,7 +169,8 @@ export default function EditCompanyProfileForm({
       industry: formData.industry || undefined,
       companySize: formData.companySize || undefined,
       headquarters: formData.headquarters || undefined,
-      description: formData.about || undefined,
+      tagline: formData.tagline,
+      description: formData.about,
       logoUrl: formData.logoUrl || undefined,
       bannerUrl: formData.bannerUrl || undefined,
     });

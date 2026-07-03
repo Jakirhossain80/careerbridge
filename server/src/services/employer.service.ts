@@ -133,6 +133,7 @@ export const createCompanyProfile = async (
     website: input.website,
     location: input.headquarters,
     headquarters: input.headquarters,
+    tagline: input.tagline,
     description: input.description,
     logo: input.logoUrl,
     logoUrl: input.logoUrl,
@@ -172,6 +173,7 @@ export const updateCompanyProfile = async (
     update.headquarters = input.headquarters;
   }
   if (input.description !== undefined) update.description = input.description;
+  if (input.tagline !== undefined) update.tagline = input.tagline;
   if (input.logoUrl !== undefined) {
     update.logo = input.logoUrl;
     update.logoUrl = input.logoUrl;

@@ -12,6 +12,7 @@ const trimmedString = z.string().trim();
 const requiredString = trimmedString.min(1);
 const optionalString = trimmedString.min(1).optional();
 const optionalUrl = trimmedString.url().optional();
+const optionalText = trimmedString.optional();
 const imageMimeTypeSchema = z.enum([
   "image/jpeg",
   "image/png",
@@ -57,7 +58,8 @@ export const companyCreateSchema = z.object({
   companySize: optionalString,
   website: optionalUrl,
   headquarters: optionalString,
-  description: optionalString,
+  tagline: optionalText,
+  description: optionalText,
   logoUrl: optionalUrl,
   bannerUrl: optionalUrl,
   socialLinks: z.record(z.string(), trimmedString.url()).optional(),

@@ -22,6 +22,7 @@ type EmployerCompanyApiResponse = {
   logoUrl?: string;
   banner?: string;
   bannerUrl?: string;
+  tagline?: string;
   description?: string;
   website?: string;
   industry?: string;
@@ -43,6 +44,7 @@ export type EmployerCompanyProfileUpdatePayload = {
   industry?: string;
   companySize?: string;
   headquarters?: string;
+  tagline?: string;
   description?: string;
   logoUrl?: string;
   bannerUrl?: string;
@@ -110,7 +112,8 @@ export function normalizeEmployerCompanyProfile(
   const companyName = company.companyName ?? company.name;
   const about = company.description ?? "";
   const fallbackTagline =
-    about.split(".").find((sentence) => sentence.trim())?.trim() ??
+    company.tagline?.trim() ||
+    about.split(".").find((sentence) => sentence.trim())?.trim() ||
     `${companyName} is building its CareerBridge profile.`;
   const verificationStatus = company.verificationStatus ?? company.status;
 

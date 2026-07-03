@@ -38,7 +38,10 @@ export const uploadImageBuffer = async (
   options: ImageUploadOptions
 ) => {
   if (!configureCloudinary()) {
-    throw new AppError("Image upload storage is not configured", 500);
+    throw new AppError(
+      "Image upload storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET on the server.",
+      500
+    );
   }
 
   return new Promise<UploadApiResponse>((resolve, reject) => {

@@ -7,10 +7,8 @@ import OpenPositions from "@/components/company-details/OpenPositions";
 import TalentPoolCard from "@/components/company-details/TalentPoolCard";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
-import {
-  companyDetails,
-  getCompanyDetailsById,
-} from "@/lib/company-details-data";
+import { companyDetails } from "@/lib/company-details-data";
+import { getPublicCompanyDetails } from "@/services/public-companies.service";
 
 type CompanyDetailsPageProps = {
   params: Promise<{
@@ -26,7 +24,7 @@ export async function generateMetadata({
   params,
 }: CompanyDetailsPageProps): Promise<Metadata> {
   const { id } = await params;
-  const company = getCompanyDetailsById(id);
+  const company = await getPublicCompanyDetails(id);
 
   if (!company) {
     return {
@@ -44,7 +42,7 @@ export default async function CompanyDetailsPage({
   params,
 }: CompanyDetailsPageProps) {
   const { id } = await params;
-  const company = getCompanyDetailsById(id);
+  const company = await getPublicCompanyDetails(id);
 
   if (!company) {
     notFound();

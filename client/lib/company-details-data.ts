@@ -36,6 +36,8 @@ export type CompanyDetails = {
   followers: string;
   openPositionsCount: number;
   initials: string;
+  logoUrl?: string;
+  bannerUrl?: string;
   logoTone: string;
   coverTone: string;
   about: string[];

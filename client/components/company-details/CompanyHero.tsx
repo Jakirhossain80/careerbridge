@@ -29,7 +29,15 @@ export default function CompanyHero({ company }: CompanyHeroProps) {
           )}
           aria-label={`${company.name} cover image`}
           role="img"
+          style={
+            company.bannerUrl
+              ? { backgroundImage: `url(${company.bannerUrl})` }
+              : undefined
+          }
         >
+          {company.bannerUrl ? (
+            <div className="absolute inset-0 bg-slate-900/30" />
+          ) : null}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.28),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.18),transparent_42%)]" />
           <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-6 text-white">
             <div className="max-w-2xl">
@@ -51,12 +59,21 @@ export default function CompanyHero({ company }: CompanyHeroProps) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               <div
                 className={cn(
-                  "flex size-24 shrink-0 items-center justify-center rounded-lg text-3xl font-bold ring-1 shadow-sm",
+                  "flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg text-3xl font-bold ring-1 shadow-sm",
                   company.logoTone,
                 )}
                 aria-hidden="true"
               >
-                {company.initials}
+                {company.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={company.logoUrl}
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  company.initials
+                )}
               </div>
 
               <div className="min-w-0 pt-1">

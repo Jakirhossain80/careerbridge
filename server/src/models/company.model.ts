@@ -15,6 +15,7 @@ export interface ICompany {
   logoUrl?: string;
   banner?: string;
   bannerUrl?: string;
+  tagline?: string;
   description?: string;
   website?: string;
   industry?: string;
@@ -69,6 +70,10 @@ const companySchema = new Schema<ICompany>(
     },
     bannerUrl: {
       type: String,
+    },
+    tagline: {
+      type: String,
+      trim: true,
     },
     description: {
       type: String,
