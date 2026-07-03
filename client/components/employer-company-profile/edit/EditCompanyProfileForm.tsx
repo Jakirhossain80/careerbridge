@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Save } from "lucide-react";
 
 import CompanyBiographyForm from "@/components/employer-company-profile/edit/CompanyBiographyForm";
@@ -11,6 +12,16 @@ import CompanyKeyDetailsForm from "@/components/employer-company-profile/edit/Co
 import CompanyPublicPreview from "@/components/employer-company-profile/edit/CompanyPublicPreview";
 import MobileSaveBar from "@/components/employer-company-profile/edit/MobileSaveBar";
 import { Button, Input } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
+import {
+  createEmployerCompanyProfile,
+  employerCompanyProfileQueryKeys,
+  updateEmployerCompanyProfile,
+  uploadEmployerCompanyBanner,
+  uploadEmployerCompanyLogo,
+  type EmployerCompanyProfileUpdatePayload,
+} from "@/services/employer-company-profile.service";
 import type { CompanyProfile } from "@/lib/employer-company-profile-data";
 
 type EditCompanyProfileFormProps = {
@@ -67,10 +78,12 @@ function toFormData(company: CompanyProfile): CompanyProfileFormData {
 export default function EditCompanyProfileForm({
   company,
 }: EditCompanyProfileFormProps) {
+  const queryClient = useQueryClient();
   const initialFormData = useMemo(() => toFormData(company), [company]);
   const [formData, setFormData] =
     useState<CompanyProfileFormData>(initialFormData);
   const [saveState, setSaveState] = useState<"idle" | "success">("idle");
+  const hasCompanyProfile = Boolean(company.id);
 
   function updateField<Key extends keyof CompanyProfileFormData>(
     key: Key,
@@ -80,9 +93,86 @@ export default function EditCompanyProfileForm({
     setSaveState("idle");
   }
 
+  async function syncCompanyCaches(updatedCompany: CompanyProfile) {
+    queryClient.setQueryData(
+      employerCompanyProfileQueryKeys.detail,
+      updatedCompany,
+    );
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: employerCompanyProfileQueryKeys.detail,
+      }),
+      queryClient.invalidateQueries({
+        queryKey: employerCompanyProfileQueryKeys.dashboard,
+      }),
+    ]);
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: (payload: EmployerCompanyProfileUpdatePayload) =>
+      hasCompanyProfile
+        ? updateEmployerCompanyProfile(payload)
+        : createEmployerCompanyProfile(payload),
+    onSuccess: async (updatedCompany) => {
+      setFormData((current) => ({
+        ...toFormData(updatedCompany),
+        tagline: current.tagline,
+      }));
+      setSaveState("success");
+      await syncCompanyCaches(updatedCompany);
+      appToast.success("Company profile saved successfully.");
+    },
+    onError: (error) => {
+      setSaveState("idle");
+      appToast.error(getApiErrorMessage(error));
+    },
+  });
+
+  const logoMutation = useMutation({
+    mutationFn: (file: File) => {
+      const uploadData = new FormData();
+      uploadData.append("logo", file);
+      return uploadEmployerCompanyLogo(uploadData);
+    },
+    onSuccess: async (updatedCompany) => {
+      updateField("logoUrl", updatedCompany.logoUrl);
+      await syncCompanyCaches(updatedCompany);
+      appToast.success("Company logo updated successfully.");
+    },
+    onError: (error) => {
+      appToast.error(getApiErrorMessage(error));
+    },
+  });
+
+  const bannerMutation = useMutation({
+    mutationFn: (file: File) => {
+      const uploadData = new FormData();
+      uploadData.append("banner", file);
+      return uploadEmployerCompanyBanner(uploadData);
+    },
+    onSuccess: async (updatedCompany) => {
+      updateField("bannerUrl", updatedCompany.bannerUrl);
+      await syncCompanyCaches(updatedCompany);
+      appToast.success("Company banner updated successfully.");
+    },
+    onError: (error) => {
+      appToast.error(getApiErrorMessage(error));
+    },
+  });
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaveState("success");
+    setSaveState("idle");
+    saveMutation.mutate({
+      companyName: formData.companyName,
+      website: formData.website || undefined,
+      industry: formData.industry || undefined,
+      companySize: formData.companySize || undefined,
+      headquarters: formData.headquarters || undefined,
+      description: formData.about || undefined,
+      logoUrl: formData.logoUrl || undefined,
+      bannerUrl: formData.bannerUrl || undefined,
+    });
   }
 
   return (
@@ -102,7 +192,7 @@ export default function EditCompanyProfileForm({
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted sm:text-base">
               Update the public company details candidates see before applying.
-              Changes are local for now and ready for future API submission.
+              Changes are saved to your company profile after submission.
             </p>
           </div>
 
@@ -115,6 +205,7 @@ export default function EditCompanyProfileForm({
             </Link>
             <Button
               type="submit"
+              isLoading={saveMutation.isPending}
               leftIcon={<Save className="size-4" aria-hidden="true" />}
             >
               Save Changes
@@ -129,8 +220,7 @@ export default function EditCompanyProfileForm({
           >
             <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>
-              Profile changes are staged in the form. Backend submission can be
-              connected here later.
+              Company profile changes were saved successfully.
             </span>
           </div>
         ) : null}
@@ -141,6 +231,10 @@ export default function EditCompanyProfileForm({
               companyName={formData.companyName}
               logoUrl={formData.logoUrl}
               bannerUrl={formData.bannerUrl}
+              isLogoUploading={logoMutation.isPending}
+              isBannerUploading={bannerMutation.isPending}
+              onLogoUpload={(file) => logoMutation.mutate(file)}
+              onBannerUpload={(file) => bannerMutation.mutate(file)}
             />
 
             <section
@@ -206,7 +300,10 @@ export default function EditCompanyProfileForm({
         </div>
       </form>
 
-      <MobileSaveBar cancelHref="/employer/dashboard/company-profile" />
+      <MobileSaveBar
+        cancelHref="/employer/dashboard/company-profile"
+        isSaving={saveMutation.isPending}
+      />
     </>
   );
 }

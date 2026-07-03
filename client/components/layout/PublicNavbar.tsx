@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, LayoutDashboard, LogOut, UserRound } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { getDashboardPathForRole } from "@/lib/authRedirects";
 import { appToast } from "@/lib/toast";
+import { getJobSeekerProfile } from "@/services/job-seeker-profile.service";
 import ActiveNavLink from "./ActiveNavLink";
 
 const navigationLinks = [
@@ -33,10 +35,17 @@ function getInitials(name?: string | null, email?: string | null) {
 export default function PublicNavbar() {
   const { user, profile, loading, isAuthenticated, logout } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const jobSeekerProfileQuery = useQuery({
+    queryKey: ["job-seeker-profile"],
+    queryFn: getJobSeekerProfile,
+    enabled: isAuthenticated && profile?.role === "job_seeker",
+  });
 
-  const displayName = profile?.name ?? user?.displayName ?? user?.email ?? "User";
-  const email = profile?.email ?? user?.email;
-  const avatarUrl = profile?.photoURL ?? user?.photoURL;
+  const jobSeekerProfile = jobSeekerProfileQuery.data;
+  const displayName =
+    jobSeekerProfile?.fullName ?? profile?.name ?? user?.displayName ?? user?.email ?? "User";
+  const email = jobSeekerProfile?.email ?? profile?.email ?? user?.email;
+  const avatarUrl = jobSeekerProfile?.avatar ?? profile?.photoURL ?? user?.photoURL;
   const initials = getInitials(displayName, email);
   const dashboardPath = getDashboardPathForRole(profile?.role) ?? "/dashboard";
 

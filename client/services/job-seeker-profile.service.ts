@@ -46,6 +46,15 @@ export async function updateJobSeekerProfile(
   return unwrap<JobSeekerProfile>(response);
 }
 
+export async function uploadJobSeekerAvatar(formData: FormData) {
+  const response = await api.post<ApiEnvelope<JobSeekerProfile> | JobSeekerProfile>(
+    "/job-seekers/me/avatar",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return unwrap<JobSeekerProfile>(response);
+}
+
 export async function getJobSeekerProfileStats() {
   const response = await api.get<
     ApiEnvelope<JobSeekerProfileStats> | JobSeekerProfileStats

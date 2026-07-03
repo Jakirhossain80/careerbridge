@@ -20,7 +20,13 @@ import {
   jobSeekerProfileSchema,
   type JobSeekerProfileFormValues,
 } from "@/lib/validations/job-seeker-profile.schema";
-import { updateJobSeekerProfile } from "@/services/job-seeker-profile.service";
+import { useAuth } from "@/hooks/useAuth";
+import { authQueryKeys } from "@/services/auth.service";
+import {
+  updateJobSeekerProfile,
+  uploadJobSeekerAvatar,
+} from "@/services/job-seeker-profile.service";
+import { userSettingsQueryKeys } from "@/services/user-settings.service";
 import type {
   JobSeekerProfile,
   JobSeekerProfileUpdatePayload,
@@ -144,6 +150,7 @@ function toPayload(values: JobSeekerProfileFormValues): JobSeekerProfileUpdatePa
 export default function EditProfileForm({ profile }: EditProfileFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { refreshProfile } = useAuth();
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
@@ -165,16 +172,39 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
     form.reset(defaultValues);
   }, [defaultValues, form]);
 
+  async function syncProfileCaches(updatedProfile: JobSeekerProfile) {
+    queryClient.setQueryData(jobSeekerProfileQueryKeys.profile, updatedProfile);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: jobSeekerProfileQueryKeys.stats }),
+      queryClient.invalidateQueries({ queryKey: jobSeekerDashboardQueryKeys.dashboard }),
+      queryClient.invalidateQueries({ queryKey: userSettingsQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: authQueryKeys.currentUser }),
+      refreshProfile(),
+    ]);
+  }
+
   const mutation = useMutation({
     mutationFn: updateJobSeekerProfile,
     onSuccess: async (updatedProfile) => {
       setSubmitMessage("Profile updated successfully.");
       form.reset(toFormValues(updatedProfile));
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: jobSeekerProfileQueryKeys.profile }),
-        queryClient.invalidateQueries({ queryKey: jobSeekerProfileQueryKeys.stats }),
-        queryClient.invalidateQueries({ queryKey: jobSeekerDashboardQueryKeys.dashboard }),
-      ]);
+      await syncProfileCaches(updatedProfile);
+    },
+    onError: () => {
+      setSubmitMessage(null);
+    },
+  });
+
+  const avatarMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      return uploadJobSeekerAvatar(formData);
+    },
+    onSuccess: async (updatedProfile) => {
+      setSubmitMessage("Profile photo updated successfully.");
+      form.reset(toFormValues(updatedProfile));
+      await syncProfileCaches(updatedProfile);
     },
     onError: () => {
       setSubmitMessage(null);
@@ -250,7 +280,9 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
             fullName={watchedName}
             completion={profile?.profileCompletion ?? completion}
             error={errors.avatar?.message}
+            isUploading={avatarMutation.isPending}
             register={form.register}
+            onAvatarUpload={(file) => avatarMutation.mutate(file)}
           />
           <EditSocialLinksCard errors={errors} register={form.register} />
           <Card

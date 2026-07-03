@@ -821,7 +821,7 @@ export const updateAdminJobSeeker = async (
     await JobSeeker.findOneAndUpdate(
       { userId: target._id },
       { $set: profileUpdate },
-      { new: true }
+      { returnDocument: "after" }
     );
   }
 
@@ -2418,7 +2418,7 @@ export const updateAdminSystemSettings = async (
         },
       },
     },
-    { upsert: true, new: true, runValidators: true }
+    { upsert: true, returnDocument: "after", runValidators: true }
   ).lean();
 
   return shapeSystemSettingsResponse(document as Awaited<ReturnType<typeof SystemSettings.findOne>>);
@@ -2447,7 +2447,7 @@ export const resetAdminSystemSettings = async (actor: AdminActor) => {
         },
       },
     },
-    { upsert: true, new: true, runValidators: true }
+    { upsert: true, returnDocument: "after", runValidators: true }
   ).lean();
 
   return shapeSystemSettingsResponse(document as Awaited<ReturnType<typeof SystemSettings.findOne>>);

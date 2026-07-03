@@ -1,17 +1,45 @@
-import Image from "next/image";
 import { Camera, ImagePlus, UploadCloud } from "lucide-react";
+import type { ChangeEvent } from "react";
 
 type CompanyBrandingEditorProps = {
   companyName: string;
   logoUrl: string;
   bannerUrl: string;
+  isLogoUploading?: boolean;
+  isBannerUploading?: boolean;
+  onLogoUpload: (file: File) => void;
+  onBannerUpload: (file: File) => void;
 };
 
 export default function CompanyBrandingEditor({
   companyName,
   logoUrl,
   bannerUrl,
+  isLogoUploading = false,
+  isBannerUploading = false,
+  onLogoUpload,
+  onBannerUpload,
 }: CompanyBrandingEditorProps) {
+  function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      onLogoUpload(file);
+    }
+
+    event.target.value = "";
+  }
+
+  function handleBannerChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      onBannerUpload(file);
+    }
+
+    event.target.value = "";
+  }
+
   return (
     <section
       aria-labelledby="company-branding-heading"
@@ -28,14 +56,14 @@ export default function CompanyBrandingEditor({
 
       <div className="p-5">
         <div className="relative min-h-52 overflow-hidden rounded-lg bg-slate-900 sm:min-h-64">
-          <Image
-            src={bannerUrl}
-            alt={`${companyName} banner preview`}
-            fill
-            sizes="(min-width: 1280px) 760px, 100vw"
-            className="object-cover"
-            priority
-          />
+          {bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={bannerUrl}
+              alt={`${companyName} banner preview`}
+              className="absolute inset-0 size-full object-cover"
+            />
+          ) : null}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/85 via-blue-700/65 to-emerald-500/70" />
           <div className="absolute inset-x-4 bottom-4 flex flex-col gap-3 sm:inset-x-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-md text-white">
@@ -46,14 +74,23 @@ export default function CompanyBrandingEditor({
             </div>
 
             <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-white/40 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus-within:ring-2 focus-within:ring-white/70">
-              <UploadCloud className="size-4" aria-hidden="true" />
-              Change banner
+              {isBannerUploading ? (
+                <span
+                  className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  aria-hidden="true"
+                />
+              ) : (
+                <UploadCloud className="size-4" aria-hidden="true" />
+              )}
+              {isBannerUploading ? "Uploading" : "Change banner"}
               <input
                 type="file"
                 name="banner"
-                accept="image/png,image/jpeg,image/svg+xml"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
                 className="sr-only"
                 aria-label="Upload company banner"
+                disabled={isBannerUploading}
+                onChange={handleBannerChange}
               />
             </label>
           </div>
@@ -61,13 +98,18 @@ export default function CompanyBrandingEditor({
 
         <div className="relative -mt-10 ml-4 flex flex-col gap-4 sm:ml-6 sm:flex-row sm:items-end">
           <div className="flex size-24 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-blue-50 shadow-sm ring-4 ring-surface dark:border-slate-700 dark:bg-slate-800 sm:size-28">
-            <Image
-              src={logoUrl}
-              alt={`${companyName} logo preview`}
-              width={112}
-              height={112}
-              className="size-full object-cover"
-            />
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt={`${companyName} logo preview`}
+                className="size-full object-cover"
+              />
+            ) : (
+              <span className="text-2xl font-bold text-primary">
+                {companyName.slice(0, 2).toUpperCase()}
+              </span>
+            )}
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-surface p-4 shadow-sm dark:border-slate-700">
@@ -79,14 +121,23 @@ export default function CompanyBrandingEditor({
               Square images work best. Recommended size: 512 x 512 px.
             </p>
             <label className="mt-3 inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 focus-within:ring-2 focus-within:ring-primary/30 dark:border-slate-600 dark:bg-transparent dark:text-white dark:hover:bg-slate-800">
-              <ImagePlus className="size-4" aria-hidden="true" />
-              Change logo
+              {isLogoUploading ? (
+                <span
+                  className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ImagePlus className="size-4" aria-hidden="true" />
+              )}
+              {isLogoUploading ? "Uploading" : "Change logo"}
               <input
                 type="file"
                 name="logo"
-                accept="image/png,image/jpeg,image/svg+xml"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
                 className="sr-only"
                 aria-label="Upload company logo"
+                disabled={isLogoUploading}
+                onChange={handleLogoChange}
               />
             </label>
           </div>

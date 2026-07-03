@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   BadgeCheck,
   Building2,
@@ -43,13 +42,16 @@ export default function CompanyProfileHero({ company }: CompanyProfileHeroProps)
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-blue-50 text-2xl font-bold text-primary shadow-sm ring-4 ring-surface dark:border-slate-700 dark:bg-slate-800 sm:size-28">
-              <Image
-                src={company.logoUrl}
-                alt={`${company.companyName} logo`}
-                width={112}
-                height={112}
-                className="size-full object-cover"
-              />
+              {company.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={company.logoUrl}
+                  alt={`${company.companyName} logo`}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <span>{company.companyName.slice(0, 2).toUpperCase()}</span>
+              )}
             </div>
 
             <div className="min-w-0 pt-1">

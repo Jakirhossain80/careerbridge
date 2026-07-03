@@ -10,6 +10,7 @@ import {
   removeResume,
   updateSettings,
   updateMe,
+  uploadAvatar,
   uploadResume,
 } from "../controllers/jobSeeker.controller.js";
 import { USER_ROLES } from "../constants/model.constants.js";
@@ -24,6 +25,7 @@ router.use(verifyFirebaseToken, allowRoles(USER_ROLES.JOB_SEEKER), checkUserStat
 
 router.get("/me", getMe);
 router.patch("/me", updateMe);
+router.post("/me/avatar", upload.single("avatar"), uploadAvatar);
 router.get("/me/stats", getProfileStats);
 router.get("/me/settings", getSettings);
 router.patch("/me/settings", updateSettings);

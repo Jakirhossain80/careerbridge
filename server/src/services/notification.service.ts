@@ -254,7 +254,7 @@ export const markAsRead = async (
       $or: [{ recipientId: recipientObjectId }, { userId: recipientObjectId }],
     },
     { $set: { read: true, isRead: true } },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!notification) {

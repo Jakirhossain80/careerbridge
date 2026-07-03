@@ -10,6 +10,11 @@ import type {
   JobSeekerRecentApplication,
   JobSeekerUpcomingInterview,
 } from "@/types/job-seeker-dashboard.types";
+import type {
+  JobSeekerProfile as JobSeekerProfileResponse,
+  JobSeekerProfileStats,
+  JobSeekerResumeSummary,
+} from "@/types/job-seeker-profile.types";
 
 type ApiEnvelope<T> = {
   success?: boolean;
@@ -47,22 +52,95 @@ async function withDevelopmentFallback<T>(
   }
 }
 
+function isMissingEndpoint(error: unknown) {
+  const candidate = error as { response?: { status?: unknown } };
+
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    candidate.response?.status === 404
+  );
+}
+
+async function withOptionalFallback<T>(
+  request: () => Promise<T>,
+  fallback: T,
+) {
+  try {
+    return await request();
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production" || isMissingEndpoint(error)) {
+      return fallback;
+    }
+
+    throw error;
+  }
+}
+
 export async function getJobSeekerDashboard() {
-  return withDevelopmentFallback(async () => {
-    const response = await api.get<
-      ApiEnvelope<JobSeekerDashboardData> | JobSeekerDashboardData
-    >("/job-seeker/dashboard");
-    return unwrap<JobSeekerDashboardData>(response);
-  }, mockJobSeekerDashboard);
+  const [profile, stats, resumes, recentApplications, interviews, recommendedJobs, notifications] =
+    await Promise.all([
+      getJobSeekerProfile(),
+      getJobSeekerProfileStats(),
+      getMyResumes(),
+      getMyApplications({ limit: 5 }),
+      getMyInterviews({ limit: 5 }),
+      getRecommendedJobs({ limit: 5 }),
+      getNotifications({ limit: 5 }),
+    ]);
+
+  return {
+    profile: {
+      fullName: profile.fullName,
+      email: profile.email,
+      avatar: profile.avatar,
+      headline: profile.headline,
+      profileCompletion: profile.profileCompletion ?? 0,
+      resumeUploaded: Boolean(profile.resume ?? resumes[0]),
+    },
+    metrics: {
+      totalApplied: stats.appliedJobs,
+      activeApplications: recentApplications.length,
+      savedJobs: stats.savedJobs,
+      interviews: stats.interviews,
+      jobAlerts: mockJobSeekerDashboard.metrics.jobAlerts,
+      recommendedJobs: recommendedJobs.length,
+    },
+    recentApplications,
+    upcomingInterviews: interviews,
+    recommendedJobs,
+    notifications,
+  } satisfies JobSeekerDashboardData;
 }
 
 export async function getJobSeekerProfile() {
+  const response = await api.get<
+    ApiEnvelope<JobSeekerProfileResponse> | JobSeekerProfileResponse
+  >("/job-seekers/me");
+  return unwrap<JobSeekerProfileResponse>(response);
+}
+
+export async function getJobSeekerProfileStats() {
   return withDevelopmentFallback(async () => {
     const response = await api.get<
-      ApiEnvelope<JobSeekerDashboardData["profile"]> | JobSeekerDashboardData["profile"]
-    >("/job-seekers/me");
-    return unwrap<JobSeekerDashboardData["profile"]>(response);
-  }, mockJobSeekerDashboard.profile);
+      ApiEnvelope<JobSeekerProfileStats> | JobSeekerProfileStats
+    >("/job-seekers/me/stats");
+    return unwrap<JobSeekerProfileStats>(response);
+  }, {
+    appliedJobs: mockJobSeekerDashboard.metrics.totalApplied,
+    savedJobs: mockJobSeekerDashboard.metrics.savedJobs,
+    interviews: mockJobSeekerDashboard.metrics.interviews,
+    profileViews: 0,
+  });
+}
+
+export async function getMyResumes() {
+  return withDevelopmentFallback(async () => {
+    const response = await api.get<
+      ApiEnvelope<JobSeekerResumeSummary[]> | JobSeekerResumeSummary[]
+    >("/job-seekers/resumes");
+    return unwrap<JobSeekerResumeSummary[]>(response);
+  }, []);
 }
 
 export async function getMyApplications(params: JobSeekerDashboardParams = {}) {
@@ -84,21 +162,25 @@ export async function getSavedJobs(params: JobSeekerDashboardParams = {}) {
 }
 
 export async function getMyInterviews(params: JobSeekerDashboardParams = {}) {
-  return withDevelopmentFallback(async () => {
+  return withOptionalFallback(async () => {
     const response = await api.get<
       ApiEnvelope<JobSeekerUpcomingInterview[]> | JobSeekerUpcomingInterview[]
     >("/interviews/me", { params });
     return unwrap<JobSeekerUpcomingInterview[]>(response);
-  }, mockJobSeekerDashboard.upcomingInterviews.slice(0, params.limit ?? 5));
+  }, process.env.NODE_ENV === "production"
+    ? []
+    : mockJobSeekerDashboard.upcomingInterviews.slice(0, params.limit ?? 5));
 }
 
 export async function getRecommendedJobs(params: JobSeekerDashboardParams = {}) {
-  return withDevelopmentFallback(async () => {
+  return withOptionalFallback(async () => {
     const response = await api.get<
       ApiEnvelope<JobSeekerRecommendedJob[]> | JobSeekerRecommendedJob[]
     >("/recommended-jobs", { params });
     return unwrap<JobSeekerRecommendedJob[]>(response);
-  }, mockJobSeekerDashboard.recommendedJobs.slice(0, params.limit ?? 5));
+  }, process.env.NODE_ENV === "production"
+    ? []
+    : mockJobSeekerDashboard.recommendedJobs.slice(0, params.limit ?? 5));
 }
 
 export async function getNotifications(params: JobSeekerDashboardParams = {}) {

@@ -5,6 +5,7 @@ import {
   applicationIdParamsSchema,
   applicationStatusUpdateSchema,
   companyCreateSchema,
+  companyImageUploadSchema,
   companyUpdateSchema,
   employerApplicantsQuerySchema,
   employerJobsQuerySchema,
@@ -23,6 +24,7 @@ import {
   updateApplicationStatus,
   updateCompanyProfile,
   updateEmployerJob,
+  uploadCompanyBrandingImage,
 } from "../services/employer.service.js";
 import AppError from "../utils/AppError.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
@@ -79,6 +81,32 @@ export const updateMyCompany: RequestHandler = async (req, res, next) => {
     handleControllerError(error, res, next);
   }
 };
+
+const uploadCompanyImage = (
+  imageType: "logo" | "banner"
+): RequestHandler => async (req, res, next) => {
+  try {
+    const employer = await getAuthenticatedEmployer(req.user);
+    const file = req.file;
+
+    if (!file) {
+      throw new AppError(`Company ${imageType} image is required`, 400);
+    }
+
+    companyImageUploadSchema.parse({
+      mimeType: file.mimetype,
+      fileSize: file.size,
+    });
+
+    const company = await uploadCompanyBrandingImage(employer, file, imageType);
+    successResponse(res, `Company ${imageType} updated successfully`, company, 200);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const uploadCompanyLogo = uploadCompanyImage("logo");
+export const uploadCompanyBanner = uploadCompanyImage("banner");
 
 export const createJob: RequestHandler = async (req, res, next) => {
   try {

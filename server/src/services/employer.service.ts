@@ -12,6 +12,7 @@ import Application, { type IApplication } from "../models/application.model.js";
 import Company, { type ICompany } from "../models/company.model.js";
 import Job, { type IJob } from "../models/job.model.js";
 import User from "../models/user.model.js";
+import { uploadImageBuffer } from "../utils/imageUpload.js";
 import {
   notifyApplicationStatusChanged,
   notifyMatchingJobAlertsForJob,
@@ -146,10 +147,6 @@ export const createCompanyProfile = async (
 export const getMyCompanyProfile = async (employer: AuthenticatedEmployer) => {
   const company = await Company.findOne({ ownerId: employer.userId });
 
-  if (!company) {
-    throw new AppError("Company profile not found", 404);
-  }
-
   return company;
 };
 
@@ -188,7 +185,46 @@ export const updateCompanyProfile = async (
   const company = await Company.findOneAndUpdate(
     { ownerId: employer.userId },
     { $set: update },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
+  );
+
+  if (!company) {
+    throw new AppError("Company profile not found", 404);
+  }
+
+  return company;
+};
+
+export const uploadCompanyBrandingImage = async (
+  employer: AuthenticatedEmployer,
+  file: Express.Multer.File,
+  imageType: "logo" | "banner"
+) => {
+  const isLogo = imageType === "logo";
+  const uploadResult = await uploadImageBuffer(file.buffer, {
+    folder: isLogo
+      ? "careerbridge/company-logos"
+      : "careerbridge/company-banners",
+    publicId: `${employer.firebaseUid}-${imageType}-${Date.now()}`,
+    transformation: isLogo
+      ? [
+          { width: 512, height: 512, crop: "fill" },
+          { quality: "auto", fetch_format: "auto" },
+        ]
+      : [
+          { width: 1440, height: 420, crop: "fill" },
+          { quality: "auto", fetch_format: "auto" },
+        ],
+  });
+
+  const update: Partial<ICompany> = isLogo
+    ? { logo: uploadResult.secure_url, logoUrl: uploadResult.secure_url }
+    : { banner: uploadResult.secure_url, bannerUrl: uploadResult.secure_url };
+
+  const company = await Company.findOneAndUpdate(
+    { ownerId: employer.userId },
+    { $set: update },
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!company) {
@@ -327,7 +363,7 @@ export const updateEmployerJob = async (
   const updatedJob = await Job.findOneAndUpdate(
     { _id: jobId, employerId: employer.userId },
     { $set: update },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!updatedJob) {
@@ -351,7 +387,7 @@ export const archiveEmployerJob = async (
   const job = await Job.findOneAndUpdate(
     { _id: jobId, employerId: employer.userId },
     { $set: { status: JOB_STATUS.ARCHIVED } },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!job) {

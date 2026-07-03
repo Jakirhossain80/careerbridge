@@ -8,6 +8,7 @@ import Resume from "../models/resume.model.js";
 import SavedJob from "../models/savedJob.model.js";
 import User from "../models/user.model.js";
 import AppError from "../utils/AppError.js";
+import { uploadImageBuffer } from "../utils/imageUpload.js";
 import type {
   ProfileUpdateInput,
   ResumeUploadInput,
@@ -220,7 +221,7 @@ export const getAuthenticatedJobSeeker = async (
         privacySettings: defaultPrivacySettings,
       },
     },
-    { new: true, upsert: true, runValidators: true }
+    { returnDocument: "after", upsert: true, runValidators: true }
   );
 
   return {
@@ -268,6 +269,38 @@ export const updateMyJobSeekerProfile = async (
       email: profile.email,
       photoURL: profile.avatar,
       profileCompleted: true,
+    },
+  });
+
+  return shapeProfileResponse(profile);
+};
+
+export const uploadMyJobSeekerAvatar = async (
+  jobSeeker: AuthenticatedJobSeeker,
+  file: Express.Multer.File
+) => {
+  const uploadResult = await uploadImageBuffer(file.buffer, {
+    folder: "careerbridge/job-seeker-avatars",
+    publicId: `${jobSeeker.firebaseUid}-${Date.now()}`,
+    transformation: [
+      { width: 512, height: 512, crop: "fill", gravity: "face" },
+      { quality: "auto", fetch_format: "auto" },
+    ],
+  });
+
+  const profile = await JobSeeker.findByIdAndUpdate(
+    jobSeeker.jobSeekerId,
+    { $set: { avatar: uploadResult.secure_url } },
+    { new: true, runValidators: true }
+  );
+
+  if (!profile) {
+    throw new AppError("Job seeker profile not found", 404);
+  }
+
+  await User.findByIdAndUpdate(jobSeeker.userId, {
+    $set: {
+      photoURL: profile.avatar,
     },
   });
 

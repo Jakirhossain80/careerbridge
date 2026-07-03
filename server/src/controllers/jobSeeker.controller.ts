@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 
 import {
+  avatarUploadSchema,
   profileUpdateSchema,
   resumeIdParamsSchema,
   resumeUploadSchema,
@@ -16,8 +17,10 @@ import {
   setDefaultResume,
   updateMyJobSeekerSettings,
   updateMyJobSeekerProfile,
+  uploadMyJobSeekerAvatar,
 } from "../services/jobSeeker.service.js";
 import { successResponse } from "../utils/apiResponse.js";
+import AppError from "../utils/AppError.js";
 import { handleControllerError } from "./controllerError.js";
 
 export const getMe: RequestHandler = async (req, res, next) => {
@@ -36,6 +39,27 @@ export const updateMe: RequestHandler = async (req, res, next) => {
     const payload = profileUpdateSchema.parse(req.body);
     const profile = await updateMyJobSeekerProfile(jobSeeker, payload);
     successResponse(res, "Job seeker profile updated successfully", profile);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const uploadAvatar: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeeker = await getAuthenticatedJobSeeker(req.user);
+    const file = req.file;
+
+    if (!file) {
+      throw new AppError("Avatar image is required", 400);
+    }
+
+    avatarUploadSchema.parse({
+      mimeType: file.mimetype,
+      fileSize: file.size,
+    });
+
+    const profile = await uploadMyJobSeekerAvatar(jobSeeker, file);
+    successResponse(res, "Profile avatar updated successfully", profile);
   } catch (error) {
     handleControllerError(error, res, next);
   }

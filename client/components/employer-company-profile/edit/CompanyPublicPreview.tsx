@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Building2, ExternalLink, MapPin, UsersRound } from "lucide-react";
 
 import { Badge, Card } from "@/components/ui";
@@ -25,25 +24,27 @@ export default function CompanyPublicPreview({
       contentClassName="p-0"
     >
       <div className="relative h-32 bg-slate-900">
-        <Image
-          src={company.bannerUrl}
-          alt=""
-          fill
-          sizes="360px"
-          className="object-cover"
-        />
+        {company.bannerUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={company.bannerUrl} alt="" className="size-full object-cover" />
+        ) : null}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/85 via-blue-700/65 to-emerald-500/70" />
       </div>
 
       <div className="px-5 pb-5">
         <div className="-mt-10 flex size-20 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-blue-50 shadow-sm ring-4 ring-surface dark:border-slate-700 dark:bg-slate-800">
-          <Image
-            src={company.logoUrl}
-            alt={`${company.companyName} logo`}
-            width={80}
-            height={80}
-            className="size-full object-cover"
-          />
+          {company.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={company.logoUrl}
+              alt={`${company.companyName} logo`}
+              className="size-full object-cover"
+            />
+          ) : (
+            <span className="text-lg font-bold text-primary">
+              {company.companyName.slice(0, 2).toUpperCase()}
+            </span>
+          )}
         </div>
 
         <div className="mt-4">

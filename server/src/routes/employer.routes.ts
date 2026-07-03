@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 
 import {
   archiveJob,
@@ -10,6 +11,8 @@ import {
   updateJob,
   updateMyCompany,
   updateStatus,
+  uploadCompanyBanner,
+  uploadCompanyLogo,
 } from "../controllers/employer.controller.js";
 import { USER_ROLES } from "../constants/model.constants.js";
 import { verifyFirebaseToken } from "../middlewares/auth.middleware.js";
@@ -17,6 +20,7 @@ import { allowRoles } from "../middlewares/role.middleware.js";
 import { checkUserStatus } from "../middlewares/status.middleware.js";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(
   verifyFirebaseToken,
@@ -27,6 +31,8 @@ router.use(
 router.post("/company", createCompany);
 router.get("/company", getMyCompany);
 router.patch("/company", updateMyCompany);
+router.post("/company/logo", upload.single("logo"), uploadCompanyLogo);
+router.post("/company/banner", upload.single("banner"), uploadCompanyBanner);
 
 router.post("/jobs", createJob);
 router.get("/jobs", getJobs);

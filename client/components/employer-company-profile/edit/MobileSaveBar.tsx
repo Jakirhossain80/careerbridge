@@ -7,9 +7,13 @@ import { Button } from "@/components/ui";
 
 type MobileSaveBarProps = {
   cancelHref: string;
+  isSaving?: boolean;
 };
 
-export default function MobileSaveBar({ cancelHref }: MobileSaveBarProps) {
+export default function MobileSaveBar({
+  cancelHref,
+  isSaving = false,
+}: MobileSaveBarProps) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-surface/95 px-4 py-3 shadow-lg backdrop-blur sm:hidden">
       <div className="flex gap-3">
@@ -23,6 +27,7 @@ export default function MobileSaveBar({ cancelHref }: MobileSaveBarProps) {
           type="submit"
           form="company-profile-edit-form"
           className="flex-1"
+          isLoading={isSaving}
           leftIcon={<Save className="size-4" aria-hidden="true" />}
         >
           Save

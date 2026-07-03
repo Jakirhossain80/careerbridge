@@ -1,9 +1,10 @@
 "use client";
 
+import { type ChangeEvent, useId } from "react";
 import { Camera, UserRound } from "lucide-react";
 import type { UseFormRegister } from "react-hook-form";
 
-import { Badge, Card, Input } from "@/components/ui";
+import { Badge, Button, Card, Input } from "@/components/ui";
 import type { JobSeekerProfileFormValues } from "@/lib/validations/job-seeker-profile.schema";
 
 type EditProfilePhotoCardProps = {
@@ -11,7 +12,9 @@ type EditProfilePhotoCardProps = {
   fullName?: string;
   completion?: number;
   error?: string;
+  isUploading?: boolean;
   register: UseFormRegister<JobSeekerProfileFormValues>;
+  onAvatarUpload: (file: File) => void;
 };
 
 function getInitials(name?: string) {
@@ -28,8 +31,22 @@ export default function EditProfilePhotoCard({
   fullName,
   completion = 0,
   error,
+  isUploading = false,
   register,
+  onAvatarUpload,
 }: EditProfilePhotoCardProps) {
+  const fileInputId = useId();
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      onAvatarUpload(file);
+    }
+
+    event.target.value = "";
+  }
+
   return (
     <Card
       header={
@@ -69,6 +86,26 @@ export default function EditProfilePhotoCard({
             error={error}
             {...register("avatar")}
           />
+        </div>
+
+        <div className="mt-3 w-full">
+          <input
+            id={fileInputId}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={handleFileChange}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            isLoading={isUploading}
+            leftIcon={<Camera className="size-4" aria-hidden="true" />}
+            onClick={() => document.getElementById(fileInputId)?.click()}
+          >
+            Upload Photo
+          </Button>
         </div>
 
         <div className="mt-5 flex w-full items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 text-left">

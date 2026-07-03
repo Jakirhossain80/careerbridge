@@ -147,9 +147,15 @@ export const resumeUploadSchema = z.object({
   isDefault: z.coerce.boolean().default(false),
 });
 
+export const avatarUploadSchema = z.object({
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  fileSize: z.coerce.number().int().min(1).max(5 * 1024 * 1024),
+});
+
 export const resumeIdParamsSchema = z.object({
   resumeId: objectIdSchema,
 });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type ResumeUploadInput = z.infer<typeof resumeUploadSchema>;
+export type AvatarUploadInput = z.infer<typeof avatarUploadSchema>;

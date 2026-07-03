@@ -19,10 +19,12 @@ import { FormSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/api";
 import { appToast } from "@/lib/toast";
+import { useAuth } from "@/hooks/useAuth";
 import {
   userSettingsSchema,
   type UserSettingsFormValues,
 } from "@/lib/validations/user-settings.schema";
+import { authQueryKeys } from "@/services/auth.service";
 import {
   deactivateAccount,
   defaultUserSettings,
@@ -33,6 +35,7 @@ import {
 
 export default function JobSeekerSettingsContent() {
   const queryClient = useQueryClient();
+  const { refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<JobSeekerSettingsTab>("account");
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -72,6 +75,8 @@ export default function JobSeekerSettingsContent() {
         queryClient.invalidateQueries({ queryKey: userSettingsQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: userSettingsQueryKeys.profile }),
         queryClient.invalidateQueries({ queryKey: userSettingsQueryKeys.dashboard }),
+        queryClient.invalidateQueries({ queryKey: authQueryKeys.currentUser }),
+        refreshProfile(),
       ]);
       reset(settings);
       setSuccessMessage("Settings updated successfully.");

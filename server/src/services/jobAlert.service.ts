@@ -49,7 +49,7 @@ export const updateJobAlert = async (
   const alert = await JobAlert.findOneAndUpdate(
     { _id: alertId, jobSeekerId: jobSeeker.jobSeekerId },
     { $set: input },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!alert) {

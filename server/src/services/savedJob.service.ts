@@ -34,7 +34,7 @@ export const saveJob = async (
   return SavedJob.findOneAndUpdate(
     { userId: jobSeeker.userId, jobId: input.jobId },
     { $setOnInsert: { userId: jobSeeker.userId, jobId: input.jobId } },
-    { new: true, upsert: true, runValidators: true }
+    { returnDocument: "after", upsert: true, runValidators: true }
   );
 };
 
