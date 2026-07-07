@@ -8,8 +8,10 @@ import {
   getApplicants,
   getJobs,
   getMyCompany,
+  getSettings,
   updateJob,
   updateMyCompany,
+  updateSettings,
   updateStatus,
   uploadCompanyBanner,
   uploadCompanyLogo,
@@ -31,6 +33,8 @@ router.use(
 router.post("/company", createCompany);
 router.get("/company", getMyCompany);
 router.patch("/company", updateMyCompany);
+router.get("/settings", getSettings);
+router.patch("/settings", updateSettings);
 router.post("/company/logo", upload.single("logo"), uploadCompanyLogo);
 router.post("/company/banner", upload.single("banner"), uploadCompanyBanner);
 

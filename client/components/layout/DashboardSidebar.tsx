@@ -58,6 +58,30 @@ export const employerDashboardLinks: DashboardNavItem[] = [
   { label: "Settings", href: "/employer/settings", icon: Settings },
 ];
 
+function isActiveDashboardLink(pathname: string, link: DashboardNavItem) {
+  if (link.href === "#") {
+    return false;
+  }
+
+  if (link.href === "/dashboard" || link.href === "/employer/dashboard") {
+    return pathname === link.href;
+  }
+
+  if (link.href === "/employer/dashboard/jobs/new") {
+    return pathname === link.href;
+  }
+
+  if (link.href === "/employer/dashboard/jobs") {
+    return (
+      pathname === link.href ||
+      (pathname.startsWith(`${link.href}/`) &&
+        pathname !== "/employer/dashboard/jobs/new")
+    );
+  }
+
+  return pathname === link.href || pathname.startsWith(`${link.href}/`);
+}
+
 type DashboardSidebarProps = {
   id?: string;
   isOpen: boolean;
@@ -136,12 +160,7 @@ export default function DashboardSidebar({
         >
           {navItems.map((link) => {
             const Icon = link.icon;
-            const isDashboardRoot =
-              link.href === "/dashboard" || link.href === "/employer/dashboard";
-            const isActive =
-              link.href !== "#" &&
-              (pathname === link.href ||
-                (!isDashboardRoot && pathname.startsWith(`${link.href}/`)));
+            const isActive = isActiveDashboardLink(pathname, link);
 
             return (
               <Link

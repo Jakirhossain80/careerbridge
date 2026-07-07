@@ -8,6 +8,7 @@ import {
   type JobType,
   type WorkMode,
 } from "../constants/model.constants.js";
+import { SUPPORTED_CURRENCY_CODES } from "../constants/currency.constants.js";
 
 export interface IJobSalary {
   min?: number;
@@ -120,6 +121,8 @@ const jobSchema = new Schema<IJob>(
       currency: {
         type: String,
         trim: true,
+        uppercase: true,
+        enum: SUPPORTED_CURRENCY_CODES,
       },
       negotiable: {
         type: Boolean,
@@ -135,6 +138,8 @@ const jobSchema = new Schema<IJob>(
     currency: {
       type: String,
       trim: true,
+      uppercase: true,
+      enum: SUPPORTED_CURRENCY_CODES,
     },
     jobType: {
       type: String,

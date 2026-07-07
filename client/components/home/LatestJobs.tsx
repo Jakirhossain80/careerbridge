@@ -1,12 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { JobCard } from "@/components/cards";
 import { latestJobs } from "@/lib/home-data";
+import { getPublicJobs, publicJobQueryKeys } from "@/services/jobs.service";
 
 import SectionHeader from "./SectionHeader";
 
 export default function LatestJobs() {
+  const latestJobsQuery = useQuery({
+    queryKey: publicJobQueryKeys.list({ limit: 3, sort: "-createdAt" }),
+    queryFn: () => getPublicJobs({ limit: 3, sort: "-createdAt" }),
+  });
+  const jobResults = latestJobsQuery.data?.homeJobs ?? latestJobs;
+
   return (
     <section className="bg-background px-6 py-16">
       <div className="mx-auto w-full max-w-6xl">
@@ -26,7 +36,7 @@ export default function LatestJobs() {
         />
 
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
-          {latestJobs.map((job) => (
+          {jobResults.map((job) => (
             <JobCard key={job.id} {...job} />
           ))}
         </div>

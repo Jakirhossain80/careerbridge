@@ -11,7 +11,7 @@ import AppError from "../utils/AppError.js";
 import Application, { type IApplication } from "../models/application.model.js";
 import Company, { type ICompany } from "../models/company.model.js";
 import Job, { type IJob } from "../models/job.model.js";
-import User from "../models/user.model.js";
+import User, { type IUser } from "../models/user.model.js";
 import { uploadImageBuffer } from "../utils/imageUpload.js";
 import {
   notifyApplicationStatusChanged,
@@ -24,6 +24,7 @@ import type {
   CompanyUpdateInput,
   EmployerApplicantsQuery,
   EmployerJobsQuery,
+  EmployerSettingsInput,
   JobCreateInput,
   JobUpdateInput,
   PaginationMeta,
@@ -63,6 +64,22 @@ const getPaginationMeta = (
 
 const isVisibleJobStatus = (status: JobStatus) =>
   status === JOB_STATUS.ACTIVE || status === JOB_STATUS.PUBLISHED;
+
+const defaultEmployerNotifications = {
+  newApplicant: true,
+  interviewReminder: true,
+  jobExpiry: true,
+  emailNotifications: true,
+  dailyDigest: false,
+};
+
+const defaultEmployerPrivacy = {
+  companyProfileVisible: true,
+  jobPostingVisible: true,
+  contactInfoVisible: true,
+  showCompanySize: true,
+  showSalaryRange: true,
+};
 
 const generateUniqueSlug = async (
   model: { exists: (filter: Record<string, unknown>) => Promise<unknown> },
@@ -107,6 +124,121 @@ export const getAuthenticatedEmployer = async (
     email: user.email,
     firebaseUid: user.firebaseUid,
   };
+};
+
+const shapeEmployerSettingsResponse = (
+  user: IUser & { _id: { toString: () => string } },
+  company: (ICompany & { _id: { toString: () => string } }) | null
+) => {
+  const companyName = company?.companyName ?? company?.name ?? "";
+  const companyEmail = company?.ownerEmail ?? user.email;
+
+  return {
+    account: {
+      fullName: user.name,
+      email: user.email,
+      phone: user.phone ?? "",
+      avatar: user.photoURL ?? "",
+      designation: user.designation ?? "",
+    },
+    company: {
+      companyId: company?._id.toString() ?? "",
+      companyName,
+      companyEmail,
+      companyPhone: "",
+      website: company?.website ?? "",
+      location: company?.headquarters ?? company?.location ?? "",
+      industry: company?.industry ?? "",
+      companySize: company?.companySize ?? company?.size ?? "",
+    },
+    notifications: {
+      ...defaultEmployerNotifications,
+      ...user.employerSettings?.notifications,
+    },
+    privacy: {
+      ...defaultEmployerPrivacy,
+      ...user.employerSettings?.privacy,
+    },
+    team: [
+      {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: "Owner" as const,
+        status: "Active" as const,
+      },
+    ],
+  };
+};
+
+export const getMyEmployerSettings = async (employer: AuthenticatedEmployer) => {
+  const [user, company] = await Promise.all([
+    User.findById(employer.userId),
+    Company.findOne({ ownerId: employer.userId }),
+  ]);
+
+  if (!user) {
+    throw new AppError("Employer user profile not found", 404);
+  }
+
+  return shapeEmployerSettingsResponse(user, company);
+};
+
+export const updateMyEmployerSettings = async (
+  employer: AuthenticatedEmployer,
+  input: EmployerSettingsInput
+) => {
+  const [user, existingCompany] = await Promise.all([
+    User.findByIdAndUpdate(
+      employer.userId,
+      {
+        $set: {
+          name: input.account.fullName,
+          email: input.account.email.toLowerCase(),
+          phone: input.account.phone,
+          designation: input.account.designation,
+          photoURL: input.account.avatar,
+          "employerSettings.notifications": input.notifications,
+          "employerSettings.privacy": input.privacy,
+          profileCompleted: true,
+        },
+      },
+      { returnDocument: "after", runValidators: true }
+    ),
+    Company.findOne({ ownerId: employer.userId }),
+  ]);
+
+  if (!user) {
+    throw new AppError("Employer user profile not found", 404);
+  }
+
+  let company = existingCompany;
+
+  if (company) {
+    const companyName = input.company.companyName;
+    const companyUpdate: Partial<ICompany> = {
+      ownerEmail: input.company.companyEmail.toLowerCase(),
+      website: input.company.website,
+      industry: input.company.industry,
+      size: input.company.companySize,
+      companySize: input.company.companySize,
+      location: input.company.location,
+      headquarters: input.company.location,
+    };
+
+    if (companyName) {
+      companyUpdate.name = companyName;
+      companyUpdate.companyName = companyName;
+    }
+
+    company = await Company.findOneAndUpdate(
+      { ownerId: employer.userId },
+      { $set: companyUpdate },
+      { returnDocument: "after", runValidators: true }
+    );
+  }
+
+  return shapeEmployerSettingsResponse(user, company);
 };
 
 export const createCompanyProfile = async (

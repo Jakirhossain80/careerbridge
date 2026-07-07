@@ -45,6 +45,7 @@ export const JOB_TYPE = {
   PART_TIME: "part_time",
   CONTRACT: "contract",
   INTERNSHIP: "internship",
+  TEMPORARY: "temporary",
   FREELANCE: "freelance",
 } as const;
 

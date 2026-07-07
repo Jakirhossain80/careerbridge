@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 
-import JobsEmptyState from "@/components/jobs/JobsEmptyState";
 import JobsFilters from "@/components/jobs/JobsFilters";
 import JobsHero from "@/components/jobs/JobsHero";
 import JobsList from "@/components/jobs/JobsList";
-import JobsLoadingSkeleton from "@/components/jobs/JobsLoadingSkeleton";
 import JobsPagination from "@/components/jobs/JobsPagination";
 import JobsSearchBar from "@/components/jobs/JobsSearchBar";
 import JobsToolbar from "@/components/jobs/JobsToolbar";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
+import type { PublicJobsParams } from "@/types/job.types";
 
 export const metadata: Metadata = {
   title: "Jobs | CareerBridge",
@@ -17,7 +16,35 @@ export const metadata: Metadata = {
     "Search verified jobs by title, company, skill, keyword, location, salary, work mode, and experience level on CareerBridge.",
 };
 
-export default function JobsPage() {
+type JobsPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const getSearchParam = (
+  searchParams: Record<string, string | string[] | undefined>,
+  key: string
+) => {
+  const value = searchParams[key];
+
+  return Array.isArray(value) ? value[0] : value;
+};
+
+export default async function JobsPage({ searchParams }: JobsPageProps) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const publicJobParams: PublicJobsParams = {
+    search: getSearchParam(resolvedSearchParams, "search"),
+    keyword: getSearchParam(resolvedSearchParams, "keyword"),
+    title: getSearchParam(resolvedSearchParams, "title"),
+    company: getSearchParam(resolvedSearchParams, "company"),
+    skill: getSearchParam(resolvedSearchParams, "skill"),
+    location: getSearchParam(resolvedSearchParams, "location"),
+    category: getSearchParam(resolvedSearchParams, "category"),
+    sort:
+      getSearchParam(resolvedSearchParams, "sort") === "oldest"
+        ? "createdAt"
+        : "-createdAt",
+  };
+
   return (
     <>
       <PublicNavbar />
@@ -36,7 +63,7 @@ export default function JobsPage() {
 
             <div>
               <JobsToolbar />
-              <JobsList />
+              <JobsList params={publicJobParams} />
 
               <div className="mt-8 flex justify-center">
                 <button
@@ -48,11 +75,6 @@ export default function JobsPage() {
               </div>
 
               <JobsPagination />
-
-              <div className="mt-8 grid gap-6">
-                <JobsEmptyState />
-                <JobsLoadingSkeleton />
-              </div>
             </div>
           </div>
         </section>

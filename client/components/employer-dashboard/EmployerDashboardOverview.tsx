@@ -57,12 +57,14 @@ export default function EmployerDashboardOverview({
             >
               Schedule Interview
             </Button>
-            <Button
-              className="w-full sm:w-auto"
-              leftIcon={<PlusCircle className="size-4" aria-hidden="true" />}
-            >
-              Post a Job
-            </Button>
+            <Link href="/employer/dashboard/jobs/new">
+              <Button
+                className="w-full sm:w-auto"
+                leftIcon={<PlusCircle className="size-4" aria-hidden="true" />}
+              >
+                Post a Job
+              </Button>
+            </Link>
           </div>
         </header>
 

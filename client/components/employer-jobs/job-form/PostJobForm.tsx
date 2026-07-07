@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import EmploymentDetails from "@/components/employer-jobs/job-form/EmploymentDetails";
@@ -12,11 +13,15 @@ import JobContentSection from "@/components/employer-jobs/job-form/JobContentSec
 import JobSkillsDeadline from "@/components/employer-jobs/job-form/JobSkillsDeadline";
 import PostJobActions from "@/components/employer-jobs/job-form/PostJobActions";
 import PostJobToast from "@/components/employer-jobs/job-form/PostJobToast";
+import { normalizeCurrencyCode } from "@/constants/currency-options";
+import { useEmployerJobMutations } from "@/hooks/employer/useEmployerJobs";
+import { getApiErrorMessage } from "@/lib/api";
 import type {
   EmployerJobCompany,
   EmployerJobFormData,
   EmployerJobStatus,
 } from "@/types/employer-job";
+import type { CreateJobPayload, JobType, WorkMode } from "@/types/job.types";
 
 type PostJobFormProps = {
   initialJob: EmployerJobFormData;
@@ -31,10 +36,69 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+const jobTypeMap: Record<string, JobType> = {
+  "Full-time": "full_time",
+  "Part-time": "part_time",
+  Contract: "contract",
+  Internship: "internship",
+  Temporary: "temporary",
+};
+
+const workModeMap: Record<string, WorkMode> = {
+  Remote: "remote",
+  Hybrid: "hybrid",
+  "On-site": "onsite",
+};
+
+function toList(value: string) {
+  return value
+    .split(/\n|,|;/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function toDeadlineIso(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return new Date(year, month - 1, day, 23, 59, 59, 999).toISOString();
+}
+
+function toCreateJobPayload(
+  formData: EmployerJobFormData,
+  status: CreateJobPayload["status"],
+): CreateJobPayload {
+  return {
+    title: formData.title.trim(),
+    category: formData.category,
+    jobType: jobTypeMap[formData.jobType] ?? "full_time",
+    workplaceType: workModeMap[formData.workMode] ?? "hybrid",
+    location: formData.workMode === "Remote" ? formData.location || "Remote" : formData.location,
+    salaryMin: formData.salaryMin,
+    salaryMax: formData.salaryMax,
+    currency: normalizeCurrencyCode(formData.currency),
+    experienceLevel: formData.experienceLevel,
+    vacancies: formData.vacancies,
+    deadline: toDeadlineIso(formData.applicationDeadline),
+    skills: formData.skills,
+    description: formData.description.trim(),
+    responsibilities: toList(formData.responsibilities),
+    requirements: toList(formData.requirements),
+    status,
+    featured: status === "published",
+  };
+}
+
 export default function PostJobForm({ initialJob, company }: PostJobFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<EmployerJobFormData>(initialJob);
   const [skillInput, setSkillInput] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const { createMutation } = useEmployerJobMutations();
 
   const completionLabel = useMemo(() => {
     const fields = [
@@ -66,6 +130,7 @@ export default function PostJobForm({ initialJob, company }: PostJobFormProps) {
       return next;
     });
     setToastMessage("");
+    setErrorMessage("");
   }
 
   function setStatus(status: EmployerJobStatus) {
@@ -77,15 +142,36 @@ export default function PostJobForm({ initialJob, company }: PostJobFormProps) {
     }));
   }
 
+  async function submitJob(status: CreateJobPayload["status"]) {
+    setToastMessage("");
+    setErrorMessage("");
+    const payload = toCreateJobPayload(formData, status);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("Employer job create payload", payload);
+    }
+
+    try {
+      await createMutation.mutateAsync(payload);
+      setStatus(status);
+      setToastMessage(
+        status === "draft"
+          ? "Draft saved successfully."
+          : "Job published successfully.",
+      );
+      router.push("/employer/dashboard/jobs");
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
+    }
+  }
+
   function handleDraft() {
-    setStatus("draft");
-    setToastMessage("Draft saved locally. Backend submission can be connected later.");
+    void submitJob("draft");
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("published");
-    setToastMessage("Job published locally. Backend submission can be connected later.");
+    void submitJob("published");
   }
 
   function handleAddSkill() {
@@ -108,6 +194,7 @@ export default function PostJobForm({ initialJob, company }: PostJobFormProps) {
     });
     setSkillInput("");
     setToastMessage("");
+    setErrorMessage("");
   }
 
   function handleRemoveSkill(skillToRemove: string) {
@@ -116,6 +203,7 @@ export default function PostJobForm({ initialJob, company }: PostJobFormProps) {
       skills: current.skills.filter((skill) => skill !== skillToRemove),
     }));
     setToastMessage("");
+    setErrorMessage("");
   }
 
   return (
@@ -148,15 +236,25 @@ export default function PostJobForm({ initialJob, company }: PostJobFormProps) {
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted sm:text-base">
               Create a clear, candidate-friendly job post for {company.name}.
-              Actions are UI-only for now and ready for a future API submission.
             </p>
           </div>
 
-          <PostJobActions onDraft={handleDraft} />
+          <PostJobActions
+            onDraft={handleDraft}
+            isSubmitting={createMutation.isPending}
+          />
         </div>
       </header>
 
       {toastMessage ? <PostJobToast message={toastMessage} /> : null}
+      {errorMessage ? (
+        <div
+          className="whitespace-pre-line rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex min-w-0 flex-col gap-6">

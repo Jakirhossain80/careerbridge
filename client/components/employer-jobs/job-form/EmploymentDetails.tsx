@@ -1,4 +1,5 @@
 import { Input, Select } from "@/components/ui";
+import { currencyOptions } from "@/constants/currency-options";
 import {
   hiringUrgencies,
   jobTypes,
@@ -98,12 +99,15 @@ export default function EmploymentDetails({
           }
           required
         />
-        <Input
+        <Select
           label="Currency"
           name="currency"
           value={formData.currency}
           onChange={(event) => onFieldChange("currency", event.target.value)}
-          maxLength={3}
+          options={currencyOptions.map((currency) => ({
+            label: currency.label,
+            value: currency.value,
+          }))}
           required
         />
         <Input

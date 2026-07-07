@@ -1,5 +1,6 @@
 import { CalendarDays, Lightbulb, MapPin, Sparkles, Users } from "lucide-react";
 
+import { normalizeCurrencyCode } from "@/constants/currency-options";
 import type {
   EmployerJobCompany,
   EmployerJobFormData,
@@ -13,7 +14,7 @@ type JobCardPreviewProps = {
 function formatSalary(job: EmployerJobFormData) {
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: job.currency || "USD",
+    currency: normalizeCurrencyCode(job.currency),
     maximumFractionDigits: 0,
   });
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@/lib/api";
-import { mockEmployerSettings } from "@/data/mock-employer-settings";
 import type {
   EmployerCompanySettings,
   EmployerSettings,
@@ -12,6 +11,48 @@ type ApiEnvelope<T> = {
   success?: boolean;
   message?: string;
   data: T;
+};
+
+export const employerSettingsQueryKeys = {
+  all: ["employer-settings"] as const,
+  detail: ["employer-settings", "me"] as const,
+  company: ["employer-company-profile"] as const,
+  authUser: ["auth", "current-user"] as const,
+};
+
+export const defaultEmployerSettings: EmployerSettings = {
+  account: {
+    fullName: "",
+    email: "",
+    phone: "",
+    avatar: "",
+    designation: "",
+  },
+  company: {
+    companyId: "",
+    companyName: "",
+    companyEmail: "",
+    companyPhone: "",
+    website: "",
+    location: "",
+    industry: "",
+    companySize: "",
+  },
+  notifications: {
+    newApplicant: true,
+    interviewReminder: true,
+    jobExpiry: true,
+    emailNotifications: true,
+    dailyDigest: false,
+  },
+  privacy: {
+    companyProfileVisible: true,
+    jobPostingVisible: true,
+    contactInfoVisible: true,
+    showCompanySize: true,
+    showSalaryRange: true,
+  },
+  team: [],
 };
 
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
@@ -29,36 +70,45 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   return payload as T;
 }
 
-export async function getEmployerSettings() {
-  try {
-    const response = await api.get<ApiEnvelope<EmployerSettings> | EmployerSettings>(
-      "/employers/settings",
-    );
-    return unwrap<EmployerSettings>(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
+function normalizeEmployerSettings(settings: EmployerSettings): EmployerSettings {
+  return {
+    ...defaultEmployerSettings,
+    ...settings,
+    account: {
+      ...defaultEmployerSettings.account,
+      ...settings.account,
+    },
+    company: {
+      ...defaultEmployerSettings.company,
+      ...settings.company,
+    },
+    notifications: {
+      ...defaultEmployerSettings.notifications,
+      ...settings.notifications,
+    },
+    privacy: {
+      ...defaultEmployerSettings.privacy,
+      ...settings.privacy,
+    },
+    team: settings.team ?? [],
+  };
+}
 
-    return mockEmployerSettings;
-  }
+export async function getEmployerSettings() {
+  const response = await api.get<ApiEnvelope<EmployerSettings> | EmployerSettings>(
+    "/employer/settings",
+  );
+
+  return normalizeEmployerSettings(unwrap<EmployerSettings>(response));
 }
 
 export async function updateEmployerSettings(payload: EmployerSettingsPayload) {
-  try {
-    const response = await api.patch<ApiEnvelope<EmployerSettings> | EmployerSettings>(
-      "/employers/settings",
-      payload,
-    );
+  const response = await api.patch<ApiEnvelope<EmployerSettings> | EmployerSettings>(
+    "/employer/settings",
+    payload,
+  );
 
-    return unwrap<EmployerSettings>(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return payload;
-  }
+  return normalizeEmployerSettings(unwrap<EmployerSettings>(response));
 }
 
 export async function updateCompanySettings(
@@ -77,7 +127,7 @@ export async function updateCompanySettings(
     }
 
     return {
-      ...mockEmployerSettings.company,
+      ...defaultEmployerSettings.company,
       companyId,
       ...payload,
     };
@@ -99,7 +149,7 @@ export async function updateUserSettings(
     }
 
     return {
-      ...mockEmployerSettings.account,
+      ...defaultEmployerSettings.account,
       ...payload,
     };
   }

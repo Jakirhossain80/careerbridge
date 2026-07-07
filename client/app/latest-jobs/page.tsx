@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 
 import LatestJobsBenefits from "@/components/latest-jobs/LatestJobsBenefits";
-import LatestJobsEmptyState from "@/components/latest-jobs/LatestJobsEmptyState";
 import LatestJobsFilters from "@/components/latest-jobs/LatestJobsFilters";
 import LatestJobsHero from "@/components/latest-jobs/LatestJobsHero";
 import LatestJobsList from "@/components/latest-jobs/LatestJobsList";
-import LatestJobsLoadingSkeleton from "@/components/latest-jobs/LatestJobsLoadingSkeleton";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 
@@ -28,11 +26,6 @@ export default function LatestJobsPage() {
 
             <div>
               <LatestJobsList />
-
-              <div className="mt-8 grid gap-6">
-                <LatestJobsEmptyState />
-                <LatestJobsLoadingSkeleton />
-              </div>
             </div>
           </div>
         </section>

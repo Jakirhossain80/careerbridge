@@ -9,37 +9,100 @@ import MyJobsLoadingState from "@/components/employer-jobs/my-jobs/MyJobsLoading
 import MyJobsPagination from "@/components/employer-jobs/my-jobs/MyJobsPagination";
 import MyJobsTable from "@/components/employer-jobs/my-jobs/MyJobsTable";
 import MyJobsTabs from "@/components/employer-jobs/my-jobs/MyJobsTabs";
-import { Button } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
+import { useEmployerJobs } from "@/hooks/employer/useEmployerJobs";
+import { getApiErrorMessage } from "@/lib/api";
+import type { Job } from "@/types/job.types";
 import type {
   EmployerJobVisibility,
   EmployerPostedJob,
   EmployerPostedJobStatus,
 } from "@/types/employer-job";
 
-type MyPostedJobsPageProps = {
-  initialJobs: EmployerPostedJob[];
-};
-
 type JobsTab = "all" | "active" | "inactive" | "draft";
 type ViewMode = "list" | "grid";
 
 const jobsPerPage = 5;
 
-export default function MyPostedJobsPage({
-  initialJobs,
-}: MyPostedJobsPageProps) {
+function formatJobType(value: Job["jobType"]) {
+  return value.replace("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatWorkMode(value?: Job["workMode"] | Job["workplaceType"]) {
+  if (value === "onsite") {
+    return "On-site";
+  }
+
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "Hybrid";
+}
+
+function normalizePostedJob(job: Job): EmployerPostedJob {
+  return {
+    id: job.id,
+    title: job.title,
+    slug: job.id,
+    category: job.category,
+    jobType: formatJobType(job.jobType),
+    workMode: formatWorkMode(job.workMode ?? job.workplaceType),
+    location: job.location ?? "Remote",
+    salaryMin: job.salaryMin ?? 0,
+    salaryMax: job.salaryMax ?? 0,
+    currency: job.currency ?? "USD",
+    applicantsCount: 0,
+    newApplicantsCount: 0,
+    viewsCount: 0,
+    postedDate: job.createdAt ?? null,
+    expirationDate: job.deadline ?? job.applicationDeadline ?? null,
+    status: job.status as EmployerPostedJobStatus,
+    visibility: job.status === "draft" || job.status === "archived" ? "private" : "public",
+    employerId: "",
+    companyId: "",
+  };
+}
+
+function matchesTab(job: EmployerPostedJob, activeTab: JobsTab) {
+  if (activeTab === "all") {
+    return true;
+  }
+
+  if (activeTab === "active") {
+    return job.status === "active" || job.status === "published";
+  }
+
+  return job.status === activeTab;
+}
+
+export default function MyPostedJobsPage() {
   const [activeTab, setActiveTab] = useState<JobsTab>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [currentPage, setCurrentPage] = useState(1);
   const [goToPage, setGoToPage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [jobs, setJobs] = useState(initialJobs);
-  const [isLoading] = useState(false);
+  const jobsQuery = useEmployerJobs({ limit: 100 });
+  const apiJobs = useMemo(
+    () => jobsQuery.data?.jobs.map(normalizePostedJob) ?? [],
+    [jobsQuery.data?.jobs],
+  );
+  const [visibilityOverrides, setVisibilityOverrides] = useState<
+    Record<string, EmployerJobVisibility>
+  >({});
+  const [archivedJobIds, setArchivedJobIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const jobs = useMemo(
+    () =>
+      apiJobs.map((job) => ({
+        ...job,
+        visibility: visibilityOverrides[job.id] ?? job.visibility,
+        status: archivedJobIds.has(job.id) ? "archived" : job.status,
+      })),
+    [apiJobs, archivedJobIds, visibilityOverrides],
+  );
 
   const tabCounts = useMemo(
     () => ({
       all: jobs.length,
-      active: jobs.filter((job) => job.status === "active").length,
+      active: jobs.filter((job) => matchesTab(job, "active")).length,
       inactive: jobs.filter((job) => job.status === "inactive").length,
       draft: jobs.filter((job) => job.status === "draft").length,
     }),
@@ -51,7 +114,7 @@ export default function MyPostedJobsPage({
     const statusFilteredJobs =
       activeTab === "all"
         ? jobs
-        : jobs.filter((job) => job.status === activeTab);
+        : jobs.filter((job) => matchesTab(job, activeTab));
 
     if (!normalizedQuery) {
       return statusFilteredJobs;
@@ -78,21 +141,11 @@ export default function MyPostedJobsPage({
     jobId: string,
     visibility: EmployerJobVisibility,
   ) {
-    setJobs((currentJobs) =>
-      currentJobs.map((job) =>
-        job.id === jobId ? { ...job, visibility } : job,
-      ),
-    );
+    setVisibilityOverrides((current) => ({ ...current, [jobId]: visibility }));
   }
 
   function handleArchive(jobId: string) {
-    setJobs((currentJobs) =>
-      currentJobs.map((job) =>
-        job.id === jobId
-          ? { ...job, status: "archived" as EmployerPostedJobStatus }
-          : job,
-      ),
-    );
+    setArchivedJobIds((current) => new Set(current).add(jobId));
   }
 
   function handleGoToPage() {
@@ -137,6 +190,20 @@ export default function MyPostedJobsPage({
           </Link>
         </div>
       </header>
+
+      {jobsQuery.isError ? (
+        <Card className="border-red-200 bg-red-50">
+          <h2 className="text-base font-semibold text-red-900">
+            Unable to load posted jobs.
+          </h2>
+          <p className="mt-2 text-sm text-red-800">
+            {getApiErrorMessage(jobsQuery.error)}
+          </p>
+          <Button className="mt-4" onClick={() => void jobsQuery.refetch()}>
+            Retry
+          </Button>
+        </Card>
+      ) : null}
 
       <section
         aria-labelledby="posted-jobs-heading"
@@ -216,7 +283,7 @@ export default function MyPostedJobsPage({
           />
         </div>
 
-        {isLoading ? (
+        {jobsQuery.isLoading ? (
           <MyJobsLoadingState />
         ) : visibleJobs.length > 0 ? (
           <>

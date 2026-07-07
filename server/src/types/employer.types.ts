@@ -6,6 +6,7 @@ import {
   companyUpdateSchema,
   employerApplicantsQuerySchema,
   employerJobsQuerySchema,
+  employerSettingsSchema,
   jobCreateSchema,
   jobUpdateSchema,
 } from "../validations/employer.validation.js";
@@ -18,6 +19,7 @@ export type EmployerJobsQuery = z.infer<typeof employerJobsQuerySchema>;
 export type EmployerApplicantsQuery = z.infer<
   typeof employerApplicantsQuerySchema
 >;
+export type EmployerSettingsInput = z.infer<typeof employerSettingsSchema>;
 export type ApplicationStatusUpdateInput = z.infer<
   typeof applicationStatusUpdateSchema
 >;

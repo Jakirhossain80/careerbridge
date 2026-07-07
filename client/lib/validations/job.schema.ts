@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+import {
+  isSupportedCurrencyCode,
+  supportedCurrencyCodes,
+} from "@/constants/currency-options";
+
+const currencySchema = z
+  .string()
+  .trim()
+  .transform((value) => value.toUpperCase())
+  .refine((value) => /^[A-Z]{3}$/.test(value), "Use a 3-letter currency code")
+  .refine(
+    (value): boolean => isSupportedCurrencyCode(value),
+    `Currency must be one of: ${supportedCurrencyCodes.join(", ")}`,
+  );
+
 export const jobFormSchema = z
   .object({
     title: z.string().trim().min(1, "Job title is required"),
@@ -16,10 +31,7 @@ export const jobFormSchema = z
     location: z.string().trim().optional(),
     salaryMin: z.number().min(0, "Minimum salary must be zero or greater").optional(),
     salaryMax: z.number().min(0, "Maximum salary must be zero or greater").optional(),
-    currency: z
-      .string()
-      .trim()
-      .length(3, "Use a 3-letter currency code"),
+    currency: currencySchema,
     experienceLevel: z.string().trim().optional(),
     educationLevel: z.string().trim().optional(),
     openings: z.number().int().min(1, "Openings must be at least 1"),

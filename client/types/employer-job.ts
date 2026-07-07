@@ -10,8 +10,11 @@ export type EmployerPostedJobStatus =
   | "active"
   | "inactive"
   | "draft"
+  | "pending"
+  | "published"
   | "closed"
-  | "archived";
+  | "archived"
+  | "rejected";
 
 export type EmployerJobVisibility = "public" | "private";
 

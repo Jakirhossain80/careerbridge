@@ -9,6 +9,10 @@ import { ArrowLeft, CheckCircle2, ChevronRight, Save } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Badge, Button, Card, Input, LoadingSkeleton, Select, Textarea } from "@/components/ui";
+import {
+  currencyOptions,
+  normalizeCurrencyCode,
+} from "@/constants/currency-options";
 import { getApiErrorMessage } from "@/lib/api";
 import { jobFormSchema, type JobFormValues } from "@/lib/validations/job.schema";
 import { getJobById, updateJob } from "@/services/jobs.service";
@@ -114,7 +118,7 @@ function formValuesFromJob(job: Job): JobFormValues {
     location: job.location ?? "",
     salaryMin: job.salaryMin,
     salaryMax: job.salaryMax,
-    currency: job.currency ?? "USD",
+    currency: normalizeCurrencyCode(job.currency),
     experienceLevel: job.experienceLevel ?? "",
     educationLevel: job.educationLevel ?? "",
     openings: job.openings ?? job.vacancies ?? 1,
@@ -426,7 +430,13 @@ export default function EditJobForm({ jobId }: EditJobFormProps) {
                   setValueAs: (value) => (value === "" ? undefined : Number(value)),
                 })}
               />
-              <Input label="Currency" maxLength={3} required error={errors.currency?.message} {...register("currency")} />
+              <Select label="Currency" required error={errors.currency?.message} {...register("currency")}>
+                {currencyOptions.map((currency) => (
+                  <option key={currency.value} value={currency.value}>
+                    {currency.label}
+                  </option>
+                ))}
+              </Select>
               <Input
                 label="Openings"
                 type="number"

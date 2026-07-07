@@ -3,11 +3,9 @@ import type { Metadata } from "next";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import FeaturedJobsBenefits from "@/components/featured-jobs/FeaturedJobsBenefits";
-import FeaturedJobsEmptyState from "@/components/featured-jobs/FeaturedJobsEmptyState";
 import FeaturedJobsFilters from "@/components/featured-jobs/FeaturedJobsFilters";
 import FeaturedJobsHero from "@/components/featured-jobs/FeaturedJobsHero";
 import FeaturedJobsList from "@/components/featured-jobs/FeaturedJobsList";
-import FeaturedJobsLoadingSkeleton from "@/components/featured-jobs/FeaturedJobsLoadingSkeleton";
 
 export const metadata: Metadata = {
   title: "Featured Jobs | CareerBridge",
@@ -28,11 +26,6 @@ export default function FeaturedJobsPage() {
 
             <div>
               <FeaturedJobsList />
-
-              <div className="mt-8 grid gap-6">
-                <FeaturedJobsEmptyState />
-                <FeaturedJobsLoadingSkeleton />
-              </div>
             </div>
           </div>
         </section>

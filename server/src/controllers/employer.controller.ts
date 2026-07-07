@@ -7,6 +7,7 @@ import {
   companyCreateSchema,
   companyImageUploadSchema,
   companyUpdateSchema,
+  employerSettingsSchema,
   employerApplicantsQuerySchema,
   employerJobsQuerySchema,
   jobCreateSchema,
@@ -20,14 +21,26 @@ import {
   getAuthenticatedEmployer,
   getEmployerJobs,
   getJobApplicants,
+  getMyEmployerSettings,
   getMyCompanyProfile,
   updateApplicationStatus,
   updateCompanyProfile,
   updateEmployerJob,
+  updateMyEmployerSettings,
   uploadCompanyBrandingImage,
 } from "../services/employer.service.js";
 import AppError from "../utils/AppError.js";
-import { errorResponse, successResponse } from "../utils/apiResponse.js";
+import {
+  errorResponse,
+  successResponse,
+  validationErrorResponse,
+} from "../utils/apiResponse.js";
+
+const formatZodIssues = (error: ZodError) =>
+  error.issues.map((issue) => ({
+    field: issue.path.length > 0 ? issue.path.join(".") : "form",
+    message: issue.message,
+  }));
 
 const handleControllerError = (
   error: unknown,
@@ -35,7 +48,7 @@ const handleControllerError = (
   next: Parameters<RequestHandler>[2]
 ) => {
   if (error instanceof ZodError) {
-    errorResponse(res, "Validation failed", error.issues, 400);
+    validationErrorResponse(res, formatZodIssues(error));
     return;
   }
 
@@ -77,6 +90,29 @@ export const updateMyCompany: RequestHandler = async (req, res, next) => {
     const company = await updateCompanyProfile(employer, payload);
 
     successResponse(res, "Company profile updated successfully", company, 200);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const getSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const employer = await getAuthenticatedEmployer(req.user);
+    const settings = await getMyEmployerSettings(employer);
+
+    successResponse(res, "Employer settings fetched successfully", settings, 200);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const updateSettings: RequestHandler = async (req, res, next) => {
+  try {
+    const employer = await getAuthenticatedEmployer(req.user);
+    const payload = employerSettingsSchema.parse(req.body);
+    const settings = await updateMyEmployerSettings(employer, payload);
+
+    successResponse(res, "Employer settings updated successfully", settings, 200);
   } catch (error) {
     handleControllerError(error, res, next);
   }

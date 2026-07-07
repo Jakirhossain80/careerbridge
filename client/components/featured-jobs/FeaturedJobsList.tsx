@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpDown,
   Bookmark,
@@ -9,11 +12,17 @@ import {
 } from "lucide-react";
 
 import { Badge, Card } from "@/components/ui";
+import FeaturedJobsEmptyState from "@/components/featured-jobs/FeaturedJobsEmptyState";
+import FeaturedJobsLoadingSkeleton from "@/components/featured-jobs/FeaturedJobsLoadingSkeleton";
 import {
   featuredJobs,
   featuredSortOptions,
   type FeaturedJob,
 } from "@/lib/featured-jobs-data";
+import {
+  getPublicFeaturedJobs,
+  publicJobQueryKeys,
+} from "@/services/jobs.service";
 
 type FeaturedJobsListProps = {
   jobs?: FeaturedJob[];
@@ -120,8 +129,22 @@ function FeaturedJobCard({ job }: { job: FeaturedJob }) {
 }
 
 export default function FeaturedJobsList({
-  jobs: jobResults = featuredJobs,
+  jobs: fallbackJobs = featuredJobs,
 }: FeaturedJobsListProps) {
+  const featuredJobsQuery = useQuery({
+    queryKey: publicJobQueryKeys.featured({ limit: 12 }),
+    queryFn: () => getPublicFeaturedJobs({ limit: 12 }),
+  });
+  const jobResults = featuredJobsQuery.data?.featuredJobs ?? fallbackJobs;
+
+  if (featuredJobsQuery.isLoading) {
+    return <FeaturedJobsLoadingSkeleton />;
+  }
+
+  if (featuredJobsQuery.isError || jobResults.length === 0) {
+    return <FeaturedJobsEmptyState />;
+  }
+
   return (
     <section aria-labelledby="featured-results-heading">
       <div className="mb-5 flex flex-col gap-4 rounded-lg border border-slate-200 bg-surface p-4 shadow-sm dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">

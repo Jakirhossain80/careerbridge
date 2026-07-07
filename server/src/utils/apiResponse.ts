@@ -5,6 +5,12 @@ type ApiResponse<TData = unknown, TError = unknown> = {
   message: string;
   data: TData | null;
   error: TError | null;
+  errors?: ValidationFieldError[];
+};
+
+export type ValidationFieldError = {
+  field: string;
+  message: string;
 };
 
 export const successResponse = <TData>(
@@ -34,6 +40,23 @@ export const errorResponse = <TError>(
     message,
     data: null,
     error,
+  };
+
+  return res.status(statusCode).json(response);
+};
+
+export const validationErrorResponse = (
+  res: Response,
+  errors: ValidationFieldError[],
+  message = "Validation failed",
+  statusCode = 400
+) => {
+  const response: ApiResponse<null, null> = {
+    success: false,
+    message,
+    data: null,
+    error: null,
+    errors,
   };
 
   return res.status(statusCode).json(response);

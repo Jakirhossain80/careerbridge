@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpDown,
   Bookmark,
@@ -10,11 +13,14 @@ import {
 } from "lucide-react";
 
 import { Badge, Card } from "@/components/ui";
+import LatestJobsEmptyState from "@/components/latest-jobs/LatestJobsEmptyState";
+import LatestJobsLoadingSkeleton from "@/components/latest-jobs/LatestJobsLoadingSkeleton";
 import {
   latestJobs,
   latestSortOptions,
   type LatestJob,
 } from "@/lib/latest-jobs-data";
+import { getPublicJobs, publicJobQueryKeys } from "@/services/jobs.service";
 
 type LatestJobsListProps = {
   jobs?: LatestJob[];
@@ -121,8 +127,22 @@ function LatestJobCard({ job }: { job: LatestJob }) {
 }
 
 export default function LatestJobsList({
-  jobs: jobResults = latestJobs,
+  jobs: fallbackJobs = latestJobs,
 }: LatestJobsListProps) {
+  const latestJobsQuery = useQuery({
+    queryKey: publicJobQueryKeys.list({ limit: 12, sort: "-createdAt" }),
+    queryFn: () => getPublicJobs({ limit: 12, sort: "-createdAt" }),
+  });
+  const jobResults = latestJobsQuery.data?.latestJobs ?? fallbackJobs;
+
+  if (latestJobsQuery.isLoading) {
+    return <LatestJobsLoadingSkeleton />;
+  }
+
+  if (latestJobsQuery.isError || jobResults.length === 0) {
+    return <LatestJobsEmptyState />;
+  }
+
   return (
     <section aria-labelledby="latest-results-heading">
       <div className="mb-5 flex flex-col gap-4 rounded-lg border border-slate-200 bg-surface p-4 shadow-sm dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">

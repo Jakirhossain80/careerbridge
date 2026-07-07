@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Archive, Eye, FilePenLine, MapPin } from "lucide-react";
 
 import type { ViewMode } from "@/components/employer-jobs/my-jobs/MyPostedJobsPage";
+import { normalizeCurrencyCode } from "@/constants/currency-options";
 import { Badge } from "@/components/ui";
 import type {
   EmployerJobVisibility,
@@ -25,8 +26,11 @@ const statusVariant: Record<
   active: "success",
   inactive: "warning",
   draft: "neutral",
+  pending: "warning",
+  published: "success",
   closed: "danger",
   archived: "neutral",
+  rejected: "danger",
 };
 
 function formatDate(value: string | null) {
@@ -43,7 +47,7 @@ function formatDate(value: string | null) {
 
 function formatSalary(job: EmployerPostedJob) {
   const formatter = new Intl.NumberFormat("en", {
-    currency: job.currency,
+    currency: normalizeCurrencyCode(job.currency),
     maximumFractionDigits: 0,
     style: "currency",
   });

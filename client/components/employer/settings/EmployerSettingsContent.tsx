@@ -17,9 +17,10 @@ import SettingsTabs, { type SettingsTab } from "@/components/employer/settings/S
 import TeamSettingsPanel from "@/components/employer/settings/TeamSettingsPanel";
 import { FormSkeleton } from "@/components/skeletons";
 import { Button, Card } from "@/components/ui";
-import { mockEmployerSettings } from "@/data/mock-employer-settings";
 import {
+  defaultEmployerSettings,
   deactivateEmployerAccount,
+  employerSettingsQueryKeys,
   getEmployerSettings,
   updateEmployerSettings,
 } from "@/services/employer-settings.service";
@@ -36,13 +37,13 @@ export default function EmployerSettingsContent() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const settingsQuery = useQuery({
-    queryKey: ["employer-settings"],
+    queryKey: employerSettingsQueryKeys.detail,
     queryFn: getEmployerSettings,
   });
 
   const methods = useForm<EmployerSettingsFormValues>({
     resolver: zodResolver(employerSettingsSchema),
-    defaultValues: mockEmployerSettings,
+    defaultValues: defaultEmployerSettings,
     mode: "onBlur",
   });
 
@@ -61,9 +62,10 @@ export default function EmployerSettingsContent() {
   const updateSettingsMutation = useMutation({
     mutationFn: updateEmployerSettings,
     onSuccess: (settings) => {
-      queryClient.invalidateQueries({ queryKey: ["employer-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["user-settings"] });
+      queryClient.setQueryData(employerSettingsQueryKeys.detail, settings);
+      queryClient.invalidateQueries({ queryKey: employerSettingsQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: employerSettingsQueryKeys.company });
+      queryClient.invalidateQueries({ queryKey: employerSettingsQueryKeys.authUser });
       reset(settings);
       setSuccessMessage("Settings updated successfully.");
       appToast.success("Settings updated successfully.");
@@ -86,7 +88,7 @@ export default function EmployerSettingsContent() {
   });
 
   function handleDiscardChanges() {
-    reset(settingsQuery.data ?? mockEmployerSettings);
+    reset(settingsQuery.data ?? defaultEmployerSettings);
     setSuccessMessage("");
   }
 

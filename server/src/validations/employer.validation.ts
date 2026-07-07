@@ -7,12 +7,31 @@ import {
   JOB_TYPE,
   WORK_MODE,
 } from "../constants/model.constants.js";
+import { SUPPORTED_CURRENCY_CODES } from "../constants/currency.constants.js";
 
 const trimmedString = z.string().trim();
 const requiredString = trimmedString.min(1);
 const optionalString = trimmedString.min(1).optional();
 const optionalUrl = trimmedString.url().optional();
+const optionalEmptyString = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  trimmedString.optional()
+);
+const optionalEmptyUrl = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  trimmedString.url().optional()
+);
 const optionalText = trimmedString.optional();
+const currencySchema = trimmedString
+  .toUpperCase()
+  .refine((value) => /^[A-Z]{3}$/.test(value), "currency must be a 3-letter code")
+  .refine(
+    (value) =>
+      SUPPORTED_CURRENCY_CODES.includes(
+        value as (typeof SUPPORTED_CURRENCY_CODES)[number]
+      ),
+    `currency must be one of: ${SUPPORTED_CURRENCY_CODES.join(", ")}`
+  );
 const imageMimeTypeSchema = z.enum([
   "image/jpeg",
   "image/png",
@@ -88,7 +107,7 @@ const baseJobSchema = z.object({
   location: optionalString,
   salaryMin: z.coerce.number().min(0).optional(),
   salaryMax: z.coerce.number().min(0).optional(),
-  currency: trimmedString.length(3).toUpperCase().default("USD"),
+  currency: currencySchema.default("USD"),
   experienceLevel: optionalString,
   vacancies: z.coerce.number().int().min(1).default(1),
   deadline: z.coerce.date(),
@@ -158,6 +177,49 @@ export const applicationStatusUpdateSchema = z.object({
   ] as [string, ...string[]]),
 });
 
+export const employerSettingsSchema = z.object({
+  account: z.object({
+    fullName: requiredString.max(120),
+    email: trimmedString.email(),
+    phone: optionalEmptyString,
+    avatar: optionalEmptyUrl.or(optionalEmptyString),
+    designation: optionalEmptyString,
+  }),
+  company: z.object({
+    companyId: optionalEmptyString,
+    companyName: optionalEmptyString,
+    companyEmail: trimmedString.email(),
+    companyPhone: optionalEmptyString,
+    website: optionalEmptyUrl,
+    location: optionalEmptyString,
+    industry: optionalEmptyString,
+    companySize: optionalEmptyString,
+  }),
+  notifications: z.object({
+    newApplicant: z.coerce.boolean(),
+    interviewReminder: z.coerce.boolean(),
+    jobExpiry: z.coerce.boolean(),
+    emailNotifications: z.coerce.boolean(),
+    dailyDigest: z.coerce.boolean(),
+  }),
+  privacy: z.object({
+    companyProfileVisible: z.coerce.boolean(),
+    jobPostingVisible: z.coerce.boolean(),
+    contactInfoVisible: z.coerce.boolean(),
+    showCompanySize: z.coerce.boolean(),
+    showSalaryRange: z.coerce.boolean(),
+  }),
+  team: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string().email(),
+      role: z.enum(["Owner", "Admin", "Recruiter", "Viewer"]),
+      status: z.enum(["Active", "Invited"]),
+    })
+  ),
+});
+
 export const jobIdParamsSchema = z.object({
   jobId: objectIdSchema,
 });
@@ -165,3 +227,5 @@ export const jobIdParamsSchema = z.object({
 export const applicationIdParamsSchema = z.object({
   applicationId: objectIdSchema,
 });
+
+export type EmployerSettingsInput = z.infer<typeof employerSettingsSchema>;

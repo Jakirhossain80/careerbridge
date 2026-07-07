@@ -13,7 +13,25 @@ export interface IUser {
   firebaseUid: string;
   name: string;
   email: string;
+  phone?: string;
+  designation?: string;
   photoURL?: string;
+  employerSettings?: {
+    notifications?: {
+      newApplicant?: boolean;
+      interviewReminder?: boolean;
+      jobExpiry?: boolean;
+      emailNotifications?: boolean;
+      dailyDigest?: boolean;
+    };
+    privacy?: {
+      companyProfileVisible?: boolean;
+      jobPostingVisible?: boolean;
+      contactInfoVisible?: boolean;
+      showCompanySize?: boolean;
+      showSalaryRange?: boolean;
+    };
+  };
   role: UserRole;
   status: UserStatus;
   authProvider: AuthProvider;
@@ -45,8 +63,32 @@ const userSchema = new Schema<IUser>(
       trim: true,
       index: true,
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    designation: {
+      type: String,
+      trim: true,
+    },
     photoURL: {
       type: String,
+    },
+    employerSettings: {
+      notifications: {
+        newApplicant: { type: Boolean, default: true },
+        interviewReminder: { type: Boolean, default: true },
+        jobExpiry: { type: Boolean, default: true },
+        emailNotifications: { type: Boolean, default: true },
+        dailyDigest: { type: Boolean, default: false },
+      },
+      privacy: {
+        companyProfileVisible: { type: Boolean, default: true },
+        jobPostingVisible: { type: Boolean, default: true },
+        contactInfoVisible: { type: Boolean, default: true },
+        showCompanySize: { type: Boolean, default: true },
+        showSalaryRange: { type: Boolean, default: true },
+      },
     },
     role: {
       type: String,
