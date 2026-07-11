@@ -16,6 +16,16 @@ type ReportsByReasonChartProps = {
   reasons?: AdminReportAnalytics["reasonDistribution"];
 };
 
+const chartTooltipProps = {
+  contentStyle: {
+    backgroundColor: "var(--chart-tooltip-background)",
+    borderColor: "var(--border)",
+    color: "var(--chart-tooltip-foreground)",
+  },
+  labelStyle: { color: "var(--chart-tooltip-foreground)" },
+  itemStyle: { color: "var(--chart-tooltip-foreground)" },
+};
+
 const colors = ["#2563eb", "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#14b8a6", "#64748b"];
 
 export default function ReportsByReasonChart({
@@ -29,7 +39,7 @@ export default function ReportsByReasonChart({
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Tooltip />
+            <Tooltip {...chartTooltipProps} />
             <Pie data={reasons} dataKey="count" nameKey="reason" innerRadius={54} outerRadius={96} paddingAngle={2}>
               {reasons.map((item, index) => (
                 <Cell key={item.reason} fill={colors[index % colors.length]} />

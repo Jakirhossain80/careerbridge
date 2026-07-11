@@ -19,6 +19,16 @@ type ApplicationTrendsChartProps = {
   data: ApplicationTrendPoint[];
 };
 
+const chartTooltipProps = {
+  contentStyle: {
+    backgroundColor: "var(--chart-tooltip-background)",
+    borderColor: "var(--border)",
+    color: "var(--chart-tooltip-foreground)",
+  },
+  labelStyle: { color: "var(--chart-tooltip-foreground)" },
+  itemStyle: { color: "var(--chart-tooltip-foreground)" },
+};
+
 export default function ApplicationTrendsChart({
   data,
 }: ApplicationTrendsChartProps) {
@@ -42,11 +52,11 @@ export default function ApplicationTrendsChart({
             data={data}
             margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="label" tickLine={false} axisLine={false} />
-            <YAxis tickLine={false} axisLine={false} />
-            <Tooltip />
-            <Legend />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+            <YAxis tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+            <Tooltip {...chartTooltipProps} />
+            <Legend wrapperStyle={{ color: "var(--foreground)" }} />
             <Bar
               dataKey="views"
               name="Job views"

@@ -18,6 +18,16 @@ type PlatformGrowthChartProps = {
   data: PlatformGrowthPoint[];
 };
 
+const chartTooltipProps = {
+  contentStyle: {
+    backgroundColor: "var(--chart-tooltip-background)",
+    borderColor: "var(--border)",
+    color: "var(--chart-tooltip-foreground)",
+  },
+  labelStyle: { color: "var(--chart-tooltip-foreground)" },
+  itemStyle: { color: "var(--chart-tooltip-foreground)" },
+};
+
 export default function PlatformGrowthChart({ data }: PlatformGrowthChartProps) {
   const hasData = data.some(
     (point) => point.newUsers > 0 || point.jobPostings > 0,
@@ -36,10 +46,10 @@ export default function PlatformGrowthChart({ data }: PlatformGrowthChartProps) 
               data={data}
               margin={{ top: 8, right: 12, left: -24, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+              <YAxis tickLine={false} axisLine={false} allowDecimals={false} tick={{ fill: "var(--muted)" }} />
+              <Tooltip {...chartTooltipProps} />
               <Bar
                 dataKey="jobPostings"
                 name="Job postings"
@@ -61,7 +71,7 @@ export default function PlatformGrowthChart({ data }: PlatformGrowthChartProps) 
 
         {!hasData ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-lg border border-slate-200 bg-white/90 px-4 py-3 text-center shadow-sm">
+            <div className="rounded-lg border border-slate-200 bg-surface/90 px-4 py-3 text-center shadow-sm dark:border-slate-700">
               <p className="text-sm font-semibold text-foreground">
                 No growth data yet
               </p>

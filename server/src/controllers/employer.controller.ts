@@ -7,6 +7,7 @@ import {
   companyCreateSchema,
   companyImageUploadSchema,
   companyUpdateSchema,
+  employerApplicationsQuerySchema,
   employerSettingsSchema,
   employerApplicantsQuerySchema,
   employerJobsQuerySchema,
@@ -18,6 +19,8 @@ import {
   archiveEmployerJob,
   createCompanyProfile,
   createEmployerJob,
+  getEmployerApplicationDetails,
+  getEmployerApplications,
   getAuthenticatedEmployer,
   getEmployerJobs,
   getJobApplicants,
@@ -201,6 +204,33 @@ export const getApplicants: RequestHandler = async (req, res, next) => {
     const result = await getJobApplicants(employer, params.jobId, query);
 
     successResponse(res, "Job applicants fetched successfully", result, 200);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const getApplications: RequestHandler = async (req, res, next) => {
+  try {
+    const employer = await getAuthenticatedEmployer(req.user);
+    const query = employerApplicationsQuerySchema.parse(req.query);
+    const result = await getEmployerApplications(employer, query);
+
+    successResponse(res, "Employer applications fetched successfully", result, 200);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const getApplicationDetails: RequestHandler = async (req, res, next) => {
+  try {
+    const employer = await getAuthenticatedEmployer(req.user);
+    const params = applicationIdParamsSchema.parse(req.params);
+    const application = await getEmployerApplicationDetails(
+      employer,
+      params.applicationId
+    );
+
+    successResponse(res, "Employer application details fetched successfully", application, 200);
   } catch (error) {
     handleControllerError(error, res, next);
   }

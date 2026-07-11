@@ -12,7 +12,9 @@ type ApplicantFiltersProps = {
   search: string;
   status: EmployerApplicationsStatusFilter;
   sortBy: EmployerApplicationsSortBy;
-  statusCounts: Record<EmployerApplicationsStatusFilter, number>;
+  statusCounts: Partial<Record<EmployerApplicationsStatusFilter, number>> & {
+    all: number;
+  };
   onSearchChange: (value: string) => void;
   onStatusChange: (value: EmployerApplicationsStatusFilter) => void;
   onSortChange: (value: EmployerApplicationsSortBy) => void;

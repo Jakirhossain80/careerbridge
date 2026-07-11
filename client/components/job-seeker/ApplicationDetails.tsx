@@ -24,6 +24,7 @@ export default function ApplicationDetails({ applicationId }: { applicationId: s
   const { data: application, isLoading } = useQuery({
     queryKey: ["application", applicationId],
     queryFn: () => getApplicationDetails(applicationId),
+    refetchOnMount: "always",
   });
 
   const withdrawMutation = useMutation({

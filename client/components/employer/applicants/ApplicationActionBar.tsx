@@ -12,12 +12,16 @@ type ApplicationActionBarProps = {
 
 const statusBadgeClasses: Record<ApplicationStatus, string> = {
   applied: "border-slate-200 bg-slate-100 text-slate-700",
+  submitted: "border-slate-200 bg-slate-100 text-slate-700",
   under_review: "border-blue-200 bg-blue-50 text-blue-700",
+  in_review: "border-blue-200 bg-blue-50 text-blue-700",
+  reviewing: "border-blue-200 bg-blue-50 text-blue-700",
   shortlisted: "border-emerald-200 bg-emerald-50 text-emerald-700",
   interview: "border-indigo-200 bg-indigo-50 text-indigo-700",
   offered: "border-emerald-200 bg-emerald-50 text-emerald-800",
   hired: "border-green-200 bg-green-50 text-green-800",
   rejected: "border-red-200 bg-red-50 text-red-700",
+  withdrawn: "border-slate-200 bg-slate-100 text-slate-700",
 };
 
 export default function ApplicationActionBar({

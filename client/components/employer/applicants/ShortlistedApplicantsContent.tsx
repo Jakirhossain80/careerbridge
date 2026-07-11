@@ -11,6 +11,8 @@ import ShortlistedApplicantsFilters from "@/components/employer/applicants/Short
 import ShortlistedStatsCards from "@/components/employer/applicants/ShortlistedStatsCards";
 import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
 import { Button, ConfirmationModal, EmptyState, Pagination } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   getEmployerApplications,
   updateApplicationStatus,
@@ -177,6 +179,9 @@ export default function ShortlistedApplicantsContent() {
     }) => updateApplicationStatus(applicationId, status),
     onMutate: async ({ applicationId, status }) => {
       await queryClient.cancelQueries({ queryKey: ["shortlisted-applicants"] });
+      const previousData = queryClient.getQueriesData<EmployerApplicationsResponse>({
+        queryKey: ["shortlisted-applicants"],
+      });
 
       queryClient.setQueriesData<EmployerApplicationsResponse>(
         { queryKey: ["shortlisted-applicants"] },
@@ -203,11 +208,23 @@ export default function ShortlistedApplicantsContent() {
           };
         },
       );
+
+      return { previousData };
     },
-    onSuccess: () => {
+    onError: (error, _variables, context) => {
+      context?.previousData.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      appToast.error(getApiErrorMessage(error));
+    },
+    onSuccess: (updatedApplication, variables) => {
+      queryClient.setQueryData(["application", variables.applicationId], updatedApplication);
       queryClient.invalidateQueries({ queryKey: ["shortlisted-applicants"] });
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
+      queryClient.invalidateQueries({ queryKey: ["employer-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["job-seeker-dashboard"] });
       setPendingStatusChange(null);
+      appToast.success("Application status updated successfully.");
     },
   });
 

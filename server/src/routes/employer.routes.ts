@@ -5,6 +5,8 @@ import {
   archiveJob,
   createCompany,
   createJob,
+  getApplicationDetails,
+  getApplications,
   getApplicants,
   getJobs,
   getMyCompany,
@@ -45,6 +47,8 @@ router.patch("/jobs/:jobId/archive", archiveJob);
 router.delete("/jobs/:jobId", archiveJob);
 router.get("/jobs/:jobId/applicants", getApplicants);
 
+router.get("/applications", getApplications);
+router.get("/applications/:applicationId", getApplicationDetails);
 router.patch("/applications/:applicationId/status", updateStatus);
 
 export default router;

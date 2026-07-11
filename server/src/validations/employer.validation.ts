@@ -71,6 +71,20 @@ const applicantSortSchema = z
   .enum(["createdAt", "-createdAt", "updatedAt", "-updatedAt"])
   .default("-createdAt");
 
+const employerApplicationSortBySchema = z
+  .enum(["matchScore", "dateApplied", "name"])
+  .default("dateApplied");
+
+const employerControlledApplicationStatusSchema = z.enum([
+  APPLICATION_STATUS.UNDER_REVIEW,
+  APPLICATION_STATUS.REVIEWING,
+  APPLICATION_STATUS.SHORTLISTED,
+  APPLICATION_STATUS.INTERVIEW,
+  APPLICATION_STATUS.OFFERED,
+  APPLICATION_STATUS.REJECTED,
+  APPLICATION_STATUS.HIRED,
+] as [string, ...string[]]);
+
 export const companyCreateSchema = z.object({
   companyName: requiredString.max(160),
   industry: optionalString,
@@ -168,13 +182,21 @@ export const employerApplicantsQuerySchema = paginationSchema.extend({
   sort: applicantSortSchema,
 });
 
+export const employerApplicationsQuerySchema = paginationSchema.extend({
+  status: z
+    .enum(Object.values(APPLICATION_STATUS) as [string, ...string[]])
+    .or(z.literal("all"))
+    .optional(),
+  search: trimmedString.optional(),
+  jobId: objectIdSchema.optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
+  sortBy: employerApplicationSortBySchema,
+});
+
 export const applicationStatusUpdateSchema = z.object({
-  status: z.enum([
-    APPLICATION_STATUS.REVIEWING,
-    APPLICATION_STATUS.SHORTLISTED,
-    APPLICATION_STATUS.REJECTED,
-    APPLICATION_STATUS.HIRED,
-  ] as [string, ...string[]]),
+  status: employerControlledApplicationStatusSchema,
+  note: trimmedString.max(1000).optional(),
 });
 
 export const employerSettingsSchema = z.object({

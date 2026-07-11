@@ -1,18 +1,17 @@
 export type ApplicationStatus =
   | "applied"
+  | "submitted"
   | "under_review"
+  | "in_review"
+  | "reviewing"
   | "shortlisted"
   | "interview"
   | "offered"
   | "hired"
-  | "rejected";
-
-export type JobSeekerApplicationStatus =
-  | ApplicationStatus
-  | "submitted"
-  | "in_review"
-  | "reviewing"
+  | "rejected"
   | "withdrawn";
+
+export type JobSeekerApplicationStatus = ApplicationStatus;
 
 export type EmployerApplicationsSortBy = "matchScore" | "dateApplied" | "name";
 
@@ -108,12 +107,16 @@ export type UpdateApplicationStatusPayload = {
 
 export const applicationStatusLabels: Record<ApplicationStatus, string> = {
   applied: "Applied",
+  submitted: "Submitted",
   under_review: "Under Review",
+  in_review: "In Review",
+  reviewing: "Reviewing",
   shortlisted: "Shortlisted",
   interview: "Interview",
   offered: "Offered",
   hired: "Hired",
   rejected: "Rejected",
+  withdrawn: "Withdrawn",
 };
 
 export const jobSeekerApplicationStatusLabels: Record<
@@ -121,10 +124,6 @@ export const jobSeekerApplicationStatusLabels: Record<
   string
 > = {
   ...applicationStatusLabels,
-  submitted: "Submitted",
-  in_review: "In Review",
-  reviewing: "Reviewing",
-  withdrawn: "Withdrawn",
 };
 
 export type JobSeekerApplication = {

@@ -4,6 +4,7 @@ import {
   applicationStatusUpdateSchema,
   companyCreateSchema,
   companyUpdateSchema,
+  employerApplicationsQuerySchema,
   employerApplicantsQuerySchema,
   employerJobsQuerySchema,
   employerSettingsSchema,
@@ -18,6 +19,9 @@ export type JobUpdateInput = z.infer<typeof jobUpdateSchema>;
 export type EmployerJobsQuery = z.infer<typeof employerJobsQuerySchema>;
 export type EmployerApplicantsQuery = z.infer<
   typeof employerApplicantsQuerySchema
+>;
+export type EmployerApplicationsQuery = z.infer<
+  typeof employerApplicationsQuerySchema
 >;
 export type EmployerSettingsInput = z.infer<typeof employerSettingsSchema>;
 export type ApplicationStatusUpdateInput = z.infer<

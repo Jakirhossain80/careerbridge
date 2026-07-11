@@ -2,7 +2,6 @@
 
 import { api } from "@/lib/api";
 import { mockApplicantDetails } from "@/data/mock-applicant-details";
-import { mockEmployerApplications } from "@/data/mock-applicants";
 import type {
   AppliedJobsResponse,
   ApplyJobPayload,
@@ -22,8 +21,30 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
-let mockApplications = [...mockEmployerApplications];
 let mockDetails = [...mockApplicantDetails];
+
+type RawEntity = string | Record<string, unknown> | null | undefined;
+
+type RawEmployerApplication = {
+  _id: string;
+  jobId?: RawEntity;
+  companyId?: RawEntity;
+  applicantId?: RawEntity;
+  applicantEmail?: string;
+  applicantName?: string;
+  resume?: string;
+  resumeUrl?: string;
+  coverLetter?: string;
+  expectedSalary?: number;
+  status: ApplicationStatus;
+  timeline?: Array<{
+    status: ApplicationStatus;
+    note?: string;
+    createdAt?: string;
+  }>;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   const payload = response.data;
@@ -41,22 +62,129 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
 }
 
 function normalizeApplicationsResponse(
-  payload: EmployerApplicationsResponse | EmployerApplication[],
+  payload:
+    | EmployerApplicationsResponse
+    | EmployerApplication[]
+    | {
+        applications?: RawEmployerApplication[];
+        meta?: AppliedJobsResponse["meta"];
+      },
   params: EmployerApplicationsQueryParams = {},
 ): EmployerApplicationsResponse {
   if (Array.isArray(payload)) {
-    return filterMockApplications(payload, params);
+    return normalizeApplicationsResponse(
+      { applications: payload as unknown as RawEmployerApplication[] },
+      params,
+    );
   }
 
+  const rawApplications =
+    (payload as { applications?: RawEmployerApplication[] }).applications ?? [];
+  const applications = rawApplications.map(mapEmployerApplication);
+  const meta = (payload as { meta?: AppliedJobsResponse["meta"] }).meta;
+
   return {
-    applications: payload.applications ?? [],
-    total: payload.total ?? payload.applications?.length ?? 0,
-    page: payload.page ?? params.page ?? 1,
-    limit: payload.limit ?? params.limit ?? 10,
-    totalPages:
-      payload.totalPages ??
-      Math.max(Math.ceil((payload.total ?? 0) / (payload.limit ?? 10)), 1),
-    meta: payload.meta,
+    applications,
+    total: payload.total ?? meta?.total ?? applications.length,
+    page: payload.page ?? meta?.page ?? params.page ?? 1,
+    limit: payload.limit ?? meta?.limit ?? params.limit ?? 10,
+    totalPages: payload.totalPages ?? meta?.totalPages ?? 1,
+    meta: {
+      ...buildApplicationsMeta(applications),
+      ...(payload.meta && !("page" in payload.meta) ? payload.meta : undefined),
+    },
+  };
+}
+
+function getEntityString(entity: RawEntity, key: string) {
+  if (!entity || typeof entity !== "object") {
+    return "";
+  }
+
+  const value = entity[key];
+  return typeof value === "string" ? value : "";
+}
+
+function getEntityNumber(entity: RawEntity, key: string) {
+  if (!entity || typeof entity !== "object") {
+    return undefined;
+  }
+
+  const value = entity[key];
+  return typeof value === "number" ? value : undefined;
+}
+
+function getEntityStringArray(entity: RawEntity, key: string) {
+  if (!entity || typeof entity !== "object") {
+    return [];
+  }
+
+  const value = entity[key];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function getEntityId(entity: RawEntity) {
+  if (typeof entity === "string") {
+    return entity;
+  }
+
+  return getEntityString(entity, "_id");
+}
+
+function mapEmployerApplication(
+  application: RawEmployerApplication,
+): EmployerApplication {
+  const job = application.jobId;
+  const applicant = application.applicantId;
+  const company = application.companyId;
+  const applicantName =
+    application.applicantName || getEntityString(applicant, "name") || "Applicant";
+  const applicantEmail =
+    application.applicantEmail || getEntityString(applicant, "email");
+
+  return {
+    _id: application._id,
+    jobId: getEntityId(job),
+    jobTitle: getEntityString(job, "title") || "Job",
+    companyName:
+      getEntityString(company, "companyName") ||
+      getEntityString(company, "name") ||
+      getEntityString(job, "companyName"),
+    applicantId: getEntityId(applicant),
+    applicantName,
+    applicantEmail,
+    applicantPhone: getEntityString(applicant, "phone"),
+    applicantAvatar: getEntityString(applicant, "photoURL"),
+    location:
+      getEntityString(applicant, "location") || getEntityString(job, "location"),
+    resumeUrl: application.resumeUrl,
+    coverLetter: application.coverLetter,
+    skills: [
+      ...getEntityStringArray(applicant, "skills"),
+      ...getEntityStringArray(job, "skills"),
+    ].slice(0, 8),
+    summary: getEntityString(applicant, "professionalHeadline"),
+    expectedSalaryMin: getEntityNumber(application, "expectedSalary"),
+    status: application.status,
+    appliedAt: application.createdAt ?? application.updatedAt ?? new Date().toISOString(),
+  };
+}
+
+function mapApplicantDetails(application: RawEmployerApplication): ApplicantDetails {
+  const mapped = mapEmployerApplication(application);
+
+  return {
+    ...mapped,
+    careerSummary: mapped.summary,
+    resumeFileName: application.resume ?? application.resumeUrl?.split("/").pop(),
+    statusHistory: (application.timeline ?? []).map((item) => ({
+      status: item.status,
+      label: applicationStatusLabels[item.status] ?? item.status,
+      createdAt: item.createdAt ?? application.updatedAt ?? mapped.appliedAt,
+      note: item.note,
+    })),
   };
 }
 
@@ -80,135 +208,34 @@ function buildApplicationsMeta(applications: EmployerApplication[]) {
   };
 }
 
-function filterMockApplications(
-  applications: EmployerApplication[],
-  params: EmployerApplicationsQueryParams,
-): EmployerApplicationsResponse {
-  const page = params.page ?? 1;
-  const limit = params.limit ?? 10;
-  const search = params.search?.trim().toLowerCase();
-
-  let filtered = [...applications];
-
-  if (params.status && params.status !== "all") {
-    filtered = filtered.filter((application) => application.status === params.status);
-  }
-
-  if (params.jobId) {
-    filtered = filtered.filter((application) => application.jobId === params.jobId);
-  }
-
-  if (params.dateFrom) {
-    const fromTime = new Date(params.dateFrom).getTime();
-    filtered = filtered.filter(
-      (application) => new Date(application.appliedAt).getTime() >= fromTime,
-    );
-  }
-
-  if (params.dateTo) {
-    const toDate = new Date(params.dateTo);
-    toDate.setHours(23, 59, 59, 999);
-    const toTime = toDate.getTime();
-    filtered = filtered.filter(
-      (application) => new Date(application.appliedAt).getTime() <= toTime,
-    );
-  }
-
-  if (search) {
-    filtered = filtered.filter((application) =>
-      [
-        application.applicantName,
-        application.applicantEmail,
-        application.jobTitle,
-        application.companyName ?? "",
-        application.location ?? "",
-        application.summary ?? "",
-        ...(application.skills ?? []),
-      ].some((value) => value.toLowerCase().includes(search)),
-    );
-  }
-
-  filtered.sort((a, b) => {
-    if (params.sortBy === "name") {
-      return a.applicantName.localeCompare(b.applicantName);
-    }
-
-    if (params.sortBy === "dateApplied") {
-      return new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime();
-    }
-
-    return (b.matchScore ?? 0) - (a.matchScore ?? 0);
-  });
-
-  const total = filtered.length;
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
-
-  return {
-    applications: filtered.slice(start, start + limit),
-    total,
-    page: safePage,
-    limit,
-    totalPages,
-    meta: buildApplicationsMeta(applications),
-  };
-}
-
 export async function getEmployerApplications(
   params: EmployerApplicationsQueryParams = {},
 ) {
-  try {
-    const response = await api.get<
-      ApiEnvelope<EmployerApplicationsResponse | EmployerApplication[]> | EmployerApplicationsResponse
-    >("/applications/employer", {
-      params: {
-        ...params,
-        status: params.status === "all" ? undefined : params.status,
-      },
-    });
+  const response = await api.get<
+    ApiEnvelope<
+      EmployerApplicationsResponse | EmployerApplication[] | {
+        applications?: RawEmployerApplication[];
+        meta?: AppliedJobsResponse["meta"];
+      }
+    > | EmployerApplicationsResponse
+  >("/employer/applications", {
+    params: {
+      ...params,
+      status: params.status === "all" ? undefined : params.status,
+    },
+  });
 
-    return normalizeApplicationsResponse(unwrap(response), params);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return filterMockApplications(mockApplications, params);
-  }
-}
-
-function mergeMockApplicationDetails(application: EmployerApplication): ApplicantDetails {
-  return {
-    ...application,
-    applicantPhone: "+1 (555) 013-4477",
-    location: "Remote",
-    education: "Candidate education details pending",
-    careerSummary:
-      "This applicant profile is using development fallback data until the application details endpoint returns a full profile.",
-    resumeFileName: application.resumeUrl?.split("/").pop(),
-    notes: [],
-    statusHistory: [
-      {
-        status: "applied",
-        label: "Applied",
-        createdAt: application.appliedAt,
-      },
-      {
-        status: application.status,
-        label: applicationStatusLabels[application.status],
-        createdAt: application.appliedAt,
-      },
-    ],
-  };
+  return normalizeApplicationsResponse(unwrap(response), params);
 }
 
 export async function getApplicationById(id: string) {
   try {
-    const response = await api.get<ApiEnvelope<ApplicantDetails> | ApplicantDetails>(
-      `/applications/${id}`,
+    const response = await api.get<
+      ApiEnvelope<RawEmployerApplication> | RawEmployerApplication
+    >(
+      `/employer/applications/${id}`,
     );
-    return unwrap<ApplicantDetails>(response);
+    return mapApplicantDetails(unwrap<RawEmployerApplication>(response));
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
       throw error;
@@ -220,13 +247,7 @@ export async function getApplicationById(id: string) {
       return details;
     }
 
-    const application = mockApplications.find((item) => item._id === id);
-
-    if (!application) {
-      throw error;
-    }
-
-    return mergeMockApplicationDetails(application);
+    throw error;
   }
 }
 
@@ -234,48 +255,13 @@ export async function updateApplicationStatus(
   id: string,
   status: ApplicationStatus,
 ) {
-  try {
-    const response = await api.patch<ApiEnvelope<ApplicantDetails> | ApplicantDetails>(
-      `/applications/${id}/status`,
-      { status },
-    );
-    return unwrap<ApplicantDetails>(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    const application = mockApplications.find((item) => item._id === id);
-
-    if (!application) {
-      throw error;
-    }
-
-    mockApplications = mockApplications.map((item) =>
-      item._id === id ? { ...item, status } : item,
-    );
-    const updatedDetails = mockDetails.find((item) => item._id === id);
-    const nextDetails = updatedDetails
-      ? {
-          ...updatedDetails,
-          status,
-          statusHistory: [
-            ...(updatedDetails.statusHistory ?? []),
-            {
-              status,
-              label: applicationStatusLabels[status],
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        }
-      : mergeMockApplicationDetails({ ...application, status });
-
-    mockDetails = updatedDetails
-      ? mockDetails.map((item) => (item._id === id ? nextDetails : item))
-      : [...mockDetails, nextDetails];
-
-    return nextDetails;
-  }
+  const response = await api.patch<
+    ApiEnvelope<RawEmployerApplication> | RawEmployerApplication
+  >(
+    `/employer/applications/${id}/status`,
+    { status },
+  );
+  return mapApplicantDetails(unwrap<RawEmployerApplication>(response));
 }
 
 export async function addApplicationNote(id: string, note: string) {

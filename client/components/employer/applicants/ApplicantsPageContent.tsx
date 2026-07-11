@@ -10,6 +10,8 @@ import ApplicantFilters from "@/components/employer/applicants/ApplicantFilters"
 import ApplicantProfileModal from "@/components/employer/applicants/ApplicantProfileModal";
 import { FilterEmptyState, SearchEmptyState } from "@/components/empty-states";
 import { Button, Card, ConfirmationModal, EmptyState, Pagination } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   getEmployerApplications,
   updateApplicationStatus,
@@ -65,11 +67,12 @@ function exportApplicationsToCsv(applications: EmployerApplication[]) {
 
 function buildStatusCounts(
   data?: EmployerApplicationsResponse,
-): Record<EmployerApplicationsStatusFilter, number> {
-  const counts: Record<EmployerApplicationsStatusFilter, number> = {
+): Partial<Record<EmployerApplicationsStatusFilter, number>> & { all: number } {
+  const counts: Partial<Record<EmployerApplicationsStatusFilter, number>> & { all: number } = {
     all: data?.total ?? 0,
     applied: 0,
     under_review: 0,
+    reviewing: 0,
     shortlisted: 0,
     interview: 0,
     offered: 0,
@@ -78,7 +81,7 @@ function buildStatusCounts(
   };
 
   data?.applications.forEach((application) => {
-    counts[application.status] += 1;
+    counts[application.status] = (counts[application.status] ?? 0) + 1;
   });
 
   return counts;
@@ -141,6 +144,9 @@ export default function ApplicantsPageContent() {
     }) => updateApplicationStatus(applicationId, nextStatus),
     onMutate: async ({ applicationId, status: nextStatus }) => {
       await queryClient.cancelQueries({ queryKey: ["employer-applicants"] });
+      const previousData = queryClient.getQueriesData<EmployerApplicationsResponse>({
+        queryKey: ["employer-applicants"],
+      });
 
       queryClient.setQueriesData<EmployerApplicationsResponse>(
         { queryKey: ["employer-applicants"] },
@@ -159,10 +165,23 @@ export default function ApplicantsPageContent() {
           };
         },
       );
+
+      return { previousData };
     },
-    onSuccess: () => {
+    onError: (error, _variables, context) => {
+      context?.previousData.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      appToast.error(getApiErrorMessage(error));
+    },
+    onSuccess: (updatedApplication, variables) => {
+      queryClient.setQueryData(["application", variables.applicationId], updatedApplication);
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
+      queryClient.invalidateQueries({ queryKey: ["shortlisted-applicants"] });
+      queryClient.invalidateQueries({ queryKey: ["employer-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["job-seeker-dashboard"] });
       setPendingStatusChange(null);
+      appToast.success("Application status updated successfully.");
     },
   });
 

@@ -78,6 +78,16 @@ const metricIcons = {
 
 const chartColors = ["#2563eb", "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#14b8a6"];
 
+const chartTooltipProps = {
+  contentStyle: {
+    backgroundColor: "var(--chart-tooltip-background)",
+    borderColor: "var(--border)",
+    color: "var(--chart-tooltip-foreground)",
+  },
+  labelStyle: { color: "var(--chart-tooltip-foreground)" },
+  itemStyle: { color: "var(--chart-tooltip-foreground)" },
+};
+
 const defaultFilters: AdminAnalyticsFilters = {
   dateRange: "last_30_days",
   dateFrom: "",
@@ -141,10 +151,10 @@ function TrendChart({ data }: { data: AdminAnalyticsOverview["trends"] }) {
       <div className="h-80">
         <RechartsResponsiveContainer width="100%" height="100%">
           <RechartsAreaChart data={data} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
-            <RechartsCartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <RechartsXAxis dataKey="label" tickLine={false} axisLine={false} />
-            <RechartsYAxis tickLine={false} axisLine={false} />
-            <RechartsTooltip />
+            <RechartsCartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <RechartsXAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+            <RechartsYAxis tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+            <RechartsTooltip {...chartTooltipProps} />
             <RechartsArea type="monotone" dataKey="users" name="Users" stroke="#2563eb" fill="#dbeafe" />
             <RechartsArea type="monotone" dataKey="jobs" name="Jobs" stroke="#10b981" fill="#d1fae5" />
             <RechartsArea type="monotone" dataKey="applications" name="Applications" stroke="#6366f1" fill="#e0e7ff" />
@@ -177,7 +187,7 @@ function CategoryDistributionChart({
       <div className="h-80">
         <RechartsResponsiveContainer width="100%" height="100%">
           <RechartsPieChart>
-            <RechartsTooltip />
+            <RechartsTooltip {...chartTooltipProps} />
             <RechartsPie data={data} dataKey="count" nameKey="label" innerRadius={58} outerRadius={104} paddingAngle={2}>
               {data.map((entry, index) => (
                 <RechartsCell key={entry.label} fill={chartColors[index % chartColors.length]} />
@@ -252,10 +262,10 @@ function LocationChart({ data }: { data: AdminAnalyticsOverview["locationDistrib
       <div className="h-80">
         <RechartsResponsiveContainer width="100%" height="100%">
           <RechartsBarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 0 }}>
-            <RechartsCartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <RechartsXAxis type="number" tickLine={false} axisLine={false} />
-            <RechartsYAxis type="category" dataKey="label" width={96} tickLine={false} axisLine={false} />
-            <RechartsTooltip />
+            <RechartsCartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <RechartsXAxis type="number" tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+            <RechartsYAxis type="category" dataKey="label" width={96} tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
+            <RechartsTooltip {...chartTooltipProps} />
             <RechartsBar dataKey="count" name="Jobs" fill="#10b981" radius={[0, 6, 6, 0]} />
           </RechartsBarChart>
         </RechartsResponsiveContainer>

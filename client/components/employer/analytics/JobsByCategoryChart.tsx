@@ -17,6 +17,16 @@ type JobsByCategoryChartProps = {
   data: CategoryAnalytics[];
 };
 
+const chartTooltipProps = {
+  contentStyle: {
+    backgroundColor: "var(--chart-tooltip-background)",
+    borderColor: "var(--border)",
+    color: "var(--chart-tooltip-foreground)",
+  },
+  labelStyle: { color: "var(--chart-tooltip-foreground)" },
+  itemStyle: { color: "var(--chart-tooltip-foreground)" },
+};
+
 export default function JobsByCategoryChart({
   data,
 }: JobsByCategoryChartProps) {
@@ -41,16 +51,17 @@ export default function JobsByCategoryChart({
             layout="vertical"
             margin={{ top: 8, right: 16, left: 16, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis type="number" tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis type="number" tickLine={false} axisLine={false} tick={{ fill: "var(--muted)" }} />
             <YAxis
               type="category"
               dataKey="category"
               width={92}
               tickLine={false}
               axisLine={false}
+              tick={{ fill: "var(--muted)" }}
             />
-            <Tooltip />
+            <Tooltip {...chartTooltipProps} />
             <Bar
               dataKey="percentage"
               name="Share"

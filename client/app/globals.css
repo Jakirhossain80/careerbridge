@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --cb-primary: #2563eb;
   --cb-accent: #10b981;
@@ -16,6 +18,14 @@
   --surface: var(--cb-light-surface);
   --foreground: var(--cb-main-text);
   --muted: var(--cb-muted-text);
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --chart-grid: #e2e8f0;
+  --chart-tooltip-background: #ffffff;
+  --chart-tooltip-foreground: #1e293b;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -25,18 +35,45 @@
   --color-muted: var(--muted);
   --color-primary: var(--cb-primary);
   --color-accent: var(--cb-accent);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
   --font-heading: var(--font-poppins), Arial, Helvetica, sans-serif;
   --font-mono: "Courier New", Courier, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--cb-dark-background);
-    --surface: var(--cb-dark-surface);
-    --foreground: var(--cb-light-surface);
-    --muted: #cbd5e1;
-  }
+:root.light,
+:root[data-theme="light"] {
+  --background: var(--cb-light-background);
+  --surface: var(--cb-light-surface);
+  --foreground: var(--cb-main-text);
+  --muted: var(--cb-muted-text);
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --chart-grid: #e2e8f0;
+  --chart-tooltip-background: #ffffff;
+  --chart-tooltip-foreground: #1e293b;
+  color-scheme: light;
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  --background: var(--cb-dark-background);
+  --surface: var(--cb-dark-surface);
+  --foreground: var(--cb-light-surface);
+  --muted: #cbd5e1;
+  --border: #334155;
+  --input: #475569;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --chart-grid: #334155;
+  --chart-tooltip-background: #0f172a;
+  --chart-tooltip-foreground: #f8fafc;
+  color-scheme: dark;
 }
 
 body {
@@ -61,4 +98,24 @@ h6 {
 
 .text-muted {
   color: var(--muted);
+}
+
+input,
+select,
+textarea {
+  color-scheme: inherit;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+  transition: background-color 9999s ease-out;
 }

@@ -15,8 +15,8 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-16">
-      <section className="app-surface w-full max-w-md rounded-lg border border-slate-200 p-8 text-center shadow-sm">
-        <div className="mx-auto mb-5 flex size-12 items-center justify-center rounded-lg bg-red-50 text-red-700">
+      <section className="app-surface w-full max-w-md rounded-lg border border-slate-200 p-8 text-center shadow-sm dark:border-slate-700">
+        <div className="mx-auto mb-5 flex size-12 items-center justify-center rounded-lg bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">
           <AlertTriangle size={24} aria-hidden="true" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">

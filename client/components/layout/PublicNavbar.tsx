@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getDashboardPathForRole } from "@/lib/authRedirects";
 import { appToast } from "@/lib/toast";
 import { getJobSeekerProfile } from "@/services/job-seeker-profile.service";
+import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 import ActiveNavLink from "./ActiveNavLink";
 
 const navigationLinks = [
@@ -61,7 +62,7 @@ export default function PublicNavbar() {
   };
 
   return (
-    <header className="border-b border-slate-200 bg-surface">
+    <header className="border-b border-slate-200 bg-surface dark:border-slate-700">
       <nav
         className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
         aria-label="Public navigation"
@@ -80,6 +81,7 @@ export default function PublicNavbar() {
               {link.label}
             </ActiveNavLink>
           ))}
+          <ThemeSwitcher />
           {loading ? (
             <span
               className="size-9 animate-pulse rounded-full bg-slate-200"
@@ -89,7 +91,7 @@ export default function PublicNavbar() {
             <>
               <Link
                 href={dashboardPath}
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               >
                 <LayoutDashboard className="size-4" aria-hidden="true" />
                 Dashboard
@@ -102,7 +104,7 @@ export default function PublicNavbar() {
                 <button
                   type="button"
                   onClick={() => setIsUserMenuOpen((value) => !value)}
-                  className="flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-2 text-slate-700 transition hover:border-primary/40 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-2 text-slate-700 transition hover:border-primary/40 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:text-white"
                   aria-haspopup="menu"
                   aria-expanded={isUserMenuOpen}
                   aria-label="Open account menu"
@@ -128,14 +130,14 @@ export default function PublicNavbar() {
                 {isUserMenuOpen ? (
                   <div
                     role="menu"
-                    className="absolute right-0 z-30 mt-0.5 w-64 rounded-md border border-slate-200 bg-white p-2 text-slate-900 shadow-lg shadow-slate-950/10"
+                    className="absolute right-0 z-30 mt-0.5 w-64 rounded-md border border-slate-200 bg-white p-2 text-slate-900 shadow-lg shadow-slate-950/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                   >
-                    <div className="border-b border-slate-100 px-3 py-2">
+                    <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-800">
                       <p className="truncate text-sm font-semibold">
                         {displayName}
                       </p>
                       {email ? (
-                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
                           {email}
                         </p>
                       ) : null}
@@ -144,7 +146,7 @@ export default function PublicNavbar() {
                       href={dashboardPath}
                       role="menuitem"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition hover:bg-slate-50"
+                      className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
                       <LayoutDashboard className="size-4" aria-hidden="true" />
                       Dashboard
@@ -153,7 +155,7 @@ export default function PublicNavbar() {
                       type="button"
                       role="menuitem"
                       onClick={handleLogout}
-                      className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50"
+                      className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30"
                     >
                       <LogOut className="size-4" aria-hidden="true" />
                       Logout

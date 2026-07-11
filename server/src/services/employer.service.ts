@@ -1,5 +1,5 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
-import type { SortOrder } from "mongoose";
+import { Types, type SortOrder } from "mongoose";
 
 import {
   APPLICATION_STATUS,
@@ -22,6 +22,7 @@ import type {
   AuthenticatedEmployer,
   CompanyCreateInput,
   CompanyUpdateInput,
+  EmployerApplicationsQuery,
   EmployerApplicantsQuery,
   EmployerJobsQuery,
   EmployerSettingsInput,
@@ -49,6 +50,16 @@ const buildSort = (sort: string): Record<string, SortOrder> => {
   return { [field]: direction };
 };
 
+const buildEmployerApplicationSort = (
+  sortBy: EmployerApplicationsQuery["sortBy"]
+): Record<string, SortOrder> => {
+  if (sortBy === "name") {
+    return { applicantName: 1 };
+  }
+
+  return { createdAt: -1 };
+};
+
 const getPaginationMeta = (
   page: number,
   limit: number,
@@ -58,7 +69,7 @@ const getPaginationMeta = (
     page,
     limit,
     total,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.max(Math.ceil(total / limit), 1),
   };
 };
 
@@ -603,6 +614,120 @@ export const getJobApplicants = async (
   };
 };
 
+export const getEmployerApplications = async (
+  employer: AuthenticatedEmployer,
+  query: EmployerApplicationsQuery
+) => {
+  const ownedJobsFilter: Record<string, unknown> = { employerId: employer.userId };
+
+  if (query.jobId) {
+    ownedJobsFilter._id = query.jobId;
+  }
+
+  const ownedJobs = await Job.find(ownedJobsFilter).select("_id").lean();
+  const ownedJobIds = ownedJobs.map((job) => job._id);
+
+  if (ownedJobIds.length === 0) {
+    return {
+      applications: [],
+      meta: getPaginationMeta(query.page, query.limit, 0),
+    };
+  }
+
+  const filter: Record<string, unknown> = {
+    employerId: employer.userId,
+    jobId: { $in: ownedJobIds },
+  };
+
+  if (query.status && query.status !== "all") {
+    filter.status = query.status;
+  }
+
+  if (query.dateFrom || query.dateTo) {
+    const createdAt: Record<string, Date> = {};
+
+    if (query.dateFrom) {
+      createdAt.$gte = query.dateFrom;
+    }
+
+    if (query.dateTo) {
+      const endDate = new Date(query.dateTo);
+      endDate.setHours(23, 59, 59, 999);
+      createdAt.$lte = endDate;
+    }
+
+    filter.createdAt = createdAt;
+  }
+
+  if (query.search) {
+    const regex = new RegExp(escapeRegex(query.search), "i");
+    const matchingJobs = await Job.find({
+      _id: { $in: ownedJobIds },
+      $or: [
+        { title: regex },
+        { companyName: regex },
+        { location: regex },
+        { skills: regex },
+      ],
+    })
+      .select("_id")
+      .lean();
+
+    filter.$or = [
+      { applicantName: regex },
+      { applicantEmail: regex },
+      { resume: regex },
+      { jobId: { $in: matchingJobs.map((job) => job._id) } },
+    ];
+  }
+
+  const skip = (query.page - 1) * query.limit;
+  const [applications, total] = await Promise.all([
+    Application.find(filter)
+      .populate("applicantId", "name email photoURL phone location skills professionalHeadline")
+      .populate("jobId", "title companyName location skills")
+      .populate("companyId", "name companyName logo logoUrl")
+      .sort(buildEmployerApplicationSort(query.sortBy))
+      .skip(skip)
+      .limit(query.limit)
+      .lean(),
+    Application.countDocuments(filter),
+  ]);
+
+  return {
+    applications,
+    meta: getPaginationMeta(query.page, query.limit, total),
+  };
+};
+
+export const getEmployerApplicationDetails = async (
+  employer: AuthenticatedEmployer,
+  applicationId: string
+) => {
+  const application = await Application.findById(applicationId)
+    .populate("applicantId", "name email photoURL phone location skills professionalHeadline")
+    .populate("jobId", "title companyName location skills description")
+    .populate("companyId", "name companyName logo logoUrl")
+    .lean();
+
+  if (!application) {
+    throw new AppError("Application not found", 404);
+  }
+
+  const job = await Job.findOne({
+    _id: application.jobId?._id ?? application.jobId,
+    employerId: employer.userId,
+  })
+    .select("_id")
+    .lean();
+
+  if (!job) {
+    throw new AppError("Forbidden: application does not belong to this employer", 403);
+  }
+
+  return application;
+};
+
 export const updateApplicationStatus = async (
   employer: AuthenticatedEmployer,
   applicationId: string,
@@ -620,13 +745,14 @@ export const updateApplicationStatus = async (
   }).select("_id");
 
   if (!job) {
-    throw new AppError("Application not found", 404);
+    throw new AppError("Forbidden: application does not belong to this employer", 403);
   }
 
   application.status = input.status as IApplication["status"];
   application.timeline.push({
     status: input.status as IApplication["status"],
-    updatedBy: application.employerId,
+    note: input.note,
+    updatedBy: new Types.ObjectId(employer.userId),
   });
 
   if (input.status === APPLICATION_STATUS.HIRED) {
@@ -636,5 +762,5 @@ export const updateApplicationStatus = async (
   await application.save();
   await notifyApplicationStatusChanged(application._id.toString(), employer.userId);
 
-  return application;
+  return getEmployerApplicationDetails(employer, application._id.toString());
 };

@@ -26,6 +26,7 @@ export default function AppliedJobsList() {
   const { data, isLoading } = useQuery({
     queryKey: ["applied-jobs"],
     queryFn: () => getAppliedJobs(),
+    refetchOnMount: "always",
   });
 
   const withdrawMutation = useMutation({

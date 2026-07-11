@@ -13,6 +13,8 @@ import InternalNotesCard from "@/components/employer/applicants/InternalNotesCar
 import ResumePreviewCard from "@/components/employer/applicants/ResumePreviewCard";
 import StatusHistoryCard from "@/components/employer/applicants/StatusHistoryCard";
 import { Badge, Button, Card, ConfirmationModal, EmptyState, Input } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/api";
+import { appToast } from "@/lib/toast";
 import {
   addApplicationNote,
   getApplicationById,
@@ -80,11 +82,18 @@ export default function ApplicantDetailsContent() {
       applicationId: string;
       status: ApplicationStatus;
     }) => updateApplicationStatus(id, status),
-    onSuccess: () => {
+    onSuccess: (updatedApplication) => {
+      queryClient.setQueryData(["application", applicationId], updatedApplication);
       queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
       queryClient.invalidateQueries({ queryKey: ["employer-applicants"] });
       queryClient.invalidateQueries({ queryKey: ["shortlisted-applicants"] });
+      queryClient.invalidateQueries({ queryKey: ["employer-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["job-seeker-dashboard"] });
       setPendingStatus(null);
+      appToast.success("Application status updated successfully.");
+    },
+    onError: (error) => {
+      appToast.error(getApiErrorMessage(error));
     },
   });
 

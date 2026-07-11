@@ -18,22 +18,30 @@ type ApplicantCardProps = {
 
 const statusLabels: Record<ApplicationStatus, string> = {
   applied: "Applied",
+  submitted: "Submitted",
   under_review: "Under Review",
+  in_review: "In Review",
+  reviewing: "Reviewing",
   shortlisted: "Shortlisted",
   interview: "Interview",
   offered: "Offered",
   hired: "Hired",
   rejected: "Rejected",
+  withdrawn: "Withdrawn",
 };
 
 const statusBadgeClasses: Record<ApplicationStatus, string> = {
   applied: "border-slate-200 bg-slate-100 text-slate-700",
+  submitted: "border-slate-200 bg-slate-100 text-slate-700",
   under_review: "border-blue-200 bg-blue-50 text-blue-700",
+  in_review: "border-blue-200 bg-blue-50 text-blue-700",
+  reviewing: "border-blue-200 bg-blue-50 text-blue-700",
   shortlisted: "border-emerald-200 bg-emerald-50 text-emerald-700",
   interview: "border-indigo-200 bg-indigo-50 text-indigo-700",
   offered: "border-emerald-200 bg-emerald-50 text-emerald-800",
   hired: "border-green-200 bg-green-50 text-green-800",
   rejected: "border-red-200 bg-red-50 text-red-700",
+  withdrawn: "border-slate-200 bg-slate-100 text-slate-700",
 };
 
 function formatDate(value: string) {
@@ -155,7 +163,7 @@ export default function ApplicantCard({
                 size="sm"
                 leftIcon={<RotateCcw className="size-4" aria-hidden="true" />}
                 isLoading={isUpdating}
-                onClick={() => onStatusChange(application._id, "under_review")}
+                onClick={() => onStatusChange(application._id, "reviewing")}
               >
                 Undo Rejection
               </Button>
