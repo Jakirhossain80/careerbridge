@@ -42,7 +42,7 @@ export default function DashboardLogoutButton({
       disabled={isLoggingOut}
       className={`mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-70 ${
         isAdmin
-          ? "border-slate-700 text-slate-200 hover:bg-slate-900 hover:text-white"
+          ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-slate-700 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
           : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950"
       }`}
       aria-busy={isLoggingOut || undefined}
