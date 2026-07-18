@@ -7,6 +7,7 @@ import {
 } from "../constants/model.constants.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { syncFirebaseUser } from "../services/user.service.js";
+import { z } from "zod";
 
 const resolveAuthProvider = (firebaseProvider?: string): AuthProvider => {
   if (firebaseProvider === "google.com") {
@@ -16,13 +17,9 @@ const resolveAuthProvider = (firebaseProvider?: string): AuthProvider => {
   return AUTH_PROVIDERS.PASSWORD;
 };
 
-const resolveRequestedRole = (role: unknown): UserRole | undefined => {
-  if (role === USER_ROLES.JOB_SEEKER || role === USER_ROLES.EMPLOYER) {
-    return role;
-  }
-
-  return undefined;
-};
+export const syncUserSchema = z.object({
+  role: z.enum([USER_ROLES.JOB_SEEKER, USER_ROLES.EMPLOYER]).optional(),
+}).strict();
 
 export const syncUser: RequestHandler = async (req, res, next) => {
   try {
@@ -38,6 +35,7 @@ export const syncUser: RequestHandler = async (req, res, next) => {
       return;
     }
 
+    const payload = syncUserSchema.parse(req.body ?? {});
     const user = await syncFirebaseUser({
       firebaseUid: firebaseUser.uid,
       name: firebaseUser.name ?? firebaseUser.email,
@@ -45,7 +43,7 @@ export const syncUser: RequestHandler = async (req, res, next) => {
       photoURL: firebaseUser.picture,
       authProvider: resolveAuthProvider(firebaseUser.firebase?.sign_in_provider),
       emailVerified: Boolean(firebaseUser.email_verified),
-      requestedRole: resolveRequestedRole(req.body?.role),
+      requestedRole: payload.role as UserRole | undefined,
     });
 
     successResponse(res, "User synced successfully", user, 200);

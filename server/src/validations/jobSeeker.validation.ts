@@ -140,16 +140,7 @@ export const profileUpdateSchema = z
   );
 
 export const resumeUploadSchema = z.object({
-  fileName: requiredString.max(255),
-  fileUrl: requiredString,
-  fileType: requiredString.max(120),
-  fileSize: z.coerce.number().int().min(1).max(10 * 1024 * 1024),
   isDefault: z.coerce.boolean().default(false),
-});
-
-export const avatarUploadSchema = z.object({
-  mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
-  fileSize: z.coerce.number().int().min(1).max(5 * 1024 * 1024),
 });
 
 export const resumeIdParamsSchema = z.object({
@@ -158,4 +149,3 @@ export const resumeIdParamsSchema = z.object({
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type ResumeUploadInput = z.infer<typeof resumeUploadSchema>;
-export type AvatarUploadInput = z.infer<typeof avatarUploadSchema>;

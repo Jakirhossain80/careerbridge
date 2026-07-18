@@ -1,7 +1,6 @@
-import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
-
-import env from "../config/env.js";
+import type { UploadApiResponse } from "cloudinary";
 import AppError from "./AppError.js";
+import { getCloudinary } from "./cloudinary.js";
 
 type ImageUploadOptions = {
   folder: string;
@@ -9,43 +8,12 @@ type ImageUploadOptions = {
   transformation?: Array<Record<string, string | number>>;
 };
 
-let cloudinaryConfigured = false;
-
-const configureCloudinary = () => {
-  if (cloudinaryConfigured) {
-    return true;
-  }
-
-  if (
-    !env.cloudinaryCloudName ||
-    !env.cloudinaryApiKey ||
-    !env.cloudinaryApiSecret
-  ) {
-    return false;
-  }
-
-  cloudinary.config({
-    cloud_name: env.cloudinaryCloudName,
-    api_key: env.cloudinaryApiKey,
-    api_secret: env.cloudinaryApiSecret,
-  });
-  cloudinaryConfigured = true;
-  return true;
-};
-
 export const uploadImageBuffer = async (
   buffer: Buffer,
   options: ImageUploadOptions
 ) => {
-  if (!configureCloudinary()) {
-    throw new AppError(
-      "Image upload storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET on the server.",
-      500
-    );
-  }
-
   return new Promise<UploadApiResponse>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
+    const stream = getCloudinary().uploader.upload_stream(
       {
         folder: options.folder,
         public_id: options.publicId,

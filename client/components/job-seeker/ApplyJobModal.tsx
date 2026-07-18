@@ -15,7 +15,7 @@ import {
 import { getApiErrorMessage } from "@/lib/api";
 import { appToast } from "@/lib/toast";
 import { applyJob } from "@/services/applications.service";
-import { getResumes } from "@/services/resumes.service";
+import { getMyResumes, resumeQueryKeys } from "@/services/resumes.service";
 
 type ApplyJobModalProps = {
   jobId: string;
@@ -38,8 +38,8 @@ export default function ApplyJobModal({
   const [errorMessage, setErrorMessage] = useState("");
   const queryClient = useQueryClient();
   const { data: resumes = [] } = useQuery({
-    queryKey: ["job-seeker-resumes"],
-    queryFn: getResumes,
+    queryKey: resumeQueryKeys.manager,
+    queryFn: async () => (await getMyResumes()).resumes,
     enabled: open && Boolean(user),
   });
 

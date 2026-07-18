@@ -1,4 +1,5 @@
 import { Router } from "express";
+import env from "../config/env.js";
 import authTestRoutes from "./authTest.routes.js";
 import adminRoutes from "./admin.routes.js";
 import applicationRoutes from "./application.routes.js";
@@ -12,19 +13,25 @@ import notificationRoutes from "./notification.routes.js";
 import savedJobRoutes from "./savedJob.routes.js";
 import userRoutes from "./user.routes.js";
 
-const router = Router();
+export const createApiRouter = (nodeEnv = env.nodeEnv) => {
+  const router = Router();
 
-router.use("/auth-test", authTestRoutes);
-router.use("/admin", adminRoutes);
-router.use("/applications", applicationRoutes);
-router.use("/companies", companyRoutes);
-router.use("/employer", employerRoutes);
-router.use("/health", healthRoutes);
-router.use("/jobs", jobRoutes);
-router.use("/job-alerts", jobAlertRoutes);
-router.use("/job-seekers", jobSeekerRoutes);
-router.use("/notifications", notificationRoutes);
-router.use("/saved-jobs", savedJobRoutes);
-router.use("/users", userRoutes);
+  if (nodeEnv !== "production") {
+    router.use("/auth-test", authTestRoutes);
+  }
+  router.use("/admin", adminRoutes);
+  router.use("/applications", applicationRoutes);
+  router.use("/companies", companyRoutes);
+  router.use("/employer", employerRoutes);
+  router.use("/health", healthRoutes);
+  router.use("/jobs", jobRoutes);
+  router.use("/job-alerts", jobAlertRoutes);
+  router.use("/job-seekers", jobSeekerRoutes);
+  router.use("/notifications", notificationRoutes);
+  router.use("/saved-jobs", savedJobRoutes);
+  router.use("/users", userRoutes);
 
-export default router;
+  return router;
+};
+
+export default createApiRouter();

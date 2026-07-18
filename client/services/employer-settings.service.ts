@@ -156,17 +156,9 @@ export async function updateUserSettings(
 }
 
 export async function deactivateEmployerAccount() {
-  try {
-    const response = await api.patch<
+  const response = await api.patch<
       ApiEnvelope<{ deactivated: boolean }> | { deactivated: boolean }
     >("/employers/deactivate");
 
-    return unwrap<{ deactivated: boolean }>(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return { deactivated: true };
-  }
+  return unwrap<{ deactivated: boolean }>(response);
 }

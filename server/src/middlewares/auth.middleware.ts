@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import type { RequestHandler } from "express";
-import { adminAuth } from "../config/firebaseAdmin.js";
+import { getAdminAuth } from "../config/firebaseAdmin.js";
 import type { UserRole, UserStatus } from "../constants/model.constants.js";
 import User from "../models/user.model.js";
 import { errorResponse } from "../utils/apiResponse.js";
@@ -30,7 +30,7 @@ export const verifyFirebaseToken: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await getAdminAuth().verifyIdToken(token);
     const user = await User.findOne({
       $or: [
         { firebaseUid: decodedToken.uid },

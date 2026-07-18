@@ -18,6 +18,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { appToast } from "@/lib/toast";
+import {
+  createEmployerCompanyProfile,
+  uploadEmployerCompanyLogo,
+} from "@/services/employer-company-profile.service";
 
 type RecruiterRole =
   | "HR Manager"
@@ -258,10 +262,13 @@ export default function EmployerAccountCreationPage() {
 
     try {
       const payload = buildPayload();
-
-      // TODO: Persist payload when an employer profile draft API is added.
-      void payload;
-      await Promise.resolve();
+      await createEmployerCompanyProfile({
+        companyName: payload.companyName,
+        website: payload.companyWebsite || undefined,
+        industry: payload.industry || undefined,
+        companySize: payload.companySize || undefined,
+        description: payload.companyBio || undefined,
+      });
       appToast.success("Draft saved successfully.");
     } catch {
       const message = "We could not save your draft. Please try again.";
@@ -286,12 +293,19 @@ export default function EmployerAccountCreationPage() {
 
     try {
       const payload = buildPayload();
+      await createEmployerCompanyProfile({
+        companyName: payload.companyName,
+        website: payload.companyWebsite || undefined,
+        industry: payload.industry,
+        companySize: payload.companySize,
+        description: payload.companyBio,
+      });
 
-      // TODO: Send payload to the employer/company API when available, set user
-      // role to employer, set verification status to pending, then redirect to
-      // the account pending page from the backend-confirmed response.
-      void payload;
-      await Promise.resolve();
+      if (payload.logoFile) {
+        const logoData = new FormData();
+        logoData.append("logo", payload.logoFile);
+        await uploadEmployerCompanyLogo(logoData);
+      }
       appToast.success("Employer account submitted successfully.");
       router.push("/account-pending");
     } catch {

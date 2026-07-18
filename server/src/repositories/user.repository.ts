@@ -24,6 +24,12 @@ export const findUserByFirebaseUidOrEmail = async (
   });
 };
 
+export const findUserByFirebaseUid = async (firebaseUid: string) =>
+  User.findOne({ firebaseUid });
+
+export const findUserByEmail = async (email: string) =>
+  User.findOne({ email: email.trim().toLowerCase() });
+
 export const createUser = async (userData: CreateUserInput) => {
   return User.create({
     ...userData,

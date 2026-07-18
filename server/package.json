@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/server.js",
+    "test": "pnpm build && node --test dist/tests/*.test.js",
+    "test:contracts": "tsx --tsconfig ../client/tsconfig.json --test ../client/tests/*.test.ts"
   },
   "keywords": [],
   "author": "",

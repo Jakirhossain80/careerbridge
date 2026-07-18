@@ -1,5 +1,5 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
-import type { Types } from "mongoose";
+import mongoose, { type Types } from "mongoose";
 
 import Application from "../models/application.model.js";
 import Interview from "../models/interview.model.js";
@@ -9,6 +9,13 @@ import SavedJob from "../models/savedJob.model.js";
 import User from "../models/user.model.js";
 import AppError from "../utils/AppError.js";
 import { uploadImageBuffer } from "../utils/imageUpload.js";
+import {
+  cloudinaryResumeStorage,
+  deleteResumeAssetWithRetry,
+  sanitizeResumeFileName,
+  type ResumeStorageProvider,
+  type StoredResumeAsset,
+} from "../utils/resumeStorage.js";
 import type {
   ProfileUpdateInput,
   ResumeUploadInput,
@@ -362,28 +369,71 @@ export const updateMyJobSeekerSettings = async (
 
 export const createResume = async (
   jobSeeker: AuthenticatedJobSeeker,
-  input: ResumeUploadInput
+  file: Express.Multer.File,
+  input: ResumeUploadInput,
+  storage: ResumeStorageProvider = cloudinaryResumeStorage
 ) => {
-  const shouldSetDefault =
-    input.isDefault ||
-    (await Resume.countDocuments({ jobSeekerId: jobSeeker.jobSeekerId })) === 0;
-
-  if (shouldSetDefault) {
-    await Resume.updateMany(
-      { jobSeekerId: jobSeeker.jobSeekerId },
-      { $set: { isDefault: false } }
-    );
-  }
-
-  return Resume.create({
-    jobSeekerId: jobSeeker.jobSeekerId,
-    fileName: input.fileName,
-    fileUrl: input.fileUrl,
-    fileType: input.fileType,
-    fileSize: input.fileSize,
-    isDefault: shouldSetDefault,
-    uploadedAt: new Date(),
+  const fileName = sanitizeResumeFileName(file.originalname);
+  const asset = await storage.upload({
+    buffer: file.buffer,
+    displayFileName: fileName,
+    ownerId: jobSeeker.jobSeekerId,
   });
+  const session = await mongoose.startSession();
+  let createdResume: InstanceType<typeof Resume> | undefined;
+
+  try {
+    await session.withTransaction(async () => {
+      const existingCount = await Resume.countDocuments({
+        jobSeekerId: jobSeeker.jobSeekerId,
+      }).session(session);
+      const shouldSetDefault = input.isDefault || existingCount === 0;
+
+      if (shouldSetDefault) {
+        await Resume.updateMany(
+          { jobSeekerId: jobSeeker.jobSeekerId, isDefault: true },
+          { $set: { isDefault: false } },
+          { session }
+        );
+      }
+
+      [createdResume] = await Resume.create(
+        [
+          {
+            jobSeekerId: jobSeeker.jobSeekerId,
+            fileName,
+            fileUrl: asset.secureUrl,
+            fileType: file.mimetype,
+            fileSize: asset.bytes,
+            storageProvider: asset.provider,
+            providerAssetId: asset.assetId,
+            providerPublicId: asset.publicId,
+            providerResourceType: asset.resourceType,
+            providerDeliveryType: asset.deliveryType,
+            providerFormat: asset.format,
+            isDefault: shouldSetDefault,
+            uploadedAt: new Date(),
+          },
+        ],
+        { session }
+      );
+    });
+
+    if (!createdResume) throw new AppError("Resume metadata creation failed", 500);
+    return createdResume;
+  } catch (error) {
+    try {
+      await deleteResumeAssetWithRetry(storage, asset);
+    } catch {
+      throw new AppError(
+        "Resume metadata creation and storage cleanup both failed",
+        500
+      );
+    }
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 };
 
 export const getMyResumes = async (jobSeeker: AuthenticatedJobSeeker) => {
@@ -396,48 +446,180 @@ export const setDefaultResume = async (
   jobSeeker: AuthenticatedJobSeeker,
   resumeId: string
 ) => {
+  const session = await mongoose.startSession();
+  let selectedResume: InstanceType<typeof Resume> | null = null;
+  try {
+    await session.withTransaction(async () => {
+      selectedResume = await Resume.findOne({
+        _id: resumeId,
+        jobSeekerId: jobSeeker.jobSeekerId,
+      }).session(session);
+      if (!selectedResume) throw new AppError("Resume not found", 404);
+
+      await Resume.updateMany(
+        { jobSeekerId: jobSeeker.jobSeekerId, isDefault: true },
+        { $set: { isDefault: false } },
+        { session }
+      );
+      await Resume.updateOne(
+        { _id: resumeId, jobSeekerId: jobSeeker.jobSeekerId },
+        { $set: { isDefault: true } },
+        { session }
+      );
+    });
+    return Resume.findOne({
+      _id: resumeId,
+      jobSeekerId: jobSeeker.jobSeekerId,
+    });
+  } finally {
+    await session.endSession();
+  }
+};
+
+const storedAssetFromResume = (resume: {
+  providerAssetId: string;
+  providerPublicId: string;
+  providerResourceType: "raw";
+  providerDeliveryType: "private";
+  providerFormat: string;
+  fileUrl: string;
+  fileSize: number;
+}): StoredResumeAsset => ({
+  provider: "cloudinary",
+  assetId: resume.providerAssetId,
+  publicId: resume.providerPublicId,
+  secureUrl: resume.fileUrl,
+  resourceType: resume.providerResourceType,
+  deliveryType: resume.providerDeliveryType,
+  format: resume.providerFormat,
+  bytes: resume.fileSize,
+});
+
+export const getResumeDownload = async (
+  jobSeeker: AuthenticatedJobSeeker,
+  resumeId: string,
+  storage: ResumeStorageProvider = cloudinaryResumeStorage
+) => {
   const resume = await Resume.findOne({
     _id: resumeId,
     jobSeekerId: jobSeeker.jobSeekerId,
+  }).lean();
+  if (!resume) throw new AppError("Resume not found", 404);
+
+  const download = storage.createDownloadUrl(storedAssetFromResume(resume));
+  return { downloadUrl: download.url, expiresAt: download.expiresAt.toISOString() };
+};
+
+export const replaceResume = async (
+  jobSeeker: AuthenticatedJobSeeker,
+  resumeId: string,
+  file: Express.Multer.File,
+  storage: ResumeStorageProvider = cloudinaryResumeStorage
+) => {
+  const existing = await Resume.findOne({
+    _id: resumeId,
+    jobSeekerId: jobSeeker.jobSeekerId,
+  });
+  if (!existing) throw new AppError("Resume not found", 404);
+
+  const oldAsset = storedAssetFromResume(existing);
+  const fileName = sanitizeResumeFileName(file.originalname);
+  const newAsset = await storage.upload({
+    buffer: file.buffer,
+    displayFileName: fileName,
+    ownerId: jobSeeker.jobSeekerId,
   });
 
-  if (!resume) {
-    throw new AppError("Resume not found", 404);
+  try {
+    const updated = await Resume.findOneAndUpdate(
+      { _id: resumeId, jobSeekerId: jobSeeker.jobSeekerId },
+      {
+        $set: {
+          fileName,
+          fileUrl: newAsset.secureUrl,
+          fileType: file.mimetype,
+          fileSize: newAsset.bytes,
+          storageProvider: newAsset.provider,
+          providerAssetId: newAsset.assetId,
+          providerPublicId: newAsset.publicId,
+          providerResourceType: newAsset.resourceType,
+          providerDeliveryType: newAsset.deliveryType,
+          providerFormat: newAsset.format,
+          uploadedAt: new Date(),
+        },
+      },
+      { new: true, runValidators: true }
+    );
+    if (!updated) throw new AppError("Resume not found", 404);
+
+    try {
+      await storage.delete(oldAsset);
+    } catch (cleanupError) {
+      await Resume.findOneAndUpdate(
+        { _id: resumeId, providerAssetId: newAsset.assetId },
+        {
+          $set: {
+            fileName: existing.fileName,
+            fileUrl: existing.fileUrl,
+            fileType: existing.fileType,
+            fileSize: existing.fileSize,
+            storageProvider: existing.storageProvider,
+            providerAssetId: existing.providerAssetId,
+            providerPublicId: existing.providerPublicId,
+            providerResourceType: existing.providerResourceType,
+            providerDeliveryType: existing.providerDeliveryType,
+            providerFormat: existing.providerFormat,
+            uploadedAt: existing.uploadedAt,
+          },
+        }
+      );
+      await deleteResumeAssetWithRetry(storage, newAsset).catch(() => undefined);
+      throw cleanupError;
+    }
+
+    return updated;
+  } catch (error) {
+    await deleteResumeAssetWithRetry(storage, newAsset).catch(() => undefined);
+    throw error;
   }
-
-  await Resume.updateMany(
-    { jobSeekerId: jobSeeker.jobSeekerId },
-    { $set: { isDefault: false } }
-  );
-
-  resume.isDefault = true;
-  await resume.save();
-
-  return resume;
 };
 
 export const deleteResume = async (
   jobSeeker: AuthenticatedJobSeeker,
-  resumeId: string
+  resumeId: string,
+  storage: ResumeStorageProvider = cloudinaryResumeStorage
 ) => {
-  const resume = await Resume.findOneAndDelete({
-    _id: resumeId,
-    jobSeekerId: jobSeeker.jobSeekerId,
-  });
+  const session = await mongoose.startSession();
+  let deletedResume: InstanceType<typeof Resume> | null = null;
+  try {
+    await session.withTransaction(async () => {
+      deletedResume = await Resume.findOne({
+        _id: resumeId,
+        jobSeekerId: jobSeeker.jobSeekerId,
+      }).session(session);
+      if (!deletedResume) throw new AppError("Resume not found", 404);
 
-  if (!resume) {
-    throw new AppError("Resume not found", 404);
+      await storage.delete(storedAssetFromResume(deletedResume));
+      await Resume.deleteOne({ _id: resumeId }, { session });
+
+      if (deletedResume.isDefault) {
+        const nextResume = await Resume.findOne({
+          jobSeekerId: jobSeeker.jobSeekerId,
+          _id: { $ne: resumeId },
+        })
+          .sort({ uploadedAt: -1 })
+          .session(session);
+        if (nextResume) {
+          await Resume.updateOne(
+            { _id: nextResume._id },
+            { $set: { isDefault: true } },
+            { session }
+          );
+        }
+      }
+    });
+    return deletedResume;
+  } finally {
+    await session.endSession();
   }
-
-  if (resume.isDefault) {
-    const nextResume = await Resume.findOne({ jobSeekerId: jobSeeker.jobSeekerId })
-      .sort({ uploadedAt: -1 });
-
-    if (nextResume) {
-      nextResume.isDefault = true;
-      await nextResume.save();
-    }
-  }
-
-  return resume;
 };

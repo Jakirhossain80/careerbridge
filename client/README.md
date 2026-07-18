@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CareerBridge client
 
-## Getting Started
+The client is a Next.js App Router application using React 19, TypeScript,
+Tailwind CSS, Firebase Authentication, React Hook Form, Zod, Axios, and TanStack
+Query.
 
-First, run the development server:
+## Commands
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Run these from the repository root:
+
+```powershell
+pnpm dev:client
+pnpm typecheck:client
+pnpm lint
+pnpm test:client
+pnpm build:client
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env.local` before local development. Every
+`NEXT_PUBLIC_*` value is browser-visible and must not contain Firebase Admin,
+database, Cloudinary, or deployment credentials.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data flow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Production API state follows:
 
-## Learn More
+```text
+app page -> feature component/hook -> service -> centralized Axios client -> API
+```
 
-To learn more about Next.js, take a look at the following resources:
+TanStack Query owns remote state. Mutations invalidate related list, detail,
+profile, and dashboard keys. Pages must not silently substitute mock operational
+data when an API fails. Static marketing content and test fixtures remain
+separate from API services.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Firebase establishes identity. `AuthProvider` synchronizes the verified ID token
+through `/api/v1/users/sync`; MongoDB roles and account status remain the backend
+authorization source.

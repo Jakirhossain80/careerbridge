@@ -259,7 +259,24 @@ export const createCompanyProfile = async (
   const existingCompany = await Company.findOne({ ownerId: employer.userId });
 
   if (existingCompany) {
-    throw new AppError("Company profile already exists for this employer", 409);
+    existingCompany.set({
+      name: input.companyName,
+      companyName: input.companyName,
+      industry: input.industry,
+      size: input.companySize,
+      companySize: input.companySize,
+      website: input.website,
+      location: input.headquarters,
+      headquarters: input.headquarters,
+      tagline: input.tagline,
+      description: input.description,
+      logo: input.logoUrl,
+      logoUrl: input.logoUrl,
+      banner: input.bannerUrl,
+      bannerUrl: input.bannerUrl,
+      socialLinks: input.socialLinks,
+    });
+    return existingCompany.save();
   }
 
   const slug = await generateUniqueSlug(Company, input.companyName);

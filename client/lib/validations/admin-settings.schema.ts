@@ -103,4 +103,5 @@ export const adminSettingsSchema = z.object({
   }),
 });
 
-export type AdminSettingsFormValues = z.infer<typeof adminSettingsSchema>;
+export type AdminSettingsFormInput = z.input<typeof adminSettingsSchema>;
+export type AdminSettingsFormValues = z.output<typeof adminSettingsSchema>;

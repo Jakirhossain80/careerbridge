@@ -164,14 +164,13 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
+      setPendingAuthSyncRole(selectedRole);
       await registerWithEmailAndVerification({
         email: email.trim(),
         password,
         name: name.trim(),
       });
-
-      // TODO: Persist selectedRole when a user profile API or Firestore profile
-      // writer is added. The auth utility currently stores Firebase Auth data.
+      await refreshProfile({ role: selectedRole });
       appToast.success("Account created successfully.");
       router.push("/verify-email");
     } catch (error) {
@@ -181,6 +180,7 @@ export default function RegisterPage() {
       });
       appToast.error(message);
     } finally {
+      clearPendingAuthSyncRole();
       setIsCreatingAccount(false);
     }
   };
@@ -193,8 +193,6 @@ export default function RegisterPage() {
       setPendingAuthSyncRole(selectedRole);
       const user = await loginWithGooglePopup();
 
-      // TODO: Persist selectedRole when a user profile API or Firestore profile
-      // writer is added for Google registration.
       if (!user.emailVerified) {
         appToast.info("Please verify your email to continue.");
         router.push("/verify-email");

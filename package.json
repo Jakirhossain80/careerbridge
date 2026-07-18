@@ -2,10 +2,22 @@
   "name": "careerbridge",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@11.5.2",
   "scripts": {
     "dev:client": "pnpm --dir client dev",
     "dev:server": "pnpm --dir server dev",
+    "lint": "pnpm --dir client lint",
+    "typecheck": "pnpm typecheck:client && pnpm typecheck:server",
+    "typecheck:client": "pnpm --dir client typecheck",
+    "typecheck:server": "pnpm --dir server typecheck",
+    "test": "pnpm test:client && pnpm test:server",
+    "test:client": "pnpm --dir server test:contracts",
+    "test:server": "pnpm --dir server test",
     "build:client": "pnpm --dir client build",
-    "build:server": "pnpm --dir server build"
+    "build:server": "pnpm --dir server build",
+    "build": "pnpm build:server && pnpm build:client",
+    "verify": "pnpm security:secrets && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "security:secrets": "node scripts/check-secrets.mjs",
+    "test:contracts": "pnpm --dir server test:contracts"
   }
 }

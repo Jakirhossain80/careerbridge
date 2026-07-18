@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:5000/api/v1
+      NEXT_PUBLIC_FIREBASE_API_KEY: fake-ci-browser-key
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: careerbridge-ci.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: careerbridge-ci
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: careerbridge-ci.firebasestorage.app
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "000000000000"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:000000000000:web:0000000000000000000000"
+      PORT: "5000"
+      CLIENT_URL: http://127.0.0.1:3000
+      MONGODB_URI: mongodb://127.0.0.1:27017/careerbridge_test
+      FIREBASE_PROJECT_ID: careerbridge-ci
+      FIREBASE_CLIENT_EMAIL: firebase-adminsdk-ci@careerbridge-ci.iam.gserviceaccount.com
+      FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nFAKE_CI_KEY_DO_NOT_USE\n-----END PRIVATE KEY-----\n"
+      JWT_SECRET: ci-only-placeholder-not-a-secret
+      CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify

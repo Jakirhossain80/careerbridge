@@ -7,6 +7,8 @@ import {
 } from "../constants/model.constants.js";
 import {
   createUser,
+  findUserByEmail,
+  findUserByFirebaseUid,
   findUserByFirebaseUidOrEmail,
 } from "../repositories/user.repository.js";
 import AppError from "../utils/AppError.js";
@@ -21,10 +23,28 @@ type SyncFirebaseUserInput = {
   requestedRole?: UserRole;
 };
 
-export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
-  const existingUser = await findUserByFirebaseUidOrEmail(
+export type SyncUserDependencies = {
+  findByUidOrEmail: typeof findUserByFirebaseUidOrEmail;
+  findByUid: typeof findUserByFirebaseUid;
+  findByEmail: typeof findUserByEmail;
+  create: typeof createUser;
+};
+
+const defaultSyncUserDependencies: SyncUserDependencies = {
+  findByUidOrEmail: findUserByFirebaseUidOrEmail,
+  findByUid: findUserByFirebaseUid,
+  findByEmail: findUserByEmail,
+  create: createUser,
+};
+
+export const syncFirebaseUser = async (
+  userData: SyncFirebaseUserInput,
+  dependencies: SyncUserDependencies = defaultSyncUserDependencies
+): Promise<Awaited<ReturnType<typeof createUser>>> => {
+  const normalizedEmail = userData.email.trim().toLowerCase();
+  const existingUser = await dependencies.findByUidOrEmail(
     userData.firebaseUid,
-    userData.email
+    normalizedEmail
   );
 
   if (existingUser) {
@@ -35,8 +55,10 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
     let shouldSave = false;
 
     if (existingUser.firebaseUid !== userData.firebaseUid) {
-      existingUser.firebaseUid = userData.firebaseUid;
-      shouldSave = true;
+      throw new AppError(
+        "An account with this email already uses a different sign-in identity. Sign in with the original method before linking another provider.",
+        409
+      );
     }
 
     if (!existingUser.photoURL && userData.photoURL) {
@@ -76,17 +98,40 @@ export const syncFirebaseUser = async (userData: SyncFirebaseUserInput) => {
   const status =
     role === USER_ROLES.EMPLOYER ? USER_STATUS.PENDING : USER_STATUS.ACTIVE;
 
-  return createUser({
-    firebaseUid: userData.firebaseUid,
-    name: userData.name,
-    email: userData.email,
-    photoURL: userData.photoURL,
-    role,
-    status,
-    authProvider: userData.authProvider,
-    emailVerified: userData.emailVerified,
-    lastLoginAt: new Date(),
-    isDeleted: false,
-    profileCompleted: false,
-  });
+  try {
+    return await dependencies.create({
+      firebaseUid: userData.firebaseUid,
+      name: userData.name,
+      email: normalizedEmail,
+      photoURL: userData.photoURL,
+      role,
+      status,
+      authProvider: userData.authProvider,
+      emailVerified: userData.emailVerified,
+      lastLoginAt: new Date(),
+      isDeleted: false,
+      profileCompleted: false,
+    });
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === 11000)) {
+      throw error;
+    }
+
+    const concurrentUser =
+      (await dependencies.findByUid(userData.firebaseUid)) ??
+      (await dependencies.findByEmail(normalizedEmail));
+
+    if (!concurrentUser) {
+      throw error;
+    }
+
+    if (concurrentUser.firebaseUid !== userData.firebaseUid) {
+      throw new AppError(
+        "An account with this email already uses a different sign-in identity. Sign in with the original method before linking another provider.",
+        409
+      );
+    }
+
+    return syncFirebaseUser(userData, dependencies);
+  }
 };

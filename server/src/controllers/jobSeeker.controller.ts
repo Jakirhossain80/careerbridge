@@ -1,7 +1,6 @@
 import type { RequestHandler } from "express";
 
 import {
-  avatarUploadSchema,
   profileUpdateSchema,
   resumeIdParamsSchema,
   resumeUploadSchema,
@@ -9,12 +8,14 @@ import {
 import {
   createResume,
   deleteResume,
+  getResumeDownload,
   getAuthenticatedJobSeeker,
   getMyJobSeekerProfile,
   getMyJobSeekerProfileStats,
   getMyJobSeekerSettings,
   getMyResumes,
   setDefaultResume,
+  replaceResume as replaceStoredResume,
   updateMyJobSeekerSettings,
   updateMyJobSeekerProfile,
   uploadMyJobSeekerAvatar,
@@ -52,11 +53,6 @@ export const uploadAvatar: RequestHandler = async (req, res, next) => {
     if (!file) {
       throw new AppError("Avatar image is required", 400);
     }
-
-    avatarUploadSchema.parse({
-      mimeType: file.mimetype,
-      fileSize: file.size,
-    });
 
     const profile = await uploadMyJobSeekerAvatar(jobSeeker, file);
     successResponse(res, "Profile avatar updated successfully", profile);
@@ -101,19 +97,39 @@ export const uploadResume: RequestHandler = async (req, res, next) => {
     const jobSeeker = await getAuthenticatedJobSeeker(req.user);
     const file = req.file;
 
+    if (!file) {
+      throw new AppError("Resume file is required", 400);
+    }
+
     const payload = resumeUploadSchema.parse({
-      fileName: req.body.fileName ?? file?.originalname,
-      // TODO: Replace this placeholder with the selected storage provider URL.
-      fileUrl:
-        req.body.fileUrl ??
-        (file ? `/uploads/resumes/${Date.now()}-${file.originalname}` : undefined),
-      fileType: req.body.fileType ?? file?.mimetype,
-      fileSize: req.body.fileSize ?? file?.size,
       isDefault: req.body.isDefault,
     });
 
-    const resume = await createResume(jobSeeker, payload);
+    const resume = await createResume(jobSeeker, file, payload);
     successResponse(res, "Resume uploaded successfully", resume, 201);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const replaceResume: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeeker = await getAuthenticatedJobSeeker(req.user);
+    const params = resumeIdParamsSchema.parse(req.params);
+    if (!req.file) throw new AppError("Resume file is required", 400);
+    const resume = await replaceStoredResume(jobSeeker, params.resumeId, req.file);
+    successResponse(res, "Resume replaced successfully", resume);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const downloadResume: RequestHandler = async (req, res, next) => {
+  try {
+    const jobSeeker = await getAuthenticatedJobSeeker(req.user);
+    const params = resumeIdParamsSchema.parse(req.params);
+    const download = await getResumeDownload(jobSeeker, params.resumeId);
+    successResponse(res, "Resume download link created", download);
   } catch (error) {
     handleControllerError(error, res, next);
   }

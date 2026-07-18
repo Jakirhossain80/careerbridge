@@ -8,10 +8,12 @@ import type { NotificationType } from "../constants/model.constants.js";
 import {
   deleteNotification,
   getAuthenticatedNotificationUser,
+  getNotificationById,
   getUnreadNotificationCount,
   getUserNotifications,
   markAllAsRead,
   markAsRead,
+  markAsUnread,
 } from "../services/notification.service.js";
 import { successResponse } from "../utils/apiResponse.js";
 import { handleControllerError } from "./controllerError.js";
@@ -26,6 +28,17 @@ export const listNotifications: RequestHandler = async (req, res, next) => {
     });
 
     successResponse(res, "Notifications fetched successfully", result);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const notificationDetails: RequestHandler = async (req, res, next) => {
+  try {
+    const recipient = await getAuthenticatedNotificationUser(req.user);
+    const params = notificationIdParamsSchema.parse(req.params);
+    const notification = await getNotificationById(recipient, params.id);
+    successResponse(res, "Notification fetched successfully", notification);
   } catch (error) {
     handleControllerError(error, res, next);
   }
@@ -62,6 +75,17 @@ export const readAllNotifications: RequestHandler = async (req, res, next) => {
     const result = await markAllAsRead(recipient);
 
     successResponse(res, "Notifications marked as read successfully", result);
+  } catch (error) {
+    handleControllerError(error, res, next);
+  }
+};
+
+export const unreadNotification: RequestHandler = async (req, res, next) => {
+  try {
+    const recipient = await getAuthenticatedNotificationUser(req.user);
+    const params = notificationIdParamsSchema.parse(req.params);
+    const notification = await markAsUnread(recipient, params.id);
+    successResponse(res, "Notification marked as unread successfully", notification);
   } catch (error) {
     handleControllerError(error, res, next);
   }

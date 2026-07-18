@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { appToast } from "@/lib/toast";
+import { updateJobSeekerProfile } from "@/services/job-seeker-profile.service";
+import { uploadResume } from "@/services/resumes.service";
 
 type JobType = "Full-time" | "Remote" | "Contract" | "Hybrid";
 
@@ -216,8 +218,18 @@ export default function JobSeekerProfilePage() {
     setErrors({});
 
     try {
-      // TODO: Persist this draft when a job seeker profile draft API is added.
-      await Promise.resolve();
+      await updateJobSeekerProfile({
+        fullName: formState.fullName.trim() || undefined,
+        phone: formState.phone.trim() || undefined,
+        location: formState.location.trim() || undefined,
+        preferredRole: formState.jobTitle.trim() || undefined,
+        headline: formState.jobTitle.trim() || undefined,
+        technicalSkills: formState.skills
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean),
+        preferredJobTypes: formState.jobTypes,
+      });
       appToast.success("Draft saved successfully.");
     } catch {
       const message = "We could not save your draft. Please try again.";
@@ -243,8 +255,25 @@ export default function JobSeekerProfilePage() {
     setErrors({});
 
     try {
-      // TODO: Submit this profile when the job seeker profile API is added.
-      await Promise.resolve();
+      await updateJobSeekerProfile({
+        fullName: formState.fullName.trim(),
+        phone: formState.phone.trim(),
+        location: formState.location.trim(),
+        preferredRole: formState.jobTitle.trim(),
+        headline: formState.jobTitle.trim(),
+        technicalSkills: formState.skills
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean),
+        preferredJobTypes: formState.jobTypes,
+      });
+
+      if (formState.resume) {
+        const resumeData = new FormData();
+        resumeData.append("resume", formState.resume);
+        resumeData.append("title", formState.resume.name);
+        await uploadResume(resumeData);
+      }
       appToast.success("Registration completed successfully.");
       router.push("/dashboard");
     } catch {

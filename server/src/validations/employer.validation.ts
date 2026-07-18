@@ -32,13 +32,6 @@ const currencySchema = trimmedString
       ),
     `currency must be one of: ${SUPPORTED_CURRENCY_CODES.join(", ")}`
   );
-const imageMimeTypeSchema = z.enum([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/svg+xml",
-]);
-
 export const objectIdSchema = requiredString.refine(
   (value) => Types.ObjectId.isValid(value),
   "Invalid MongoDB ObjectId"
@@ -102,11 +95,6 @@ export const companyUpdateSchema = companyCreateSchema.partial().refine(
   (value) => Object.keys(value).length > 0,
   "At least one company field is required"
 );
-
-export const companyImageUploadSchema = z.object({
-  mimeType: imageMimeTypeSchema,
-  fileSize: z.coerce.number().int().min(1).max(8 * 1024 * 1024),
-});
 
 const baseJobSchema = z.object({
   title: requiredString.max(180),

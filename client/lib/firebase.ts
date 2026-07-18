@@ -117,6 +117,7 @@ export const registerWithEmailVerification = async ({
     await updateProfile(userCredential.user, {
       displayName: name,
     });
+    await userCredential.user.getIdToken(true);
   }
 
   await resendEmailVerification(userCredential.user);
@@ -163,8 +164,6 @@ export const loginWithGoogle = async (): Promise<User> => {
 
   const userCredential = await signInWithPopup(authInstance, googleProvider);
 
-  // TODO: Sync this Firebase user to the CareerBridge backend when a client-side
-  // user sync API is added.
   return userCredential.user;
 };
 

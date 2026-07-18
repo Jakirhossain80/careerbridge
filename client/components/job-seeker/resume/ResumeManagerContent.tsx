@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button, LoadingSkeleton } from "@/components/ui";
 import CurrentResumeCard from "@/components/job-seeker/resume/CurrentResumeCard";
@@ -13,18 +12,13 @@ import ResumeUploadDropzone from "@/components/job-seeker/resume/ResumeUploadDro
 import ResumeVersionHistory from "@/components/job-seeker/resume/ResumeVersionHistory";
 import { getApiErrorMessage } from "@/lib/api";
 import { appToast } from "@/lib/toast";
+import { useResumes } from "@/hooks/useResumes";
 import {
   RESUME_ALLOWED_EXTENSIONS,
   resumeUploadSchema,
 } from "@/lib/validations/resume.schema";
 import {
-  deleteResume,
   downloadResume,
-  getMyResumes,
-  replaceResume,
-  resumeQueryKeys,
-  setDefaultResume,
-  uploadResume,
 } from "@/services/resumes.service";
 import type { ResumeFile } from "@/types/resume.types";
 
@@ -63,85 +57,58 @@ export default function ResumeManagerContent() {
   const [submitError, setSubmitError] = useState("");
   const [resumeToDelete, setResumeToDelete] = useState<ResumeFile>();
   const [resumeToReplace, setResumeToReplace] = useState<ResumeFile>();
-  const queryClient = useQueryClient();
+  const {
+    resumesQuery,
+    uploadMutation,
+    replaceMutation,
+    deleteMutation,
+    defaultMutation: restoreMutation,
+  } = useResumes();
 
-  const resumesQuery = useQuery({
-    queryKey: resumeQueryKeys.manager,
-    queryFn: getMyResumes,
-  });
-
-  const invalidateResumeData = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: resumeQueryKeys.manager }),
-      queryClient.invalidateQueries({ queryKey: resumeQueryKeys.profile }),
-      queryClient.invalidateQueries({ queryKey: resumeQueryKeys.dashboard }),
-    ]);
-  };
-
-  const uploadMutation = useMutation({
-    mutationFn: uploadResume,
-    onSuccess: async () => {
+  const uploadSuccess = () => {
       setSubmitError("");
       setStatusMessage("Resume uploaded successfully.");
-      await invalidateResumeData();
       appToast.success("Resume uploaded successfully.");
-    },
-    onError: (error) => {
+  };
+  const uploadError = (error: Error) => {
       setStatusMessage("");
       const message = getApiErrorMessage(error) || "Unable to upload resume. Please try again.";
       setSubmitError(message);
       appToast.error(message);
-    },
-  });
-
-  const replaceMutation = useMutation({
-    mutationFn: ({ resumeId, formData }: { resumeId: string; formData: FormData }) =>
-      replaceResume(resumeId, formData),
-    onSuccess: async () => {
+  };
+  const replaceSuccess = () => {
       setSubmitError("");
       setStatusMessage("Resume updated successfully.");
       setResumeToReplace(undefined);
-      await invalidateResumeData();
       appToast.success("Resume updated successfully.");
-    },
-    onError: (error) => {
+  };
+  const replaceError = (error: Error) => {
       setStatusMessage("");
       const message = getApiErrorMessage(error) || "Unable to update resume. Please try again.";
       setSubmitError(message);
       appToast.error(message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteResume,
-    onSuccess: async () => {
+  };
+  const deleteSuccess = () => {
       setSubmitError("");
       setStatusMessage("Resume deleted successfully.");
       setResumeToDelete(undefined);
-      await invalidateResumeData();
       appToast.success("Resume deleted successfully.");
-    },
-    onError: (error) => {
+  };
+  const deleteError = (error: Error) => {
       setStatusMessage("");
       const message = getApiErrorMessage(error) || "Unable to delete resume. Please try again.";
       setSubmitError(message);
       appToast.error(message);
-    },
-  });
-
-  const restoreMutation = useMutation({
-    mutationFn: setDefaultResume,
-    onSuccess: async () => {
+  };
+  const restoreSuccess = () => {
       setStatusMessage("Resume restored as active.");
-      await invalidateResumeData();
       appToast.success("Resume restored as active.");
-    },
-    onError: (error) => {
+  };
+  const restoreError = (error: Error) => {
       const message = getApiErrorMessage(error) || "Unable to restore resume. Please try again.";
       setSubmitError(message);
       appToast.error(message);
-    },
-  });
+  };
 
   async function handleReplacementFile(file?: File) {
     if (!file || !resumeToReplace) {
@@ -159,25 +126,14 @@ export default function ResumeManagerContent() {
     replaceMutation.mutate({
       resumeId: resumeToReplace._id,
       formData: buildReplacementFormData(file),
-    });
+    }, { onSuccess: replaceSuccess, onError: replaceError });
   }
 
   function handleView(resume: ResumeFile) {
-    if (resume.fileUrl && typeof window !== "undefined") {
-      window.open(resume.fileUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    setSubmitError("Resume preview is not available yet.");
-    appToast.info("Resume preview is not available yet.");
+    void handleDownload(resume);
   }
 
   async function handleDownload(resume: ResumeFile) {
-    if (resume.fileUrl && typeof window !== "undefined") {
-      window.open(resume.fileUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-
     try {
       const result = await downloadResume(resume._id);
 
@@ -192,8 +148,7 @@ export default function ResumeManagerContent() {
   }
 
   function handleRestore(resume: ResumeFile) {
-    // TODO: Replace this with a dedicated restore endpoint when backend version restore exists.
-    restoreMutation.mutate(resume._id);
+    restoreMutation.mutate(resume._id, { onSuccess: restoreSuccess, onError: restoreError });
   }
 
   if (resumesQuery.isLoading) {
@@ -270,7 +225,7 @@ export default function ResumeManagerContent() {
             <ResumeUploadDropzone
               isUploading={uploadMutation.isPending}
               submitError={uploadMutation.isError ? submitError : undefined}
-              onUpload={(formData) => uploadMutation.mutate(formData)}
+              onUpload={(formData) => uploadMutation.mutate(formData, { onSuccess: uploadSuccess, onError: uploadError })}
             />
             <CurrentResumeCard
               resume={activeResume}
@@ -317,7 +272,7 @@ export default function ResumeManagerContent() {
         onClose={() => setResumeToDelete(undefined)}
         onConfirm={() => {
           if (resumeToDelete) {
-            deleteMutation.mutate(resumeToDelete._id);
+            deleteMutation.mutate(resumeToDelete._id, { onSuccess: deleteSuccess, onError: deleteError });
           }
         }}
       />

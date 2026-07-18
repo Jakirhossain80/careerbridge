@@ -40,11 +40,12 @@ import { getApiErrorMessage } from "@/lib/api";
 import { appToast } from "@/lib/toast";
 import {
   adminSettingsSchema,
+  type AdminSettingsFormInput,
   type AdminSettingsFormValues,
 } from "@/lib/validations/admin-settings.schema";
 import type { AdminSystemSettings } from "@/types/admin-settings";
 
-const defaultSettings: AdminSettingsFormValues = {
+export const defaultSettings: AdminSettingsFormValues = {
   general: {
     platformName: "CareerBridge",
     platformTagline: "Connecting talent with opportunity",
@@ -166,7 +167,7 @@ function ToggleField({
   label: string;
   description?: string;
 }) {
-  const { control } = useFormContext<AdminSettingsFormValues>();
+  const { control } = useFormContext<AdminSettingsFormInput>();
 
   return (
     <Controller
@@ -190,7 +191,7 @@ function formatDate(value?: string) {
 }
 
 function GeneralSettingsSection() {
-  const { register, formState: { errors } } = useFormContext<AdminSettingsFormValues>();
+  const { register, formState: { errors } } = useFormContext<AdminSettingsFormInput>();
 
   return (
     <SettingsCard title="General Settings" description="Control platform identity and public contact information." icon={<Globe className="size-5" aria-hidden="true" />}>
@@ -228,7 +229,7 @@ function ToggleSettingsSection({
 }
 
 function EmailSettingsSection() {
-  const { register, formState: { errors } } = useFormContext<AdminSettingsFormValues>();
+  const { register, formState: { errors } } = useFormContext<AdminSettingsFormInput>();
 
   return (
     <SettingsCard title="Email Settings" description="Public sender identity only. Credentials are never exposed here." icon={<Mail className="size-5" aria-hidden="true" />}>
@@ -242,7 +243,7 @@ function EmailSettingsSection() {
 }
 
 function SecuritySettingsSection() {
-  const { register, formState: { errors } } = useFormContext<AdminSettingsFormValues>();
+  const { register, formState: { errors } } = useFormContext<AdminSettingsFormInput>();
 
   return (
     <SettingsCard title="Security Settings" description="Session, login attempt, password policy, and two-factor controls." icon={<LockKeyhole className="size-5" aria-hidden="true" />}>
@@ -262,7 +263,7 @@ function SecuritySettingsSection() {
 }
 
 function SeoSettingsSection() {
-  const { register, formState: { errors } } = useFormContext<AdminSettingsFormValues>();
+  const { register, formState: { errors } } = useFormContext<AdminSettingsFormInput>();
 
   return (
     <SettingsCard title="SEO Settings" description="Default metadata used when pages do not define their own values." icon={<Search className="size-5" aria-hidden="true" />}>
@@ -344,7 +345,11 @@ export default function SystemSettingsPage() {
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
-  const methods = useForm<AdminSettingsFormValues>({
+  const methods = useForm<
+    AdminSettingsFormInput,
+    undefined,
+    AdminSettingsFormValues
+  >({
     resolver: zodResolver(adminSettingsSchema),
     defaultValues: defaultSettings,
     mode: "onBlur",
@@ -426,8 +431,8 @@ export default function SystemSettingsPage() {
       <FormProvider {...methods}>
         <form
           className="mx-auto flex max-w-7xl flex-col gap-5"
-          onSubmit={handleSubmit(() => {
-            setPendingSaveValues(methods.getValues());
+          onSubmit={handleSubmit((values) => {
+            setPendingSaveValues(values);
           })}
         >
           <header className="rounded-lg border border-slate-200 bg-surface p-5 shadow-sm dark:border-slate-700">

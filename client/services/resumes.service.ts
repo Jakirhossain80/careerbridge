@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@/lib/api";
-import { mockResumeManagerData } from "@/data/mock-resumes";
 import type { ResumeFile, ResumeManagerData } from "@/types/resume.types";
 
 type ApiEnvelope<T> = { data: T };
@@ -33,7 +32,8 @@ function normalizeResume(resume: Partial<ResumeFile> & { _id: string }): ResumeF
     _id: resume._id,
     jobSeekerId: resume.jobSeekerId ?? "",
     fileName: resume.fileName ?? "Resume",
-    fileUrl: resume.fileUrl,
+    // Stored assets are private; access is granted through the download endpoint.
+    fileUrl: undefined,
     fileType: getFileType(resume.fileType ?? resume.mimeType),
     mimeType: resume.mimeType,
     fileSize: resume.fileSize ?? 0,
@@ -64,7 +64,6 @@ function normalizeResumeManagerData(
           ? "Your active resume is available for applications."
           : "Upload a resume to unlock faster job applications.",
       },
-      insights: mockResumeManagerData.insights,
       lastResumeUpdate: activeResume?.updatedAt ?? activeResume?.uploadedAt,
       resumeCompletionStatus: activeResume ? "Resume uploaded" : "No resume uploaded",
     };
@@ -84,57 +83,25 @@ function normalizeResumeManagerData(
     versionHistory: (payload.versionHistory ?? resumes).map((resume) =>
       normalizeResume(resume),
     ),
-    performance: payload.performance ?? mockResumeManagerData.performance,
-    insights: payload.insights ?? mockResumeManagerData.insights,
+    performance: payload.performance,
+    insights: payload.insights,
     lastResumeUpdate:
       payload.lastResumeUpdate ?? activeResume?.updatedAt ?? activeResume?.uploadedAt,
   };
 }
 
-async function withDevelopmentFallback<T>(
-  request: () => Promise<T>,
-  fallback: T,
-) {
-  try {
-    return await request();
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return fallback;
-  }
-}
-
 export const resumeQueryKeys = {
-  manager: ["job-seeker-resumes"] as const,
+  all: ["job-seeker-resumes"] as const,
+  manager: ["job-seeker-resumes", "manager"] as const,
   profile: ["job-seeker-profile"] as const,
   dashboard: ["job-seeker-dashboard"] as const,
 };
 
 export async function getMyResumes() {
-  return withDevelopmentFallback(async () => {
-    try {
-      const response = await api.get<
-        ApiEnvelope<ResumeManagerData | ResumeFile[]> | ResumeManagerData | ResumeFile[]
-      >("/resumes/me");
-      return normalizeResumeManagerData(unwrap<ResumeManagerData | ResumeFile[]>(response));
-    } catch {
-      const response = await api.get<ApiEnvelope<ResumeFile[]> | ResumeFile[]>(
-        "/job-seekers/resumes",
-      );
-      return normalizeResumeManagerData(unwrap<ResumeFile[]>(response));
-    }
-  }, mockResumeManagerData);
-}
-
-export async function getResumes() {
-  return withDevelopmentFallback(async () => {
-    const response = await api.get<ApiEnvelope<ResumeFile[]> | ResumeFile[]>(
-      "/job-seekers/resumes",
-    );
-    return unwrap<ResumeFile[]>(response).map((resume) => normalizeResume(resume));
-  }, mockResumeManagerData.resumes);
+  const response = await api.get<ApiEnvelope<ResumeFile[]> | ResumeFile[]>(
+    "/job-seekers/resumes",
+  );
+  return normalizeResumeManagerData(unwrap<ResumeFile[]>(response));
 }
 
 export async function uploadResume(formData: FormData) {
@@ -148,7 +115,7 @@ export async function uploadResume(formData: FormData) {
 
 export async function replaceResume(resumeId: string, formData: FormData) {
   const response = await api.patch<ApiEnvelope<ResumeFile> | ResumeFile>(
-    `/resumes/${resumeId}`,
+    `/job-seekers/resumes/${resumeId}`,
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
@@ -171,7 +138,7 @@ export async function deleteResume(resumeId: string) {
 
 export async function downloadResume(resumeId: string) {
   const response = await api.get<ApiEnvelope<{ downloadUrl: string }> | { downloadUrl: string }>(
-    `/resumes/${resumeId}/download`,
+    `/job-seekers/resumes/${resumeId}/download`,
   );
   return unwrap<{ downloadUrl: string }>(response);
 }

@@ -1,26 +1,24 @@
-import "dotenv/config";
 import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+import { getAuth, type Auth } from "firebase-admin/auth";
+import env from "./env.js";
 
-const projectId = process.env.FIREBASE_PROJECT_ID;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+let adminAuth: Auth | undefined;
 
-if (!projectId || !clientEmail || !privateKey) {
-  throw new Error(
-    "Missing Firebase Admin environment variables: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are required."
-  );
-}
+export const getAdminAuth = () => {
+  if (!adminAuth) {
+    const firebaseAdminApp =
+      getApps().length > 0
+        ? getApp()
+        : initializeApp({
+            credential: cert({
+              projectId: env.firebaseProjectId,
+              clientEmail: env.firebaseClientEmail,
+              privateKey: env.firebasePrivateKey,
+            }),
+          });
 
-const firebaseAdminApp =
-  getApps().length > 0
-    ? getApp()
-    : initializeApp({
-        credential: cert({
-          projectId,
-          clientEmail,
-          privateKey,
-        }),
-      });
+    adminAuth = getAuth(firebaseAdminApp);
+  }
 
-export const adminAuth = getAuth(firebaseAdminApp);
+  return adminAuth;
+};

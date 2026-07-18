@@ -1,10 +1,5 @@
-import JobSeekerShell from "@/components/job-seeker/JobSeekerShell";
-import ResumeManager from "@/components/job-seeker/ResumeManager";
+import { redirect } from "next/navigation";
 
 export default function ResumesPage() {
-  return (
-    <JobSeekerShell>
-      <ResumeManager />
-    </JobSeekerShell>
-  );
+  redirect("/job-seeker/resume-manager");
 }

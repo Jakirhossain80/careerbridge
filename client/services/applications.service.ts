@@ -1,7 +1,7 @@
 "use client";
 
+import { z } from "zod";
 import { api } from "@/lib/api";
-import { mockApplicantDetails } from "@/data/mock-applicant-details";
 import type {
   AppliedJobsResponse,
   ApplyJobPayload,
@@ -20,8 +20,6 @@ type ApiEnvelope<T> = {
   message?: string;
   data: T;
 };
-
-let mockDetails = [...mockApplicantDetails];
 
 type RawEntity = string | Record<string, unknown> | null | undefined;
 
@@ -46,6 +44,63 @@ type RawEmployerApplication = {
   updatedAt?: string;
 };
 
+const applicationStatusSchema = z.enum([
+  "applied",
+  "submitted",
+  "under_review",
+  "in_review",
+  "reviewing",
+  "shortlisted",
+  "interview",
+  "offered",
+  "hired",
+  "rejected",
+  "withdrawn",
+]);
+
+const rawEntitySchema = z
+  .union([z.string(), z.record(z.string(), z.unknown()), z.null()])
+  .optional();
+
+const rawEmployerApplicationSchema: z.ZodType<RawEmployerApplication> = z.object({
+  _id: z.string(),
+  jobId: rawEntitySchema,
+  companyId: rawEntitySchema,
+  applicantId: rawEntitySchema,
+  applicantEmail: z.string().optional(),
+  applicantName: z.string().optional(),
+  resume: z.string().optional(),
+  resumeUrl: z.string().optional(),
+  coverLetter: z.string().optional(),
+  expectedSalary: z.number().optional(),
+  status: applicationStatusSchema,
+  timeline: z
+    .array(
+      z.object({
+        status: applicationStatusSchema,
+        note: z.string().optional(),
+        createdAt: z.string().optional(),
+      }),
+    )
+    .optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+const employerApplicationsApiResponseSchema = z.object({
+  applications: z.array(rawEmployerApplicationSchema),
+  meta: z.object({
+    page: z.number().int().min(1),
+    limit: z.number().int().min(1),
+    total: z.number().int().min(0),
+    totalPages: z.number().int().min(1),
+  }),
+});
+
+type EmployerApplicationsApiResponse = z.infer<
+  typeof employerApplicationsApiResponseSchema
+>;
+
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   const payload = response.data;
 
@@ -61,38 +116,19 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   return payload as T;
 }
 
-function normalizeApplicationsResponse(
-  payload:
-    | EmployerApplicationsResponse
-    | EmployerApplication[]
-    | {
-        applications?: RawEmployerApplication[];
-        meta?: AppliedJobsResponse["meta"];
-      },
-  params: EmployerApplicationsQueryParams = {},
+export function normalizeApplicationsResponse(
+  payload: unknown,
 ): EmployerApplicationsResponse {
-  if (Array.isArray(payload)) {
-    return normalizeApplicationsResponse(
-      { applications: payload as unknown as RawEmployerApplication[] },
-      params,
-    );
-  }
-
-  const rawApplications =
-    (payload as { applications?: RawEmployerApplication[] }).applications ?? [];
-  const applications = rawApplications.map(mapEmployerApplication);
-  const meta = (payload as { meta?: AppliedJobsResponse["meta"] }).meta;
+  const parsed = employerApplicationsApiResponseSchema.parse(payload);
+  const applications = parsed.applications.map(mapEmployerApplication);
 
   return {
     applications,
-    total: payload.total ?? meta?.total ?? applications.length,
-    page: payload.page ?? meta?.page ?? params.page ?? 1,
-    limit: payload.limit ?? meta?.limit ?? params.limit ?? 10,
-    totalPages: payload.totalPages ?? meta?.totalPages ?? 1,
-    meta: {
-      ...buildApplicationsMeta(applications),
-      ...(payload.meta && !("page" in payload.meta) ? payload.meta : undefined),
-    },
+    total: parsed.meta.total,
+    page: parsed.meta.page,
+    limit: parsed.meta.limit,
+    totalPages: parsed.meta.totalPages,
+    meta: buildApplicationsMeta(applications),
   };
 }
 
@@ -212,12 +248,7 @@ export async function getEmployerApplications(
   params: EmployerApplicationsQueryParams = {},
 ) {
   const response = await api.get<
-    ApiEnvelope<
-      EmployerApplicationsResponse | EmployerApplication[] | {
-        applications?: RawEmployerApplication[];
-        meta?: AppliedJobsResponse["meta"];
-      }
-    > | EmployerApplicationsResponse
+    ApiEnvelope<EmployerApplicationsApiResponse>
   >("/employer/applications", {
     params: {
       ...params,
@@ -225,30 +256,16 @@ export async function getEmployerApplications(
     },
   });
 
-  return normalizeApplicationsResponse(unwrap(response), params);
+  return normalizeApplicationsResponse(response.data.data);
 }
 
 export async function getApplicationById(id: string) {
-  try {
-    const response = await api.get<
+  const response = await api.get<
       ApiEnvelope<RawEmployerApplication> | RawEmployerApplication
     >(
       `/employer/applications/${id}`,
     );
-    return mapApplicantDetails(unwrap<RawEmployerApplication>(response));
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    const details = mockDetails.find((item) => item._id === id);
-
-    if (details) {
-      return details;
-    }
-
-    throw error;
-  }
+  return mapApplicantDetails(unwrap<RawEmployerApplication>(response));
 }
 
 export async function updateApplicationStatus(
@@ -265,41 +282,11 @@ export async function updateApplicationStatus(
 }
 
 export async function addApplicationNote(id: string, note: string) {
-  try {
-    const response = await api.post<ApiEnvelope<ApplicationNote> | ApplicationNote>(
+  const response = await api.post<ApiEnvelope<ApplicationNote> | ApplicationNote>(
       `/applications/${id}/notes`,
       { note },
     );
-    return unwrap<ApplicationNote>(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    const details = mockDetails.find((item) => item._id === id);
-
-    if (!details) {
-      throw error;
-    }
-
-    const nextNote: ApplicationNote = {
-      _id: `note-${Date.now()}`,
-      authorName: "You",
-      message: note,
-      createdAt: new Date().toISOString(),
-    };
-
-    mockDetails = mockDetails.map((item) =>
-      item._id === id
-        ? {
-            ...item,
-            notes: [nextNote, ...(item.notes ?? [])],
-          }
-        : item,
-    );
-
-    return nextNote;
-  }
+  return unwrap<ApplicationNote>(response);
 }
 
 export async function applyJob(payload: ApplyJobPayload) {

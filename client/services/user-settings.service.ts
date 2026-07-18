@@ -147,17 +147,9 @@ export async function updatePrivacySettings(
 }
 
 export async function deactivateAccount() {
-  try {
-    const response = await api.patch<
+  const response = await api.patch<
       ApiEnvelope<{ deactivated: boolean }> | { deactivated: boolean }
     >("/users/me/deactivate");
 
-    return unwrap<{ deactivated: boolean }>(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return { deactivated: true };
-  }
+  return unwrap<{ deactivated: boolean }>(response);
 }

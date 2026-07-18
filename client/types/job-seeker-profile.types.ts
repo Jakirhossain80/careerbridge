@@ -60,6 +60,7 @@ export interface JobSeekerProfile {
   yearsOfExperience?: number;
   currentDesignation?: string;
   preferredRole?: string;
+  preferredJobTypes?: string[];
   technicalSkills?: string[];
   softSkills?: string[];
   experience?: JobSeekerProfileExperience[];

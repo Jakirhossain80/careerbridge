@@ -243,6 +243,20 @@ export const getUnreadNotificationCount = async (
   });
 };
 
+export const getNotificationById = async (
+  recipient: NotificationRecipient,
+  notificationId: string
+) => {
+  const recipientObjectId = new Types.ObjectId(recipient.id);
+  const notification = await Notification.findOne({
+    _id: notificationId,
+    $or: [{ recipientId: recipientObjectId }, { userId: recipientObjectId }],
+  }).lean();
+
+  if (!notification) throw new AppError("Notification not found", 404);
+  return notification;
+};
+
 export const markAsRead = async (
   recipient: NotificationRecipient,
   notificationId: string
@@ -261,6 +275,24 @@ export const markAsRead = async (
     throw new AppError("Notification not found", 404);
   }
 
+  return notification;
+};
+
+export const markAsUnread = async (
+  recipient: NotificationRecipient,
+  notificationId: string
+) => {
+  const recipientObjectId = new Types.ObjectId(recipient.id);
+  const notification = await Notification.findOneAndUpdate(
+    {
+      _id: notificationId,
+      $or: [{ recipientId: recipientObjectId }, { userId: recipientObjectId }],
+    },
+    { $set: { read: false, isRead: false } },
+    { returnDocument: "after", runValidators: true }
+  );
+
+  if (!notification) throw new AppError("Notification not found", 404);
   return notification;
 };
 

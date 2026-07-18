@@ -5,7 +5,6 @@ import {
   applicationIdParamsSchema,
   applicationStatusUpdateSchema,
   companyCreateSchema,
-  companyImageUploadSchema,
   companyUpdateSchema,
   employerApplicationsQuerySchema,
   employerSettingsSchema,
@@ -131,11 +130,6 @@ const uploadCompanyImage = (
     if (!file) {
       throw new AppError(`Company ${imageType} image is required`, 400);
     }
-
-    companyImageUploadSchema.parse({
-      mimeType: file.mimetype,
-      fileSize: file.size,
-    });
 
     const company = await uploadCompanyBrandingImage(employer, file, imageType);
     successResponse(res, `Company ${imageType} updated successfully`, company, 200);

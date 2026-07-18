@@ -1,6 +1,5 @@
 "use client";
 
-import { mockNotifications } from "@/data/mock-notifications";
 import { api } from "@/lib/api";
 import type {
   CareerBridgeNotification,
@@ -68,8 +67,6 @@ type NotificationsPayload =
         unreadCount?: number;
       };
     };
-
-let localMockNotifications = [...mockNotifications];
 
 function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   const payload = response.data;
@@ -298,8 +295,7 @@ export const notificationQueryKeys = {
 };
 
 export async function getNotifications(params: NotificationsQueryParams = {}) {
-  try {
-    const response = await api.get<
+  const response = await api.get<
       ApiEnvelope<NotificationsPayload> | NotificationsPayload
     >("/notifications", {
       params: {
@@ -318,52 +314,19 @@ export async function getNotifications(params: NotificationsQueryParams = {}) {
       },
     });
 
-    return normalizeResponse(unwrap(response), params);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return filterNotifications(localMockNotifications, params);
-  }
+  return normalizeResponse(unwrap(response), params);
 }
 
 export async function getNotification(notificationId: string) {
-  try {
-    const response = await api.get<
+  const response = await api.get<
       ApiEnvelope<LegacyNotification> | LegacyNotification
     >(`/notifications/${notificationId}`);
 
-    return normalizeNotification(unwrap(response));
-  } catch (error) {
-    const firstPage = await getNotifications({ page: 1, limit: 100 });
-    const notification = firstPage.notifications.find(
-      (item) => item._id === notificationId,
-    );
-
-    if (notification) {
-      return notification;
-    }
-
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    const fallback = localMockNotifications.find(
-      (item) => item._id === notificationId,
-    );
-
-    if (!fallback) {
-      throw error;
-    }
-
-    return normalizeNotification(fallback);
-  }
+  return normalizeNotification(unwrap(response));
 }
 
 export async function getUnreadNotifications() {
-  try {
-    const response = await api.get<
+  const response = await api.get<
       ApiEnvelope<{ count?: number; notifications?: CareerBridgeNotification[] }> | {
         count?: number;
         notifications?: CareerBridgeNotification[];
@@ -371,119 +334,37 @@ export async function getUnreadNotifications() {
     >("/notifications/unread-count");
     const payload = unwrap(response);
 
-    return {
+  return {
       count:
         payload.count ??
         payload.notifications?.filter((notification) => !notification.isRead).length ??
         0,
       notifications: payload.notifications ?? [],
-    };
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    return {
-      count: localMockNotifications.filter((notification) => !notification.isRead).length,
-      notifications: localMockNotifications.filter(
-        (notification) => !notification.isRead,
-      ),
-    };
-  }
+  };
 }
 
 export async function markNotificationAsRead(notificationId: string) {
-  try {
-    const response = await api.patch<
+  const response = await api.patch<
       ApiEnvelope<CareerBridgeNotification> | CareerBridgeNotification
     >(`/notifications/${notificationId}/read`);
-    return normalizeNotification(unwrap(response));
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    localMockNotifications = localMockNotifications.map((notification) =>
-      notification._id === notificationId
-        ? { ...notification, isRead: true, updatedAt: new Date().toISOString() }
-        : notification,
-    );
-
-    const updated = localMockNotifications.find(
-      (notification) => notification._id === notificationId,
-    );
-
-    if (!updated) {
-      throw error;
-    }
-
-    return updated;
-  }
+  return normalizeNotification(unwrap(response));
 }
 
 export async function markNotificationAsUnread(notificationId: string) {
-  try {
-    const response = await api.patch<
+  const response = await api.patch<
       ApiEnvelope<CareerBridgeNotification> | CareerBridgeNotification
     >(`/notifications/${notificationId}/unread`);
-    return normalizeNotification(unwrap(response));
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    localMockNotifications = localMockNotifications.map((notification) =>
-      notification._id === notificationId
-        ? { ...notification, isRead: false, updatedAt: new Date().toISOString() }
-        : notification,
-    );
-
-    const updated = localMockNotifications.find(
-      (notification) => notification._id === notificationId,
-    );
-
-    if (!updated) {
-      throw error;
-    }
-
-    return updated;
-  }
+  return normalizeNotification(unwrap(response));
 }
 
 export async function markAllNotificationsAsRead() {
-  try {
-    const response = await api.patch<
+  const response = await api.patch<
       ApiEnvelope<{ modifiedCount?: number }> | { modifiedCount?: number }
     >("/notifications/read-all");
-    return unwrap(response);
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    localMockNotifications = localMockNotifications.map((notification) => ({
-      ...notification,
-      isRead: true,
-      updatedAt: new Date().toISOString(),
-    }));
-
-    return { modifiedCount: localMockNotifications.length };
-  }
+  return unwrap(response);
 }
 
 export async function deleteNotification(notificationId: string) {
-  try {
-    await api.delete(`/notifications/${notificationId}`);
-    return { notificationId };
-  } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
-
-    localMockNotifications = localMockNotifications.filter(
-      (notification) => notification._id !== notificationId,
-    );
-
-    return { notificationId };
-  }
+  await api.delete(`/notifications/${notificationId}`);
+  return { notificationId };
 }
