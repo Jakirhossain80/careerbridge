@@ -4,17 +4,20 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { reload } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
+import type { AuthUserRole } from "@/services/auth.service";
 
 type ProtectedRouteProps = {
   children: ReactNode;
   loginPath?: string;
   verifyEmailPath?: string;
+  allowedRoles?: AuthUserRole | readonly AuthUserRole[];
 };
 
 export default function ProtectedRoute({
   children,
   loginPath = "/login",
   verifyEmailPath = "/verify-email",
+  allowedRoles,
 }: ProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -83,6 +86,19 @@ export default function ProtectedRoute({
         return;
       }
 
+      const hasAllowedRole =
+        !allowedRoles ||
+        (typeof allowedRoles === "string"
+          ? syncedUser.role === allowedRoles
+          : allowedRoles.includes(syncedUser.role));
+
+      if (!hasAllowedRole) {
+        setCanViewPage(false);
+        setIsCheckingAuth(false);
+        router.replace("/unauthorized");
+        return;
+      }
+
       setCanViewPage(true);
       setIsCheckingAuth(false);
     };
@@ -90,6 +106,7 @@ export default function ProtectedRoute({
     void checkAccess();
   }, [
     loading,
+    allowedRoles,
     loginPath,
     pathname,
     profile,

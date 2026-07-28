@@ -2,11 +2,16 @@
   "name": "careerbridge",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
   "packageManager": "pnpm@11.5.2",
   "scripts": {
     "dev:client": "pnpm --dir client dev",
     "dev:server": "pnpm --dir server dev",
-    "lint": "pnpm --dir client lint",
+    "lint": "pnpm lint:client && pnpm lint:server",
+    "lint:client": "pnpm --dir client lint",
+    "lint:server": "pnpm --dir server lint",
     "typecheck": "pnpm typecheck:client && pnpm typecheck:server",
     "typecheck:client": "pnpm --dir client typecheck",
     "typecheck:server": "pnpm --dir server typecheck",

@@ -18,7 +18,7 @@ export default function JobSeekerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles="job_seeker">
       <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 md:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

@@ -11,6 +11,7 @@ import {
   updateUserRole,
   updateUserStatus,
 } from "@/services/admin.service";
+import { adminDashboardQueryKeys } from "@/services/admin-dashboard.service";
 import type { AdminUser, UserRole, UserStatus } from "@/types/admin-user.types";
 
 export function useAdminUser(userId: string) {
@@ -26,9 +27,9 @@ export function useAdminUserMutations(userId: string) {
 
   const invalidateAdminUserQueries = async () => {
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.user(userId) });
-    await queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.userLists });
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.stats });
-    await queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    await queryClient.invalidateQueries({ queryKey: adminDashboardQueryKeys.dashboard });
   };
 
   const updateMutation = useMutation({

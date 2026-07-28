@@ -37,6 +37,7 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
 
 export const adminQueryKeys = {
   stats: ["admin-stats"] as const,
+  userLists: ["admin-users"] as const,
   users: (filters: AdminListParams) => ["admin-users", filters] as const,
   user: (userId: string) => ["admin-user", userId] as const,
   employers: (filters: AdminListParams) => ["admin-employers", filters] as const,

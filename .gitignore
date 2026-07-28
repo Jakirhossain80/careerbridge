@@ -46,6 +46,7 @@ coverage/
 
 # Cache
 .cache/
+.pnpm-store/
 
 # TypeScript
 *.tsbuildinfo

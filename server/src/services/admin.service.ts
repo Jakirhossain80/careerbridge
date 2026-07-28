@@ -2070,7 +2070,7 @@ export const getAdminAnalyticsOverview = async (query: AdminAnalyticsQuery) => {
   return {
     kpis,
     growthMetrics: kpis,
-    trends: buckets.map(({ from, to, ...bucket }) => bucket),
+    trends: buckets.map(({ from: _from, to: _to, ...bucket }) => bucket),
     categoryDistribution: categoryRows.map((row) => ({
       label: row._id ?? "Uncategorized",
       count: row.count,

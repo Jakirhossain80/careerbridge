@@ -11,6 +11,7 @@ import {
   updateAdminJobSeekerStatus,
 } from "@/services/admin-job-seekers.service";
 import { adminQueryKeys } from "@/services/admin.service";
+import { adminDashboardQueryKeys } from "@/services/admin-dashboard.service";
 import type {
   AdminJobSeekerListParams,
   AdminJobSeekerStatus,
@@ -56,9 +57,9 @@ export function useAdminJobSeekerMutations(jobSeekerId?: string) {
       });
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.userLists });
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.stats });
-    await queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    await queryClient.invalidateQueries({ queryKey: adminDashboardQueryKeys.dashboard });
   };
 
   const updateMutation = useMutation({

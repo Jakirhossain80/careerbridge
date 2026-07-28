@@ -9,6 +9,7 @@ import {
   resetAdminSettings,
   updateAdminSettings,
 } from "@/services/adminSettingsService";
+import { adminDashboardQueryKeys } from "@/services/admin-dashboard.service";
 import type { AdminSystemSettingsPayload } from "@/types/admin-settings";
 
 export function useAdminSettings() {
@@ -35,7 +36,7 @@ export function useAdminSettingsMutations() {
       queryClient.invalidateQueries({ queryKey: adminSettingsQueryKeys.settings }),
       queryClient.invalidateQueries({ queryKey: adminSettingsQueryKeys.categories }),
       queryClient.invalidateQueries({ queryKey: adminSettingsQueryKeys.auditLog }),
-      queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: adminDashboardQueryKeys.dashboard }),
     ]);
   };
 

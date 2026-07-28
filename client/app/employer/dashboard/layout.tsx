@@ -10,7 +10,7 @@ export default function EmployerDashboardLayout({
   children: ReactNode;
 }) {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles="employer">
       <DashboardShell
         navItems={employerDashboardLinks}
         roleLabel="Employer"

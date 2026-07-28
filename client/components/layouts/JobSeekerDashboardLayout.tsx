@@ -19,7 +19,7 @@ export default function JobSeekerDashboardLayout({
   const sidebarId = "job-seeker-sidebar";
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles="job_seeker">
       <div className="min-h-screen bg-background text-foreground lg:flex">
         <JobSeekerSidebar
           id={sidebarId}

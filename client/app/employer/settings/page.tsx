@@ -5,7 +5,7 @@ import { employerDashboardLinks } from "@/components/layout/DashboardSidebar";
 
 export default function EmployerSettingsPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles="employer">
       <DashboardShell
         navItems={employerDashboardLinks}
         roleLabel="Employer"
@@ -20,4 +20,3 @@ export default function EmployerSettingsPage() {
     </ProtectedRoute>
   );
 }
-

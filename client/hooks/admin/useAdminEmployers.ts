@@ -12,6 +12,7 @@ import {
   updateAdminEmployerVerification,
 } from "@/services/admin-employers.service";
 import { adminQueryKeys } from "@/services/admin.service";
+import { adminDashboardQueryKeys } from "@/services/admin-dashboard.service";
 import type {
   AdminEmployerListParams,
   AdminEmployerUpdatePayload,
@@ -54,9 +55,9 @@ export function useAdminEmployerMutations(employerId?: string) {
       });
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.userLists });
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.stats });
-    await queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    await queryClient.invalidateQueries({ queryKey: adminDashboardQueryKeys.dashboard });
   };
 
   const updateMutation = useMutation({

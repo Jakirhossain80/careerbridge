@@ -5,7 +5,7 @@ import { employerDashboardLinks } from "@/components/layout/DashboardSidebar";
 
 export default function EmployerAnalyticsPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles="employer">
       <DashboardShell
         navItems={employerDashboardLinks}
         roleLabel="Employer"
