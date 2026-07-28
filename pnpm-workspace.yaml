@@ -1,3 +1,10 @@
 packages:
   - "client"
   - "server"
+
+allowBuilds:
+  "@firebase/util@1.15.1": true
+  "esbuild@0.28.0": true
+  "protobufjs@7.6.2": false
+  "sharp@0.34.5": true
+  "unrs-resolver@1.12.2": true
