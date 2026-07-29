@@ -788,9 +788,7 @@ CLOUDINARY_API_SECRET=<YOUR_CLOUDINARY_API_SECRET>
 | `pnpm run typecheck` | TypeScript validation |
 | `pnpm test` | Run server tests |
 
----
 
-➡ **Continue to Part 3:** Authentication, User Roles, Database Design, API Overview, Application Workflow, and Theme Support.  
 
 
 ---
@@ -1524,9 +1522,6 @@ Tailwind CSS
 UI
 ```
 
----
-
-➡ **Continue to Part 4:** Security, Performance, Accessibility, Deployment, Testing, and Production Readiness.
 
 
 ---
