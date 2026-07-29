@@ -1,10 +1,8 @@
-# CareerBridge
-
 <div align="center">
 
 # 🌉 CareerBridge
 
-### Enterprise-Level AI-Ready Job Portal Platform
+## Enterprise-Level AI-Ready Job Portal Platform
 
 A modern full-stack recruitment platform connecting Job Seekers, Employers, Recruiters, and Administrators through a secure, scalable, and production-ready architecture.
 
@@ -25,7 +23,7 @@ A modern full-stack recruitment platform connecting Job Seekers, Employers, Recr
 
 ---
 
-# 🚀 Project Overview
+## 🚀 Project Overview
 
 CareerBridge is a modern enterprise-grade recruitment platform built using the MERN ecosystem and Next.js.
 
@@ -46,7 +44,7 @@ The project follows a monorepo architecture and separates frontend and backend a
 
 ---
 
-# 🎯 Project Objectives
+## 🎯 Project Objectives
 
 CareerBridge aims to provide a complete recruitment ecosystem where:
 
@@ -66,9 +64,9 @@ The application emphasizes:
 
 ---
 
-# 👥 Target Users
+## 👥 Target Users
 
-## Public Visitors
+### Public Visitors
 
 - Browse jobs
 - Explore companies
@@ -78,7 +76,7 @@ The application emphasizes:
 
 ---
 
-## Job Seekers
+### Job Seekers
 
 - Create profile
 - Upload resumes
@@ -89,7 +87,7 @@ The application emphasizes:
 
 ---
 
-## Employers
+### Employers
 
 - Company management
 - Publish jobs
@@ -99,7 +97,7 @@ The application emphasizes:
 
 ---
 
-## Administrators
+### Administrators
 
 - Moderate employers
 - Approve jobs
@@ -110,7 +108,7 @@ The application emphasizes:
 
 ---
 
-## Super Administrators
+### Super Administrators
 
 - Platform management
 - Workspace management
@@ -120,9 +118,9 @@ The application emphasizes:
 
 ---
 
-# ✨ Key Features
+## ✨ Key Features
 
-## 🌐 Public Website
+### 🌐 Public Website
 
 - Responsive landing page
 - Featured jobs
@@ -140,7 +138,7 @@ The application emphasizes:
 
 ---
 
-## 🔐 Authentication
+### 🔐 Authentication
 
 - Firebase Authentication
 - Email & Password Login
@@ -151,7 +149,7 @@ The application emphasizes:
 
 ---
 
-## 👨‍💼 Employer Module
+### 👨‍💼 Employer Module
 
 - Employer Dashboard
 - Company Profile
@@ -166,7 +164,7 @@ The application emphasizes:
 
 ---
 
-## 👩‍💻 Job Seeker Module
+### 👩‍💻 Job Seeker Module
 
 - Dashboard
 - Profile Management
@@ -180,7 +178,7 @@ The application emphasizes:
 
 ---
 
-## 🛡️ Admin Module
+### 🛡️ Admin Module
 
 - Dashboard
 - User Management
@@ -193,7 +191,7 @@ The application emphasizes:
 
 ---
 
-## 👑 Super Admin Module
+### 👑 Super Admin Module
 
 - Dashboard
 - Workspace Management
@@ -204,7 +202,7 @@ The application emphasizes:
 
 ---
 
-# 🏗 Overall Architecture
+## 🏗 Overall Architecture
 
 CareerBridge follows a modern monorepo architecture.
 
@@ -216,69 +214,43 @@ CareerBridge
 ├── server (Express.js)
 │
 └── Shared Development Workflow
-
----
-
-# 🏛 Project Architecture
-
-CareerBridge follows a layered, feature-oriented architecture that emphasizes separation of concerns, maintainability, scalability, and reusability.
-
-## High-Level System Architecture
-
-```mermaid
-flowchart TD
-
-A[User Browser]
-
-A --> B[Next.js Client]
-
-B --> C[React Query]
-
-C --> D[Service Layer]
-
-D --> E[Axios API Client]
-
-E --> F[Express.js REST API]
-
-F --> G[Authentication Middleware]
-
-G --> H[Controllers]
-
-H --> I[Services]
-
-I --> J[MongoDB Atlas]
-
-F --> K[Cloudinary]
-
-F --> L[Firebase Admin SDK]
 ```
 
 ---
 
-# Frontend Architecture
+## 🏛 Project Architecture
+
+CareerBridge follows a layered, feature-oriented architecture that emphasizes separation of concerns, maintainability, scalability, and reusability.
+
+### High-Level System Architecture
+
+```mermaid
+flowchart TD
+    A[User Browser] --> B[Next.js Client]
+    B --> C[React Query]
+    C --> D[Service Layer]
+    D --> E[Axios API Client]
+    E --> F[Express.js REST API]
+    F --> G[Authentication Middleware]
+    G --> H[Controllers]
+    H --> I[Services]
+    I --> J[MongoDB Atlas]
+    F --> K[Cloudinary]
+    F --> L[Firebase Admin SDK]
+```
+
+---
+
+## Frontend Architecture
 
 The frontend follows a clean layered architecture.
 
 ```mermaid
 flowchart TD
-
-Page
-
-↓
-
-Custom Hook
-
-↓
-
-Service
-
-↓
-
-Axios Client
-
-↓
-
-REST API
+    PAGE[Page] --> HOOK[Custom Hook]
+    HOOK --> SERVICE[Service]
+    SERVICE --> AXIOS[Axios Client]
+    AXIOS --> API[REST API]
 ```
 
 Each layer has a single responsibility.
@@ -296,105 +268,58 @@ Each layer has a single responsibility.
 
 ---
 
-# Backend Architecture
+## Backend Architecture
 
 The backend follows a modular Express architecture.
 
 ```mermaid
 flowchart TD
-
-Request
-
-↓
-
-Express Router
-
-↓
-
-Middleware
-
-↓
-
-Controller
-
-↓
-
-Service
-
-↓
-
-Database
-
-↓
-
-Response
+    REQUEST[Request] --> ROUTER[Express Router]
+    ROUTER --> MIDDLEWARE[Middleware]
+    MIDDLEWARE --> CONTROLLER[Controller]
+    CONTROLLER --> SERVICE[Service]
+    SERVICE --> DATABASE[Database]
+    DATABASE --> RESPONSE[Response]
 ```
 
 ---
 
-# Authentication Flow
+## Authentication Request Flow
 
 CareerBridge currently uses Firebase Authentication with Bearer Token verification.
 
 ```mermaid
 sequenceDiagram
+    participant User
+    participant Firebase
+    participant Client
+    participant Express
+    participant FirebaseAdmin
 
-participant User
-
-participant Firebase
-
-participant Client
-
-participant Express
-
-participant FirebaseAdmin
-
-User->>Firebase: Login
-
-Firebase-->>Client: Firebase ID Token
-
-Client->>Express: Authorization: Bearer Token
-
-Express->>FirebaseAdmin: Verify Token
-
-FirebaseAdmin-->>Express: Valid User
-
-Express-->>Client: Protected Response
+    User->>Firebase: Login
+    Firebase-->>Client: Firebase ID Token
+    Client->>Express: Authorization: Bearer Token
+    Express->>FirebaseAdmin: Verify Token
+    FirebaseAdmin-->>Express: Valid User
+    Express-->>Client: Protected Response
 ```
 
 ---
 
-# Data Flow
+## Data Flow
 
 ```mermaid
 flowchart LR
-
-UI
-
--->
-
-React Query
-
--->
-
-Service
-
--->
-
-Axios
-
--->
-
-Express API
-
--->
-
-MongoDB Atlas
+    UI[UI] --> QUERY[React Query]
+    QUERY --> SERVICE[Service]
+    SERVICE --> AXIOS[Axios]
+    AXIOS --> API[Express API]
+    API --> DATABASE[MongoDB Atlas]
 ```
 
 ---
 
-# Folder Structure
+## Folder Structure
 
 ```text
 careerbridge/
@@ -442,15 +367,15 @@ careerbridge/
 
 ---
 
-# Folder Explanation
+## Folder Explanation
 
-## Root
+### Root
 
 Contains workspace configuration and project documentation.
 
 ---
 
-## client/
+### client/
 
 Contains the Next.js frontend application.
 
@@ -465,7 +390,7 @@ Responsibilities:
 
 ---
 
-## server/
+### server/
 
 Contains the Express backend.
 
@@ -479,13 +404,13 @@ Responsibilities:
 
 ---
 
-## app/
+### app/
 
 Next.js App Router pages and layouts.
 
 ---
 
-## components/
+### components/
 
 Reusable UI components.
 
@@ -502,7 +427,7 @@ Examples:
 
 ---
 
-## hooks/
+### hooks/
 
 Custom React hooks.
 
@@ -515,7 +440,7 @@ Examples:
 
 ---
 
-## services/
+### services/
 
 API service layer.
 
@@ -527,19 +452,19 @@ Responsibilities:
 
 ---
 
-## schemas/
+### schemas/
 
 Zod validation schemas.
 
 ---
 
-## types/
+### types/
 
 Shared TypeScript types.
 
 ---
 
-## models/
+### models/
 
 Mongoose models.
 
@@ -554,13 +479,13 @@ Examples:
 
 ---
 
-## controllers/
+### controllers/
 
 HTTP request handlers.
 
 ---
 
-## services/
+### services/
 
 Business logic.
 
@@ -568,13 +493,13 @@ Controllers remain thin while services encapsulate application rules.
 
 ---
 
-## routes/
+### routes/
 
 Express routers.
 
 ---
 
-## middlewares/
+### middlewares/
 
 Reusable middleware.
 
@@ -588,9 +513,9 @@ Examples:
 
 ---
 
-# ⚙️ Installation Guide
+## ⚙️ Installation Guide
 
-## Prerequisites
+### Prerequisites
 
 Install the following software before running CareerBridge.
 
@@ -605,7 +530,7 @@ Install the following software before running CareerBridge.
 
 ---
 
-## Clone Repository
+### Clone Repository
 
 ```bash
 git clone <YOUR_GITHUB_REPOSITORY>
@@ -615,7 +540,7 @@ cd careerbridge
 
 ---
 
-## Install Dependencies
+### Install Dependencies
 
 ```bash
 pnpm install
@@ -623,7 +548,7 @@ pnpm install
 
 ---
 
-## Frontend Setup
+### Frontend Setup
 
 ```bash
 cd client
@@ -633,7 +558,7 @@ pnpm install
 
 ---
 
-## Backend Setup
+### Backend Setup
 
 ```bash
 cd ../server
@@ -643,9 +568,9 @@ pnpm install
 
 ---
 
-# Running Development Servers
+## Running Development Servers
 
-## Start Backend
+### Start Backend
 
 ```bash
 cd server
@@ -655,7 +580,7 @@ pnpm run dev
 
 ---
 
-## Start Frontend
+### Start Frontend
 
 ```bash
 cd client
@@ -665,21 +590,21 @@ pnpm run dev
 
 Frontend:
 
-```
+```text
 http://localhost:3000
 ```
 
 Backend:
 
-```
+```text
 http://localhost:5000
 ```
 
 ---
 
-# Production Build
+## Production Build
 
-## Backend
+### Backend
 
 ```bash
 cd server
@@ -691,7 +616,7 @@ pnpm start
 
 ---
 
-## Frontend
+### Frontend
 
 ```bash
 cd client
@@ -703,9 +628,9 @@ pnpm start
 
 ---
 
-# 🌎 Environment Variables
+## 🌎 Environment Variables
 
-## Frontend (.env.local)
+### Frontend (.env.local)
 
 ```env
 NEXT_PUBLIC_API_URL=<YOUR_RENDER_API_URL>
@@ -725,7 +650,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=<YOUR_FIREBASE_APP_ID>
 
 ---
 
-## Backend (.env)
+### Backend (.env)
 
 ```env
 PORT=5000
@@ -751,9 +676,9 @@ CLOUDINARY_API_SECRET=<YOUR_CLOUDINARY_API_SECRET>
 
 ---
 
-# 🔧 Project Scripts
+## 🔧 Project Scripts
 
-## Root Workspace
+### Root Workspace
 
 | Command | Description |
 |----------|-------------|
@@ -765,7 +690,7 @@ CLOUDINARY_API_SECRET=<YOUR_CLOUDINARY_API_SECRET>
 
 ---
 
-## Frontend
+### Frontend
 
 | Command | Description |
 |----------|-------------|
@@ -777,7 +702,7 @@ CLOUDINARY_API_SECRET=<YOUR_CLOUDINARY_API_SECRET>
 
 ---
 
-## Backend
+### Backend
 
 | Command | Description |
 |----------|-------------|
@@ -788,12 +713,9 @@ CLOUDINARY_API_SECRET=<YOUR_CLOUDINARY_API_SECRET>
 | `pnpm run typecheck` | TypeScript validation |
 | `pnpm test` | Run server tests |
 
-
-
-
 ---
 
-# 🔐 Authentication & Authorization
+## 🔐 Authentication & Authorization
 
 CareerBridge uses **Firebase Authentication** for identity management and **Firebase Admin SDK** on the backend to verify user identity securely.
 
@@ -801,7 +723,7 @@ The application follows a stateless authentication model using **Firebase ID Tok
 
 ---
 
-## Authentication Providers
+### Authentication Providers
 
 Supported authentication methods:
 
@@ -811,39 +733,31 @@ Supported authentication methods:
 
 ---
 
-## Authentication Flow
+### Authentication Flow
 
 ```mermaid
 sequenceDiagram
+    participant User
+    participant Frontend
+    participant Firebase
+    participant Backend
+    participant FirebaseAdmin
+    participant MongoDB
 
-participant User
-participant Frontend
-participant Firebase
-participant Backend
-participant FirebaseAdmin
-participant MongoDB
-
-User->>Frontend: Login
-Frontend->>Firebase: Authenticate
-
-Firebase-->>Frontend: ID Token
-
-Frontend->>Backend: Authorization: Bearer Token
-
-Backend->>FirebaseAdmin: Verify Token
-
-FirebaseAdmin-->>Backend: User Verified
-
-Backend->>MongoDB: Load User
-
-MongoDB-->>Backend: User Profile
-
-Backend-->>Frontend: Authorized Response
+    User->>Frontend: Login
+    Frontend->>Firebase: Authenticate
+    Firebase-->>Frontend: ID Token
+    Frontend->>Backend: Authorization: Bearer Token
+    Backend->>FirebaseAdmin: Verify Token
+    FirebaseAdmin-->>Backend: User Verified
+    Backend->>MongoDB: Load User
+    MongoDB-->>Backend: User Profile
+    Backend-->>Frontend: Authorized Response
 ```
 
 ---
 
-## Authorization
+### Authorization
 
 CareerBridge implements **Role-Based Access Control (RBAC)**.
 
@@ -860,7 +774,7 @@ Frontend authorization improves UX only.
 
 ---
 
-# 👥 User Roles
+## 👥 User Roles
 
 CareerBridge currently supports four user roles.
 
@@ -873,7 +787,7 @@ CareerBridge currently supports four user roles.
 
 ---
 
-## 👑 Super Admin
+### 👑 Super Admin
 
 Highest privilege.
 
@@ -892,7 +806,7 @@ Responsibilities include:
 
 ---
 
-## 🛡 Admin
+### 🛡 Admin
 
 Platform moderator.
 
@@ -912,7 +826,7 @@ Cannot:
 
 ---
 
-## 🏢 Employer
+### 🏢 Employer
 
 Responsibilities:
 
@@ -927,7 +841,7 @@ Responsibilities:
 
 ---
 
-## 👨‍💻 Job Seeker
+### 👨‍💻 Job Seeker
 
 Responsibilities:
 
@@ -941,7 +855,7 @@ Responsibilities:
 
 ---
 
-# 🔑 Permission Matrix
+## 🔑 Permission Matrix
 
 | Feature | Super Admin | Admin | Employer | Job Seeker |
 |-----------|:----------:|:-----:|:---------:|:----------:|
@@ -959,7 +873,7 @@ Responsibilities:
 
 ---
 
-# 🗄 Database Design
+## 🗄 Database Design
 
 CareerBridge uses **MongoDB Atlas**.
 
@@ -983,7 +897,7 @@ notifications
 
 ---
 
-## Users Collection
+### Users Collection
 
 Stores:
 
@@ -1024,7 +938,7 @@ Applications
 
 ---
 
-## Companies Collection
+### Companies Collection
 
 Stores:
 
@@ -1052,7 +966,7 @@ Jobs
 
 ---
 
-## Jobs Collection
+### Jobs Collection
 
 Stores:
 
@@ -1083,7 +997,7 @@ Applications
 
 ---
 
-## Applications Collection
+### Applications Collection
 
 Stores:
 
@@ -1115,7 +1029,7 @@ Employer
 
 ---
 
-## Categories Collection
+### Categories Collection
 
 Stores:
 
@@ -1125,7 +1039,7 @@ Stores:
 
 ---
 
-## Blogs Collection
+### Blogs Collection
 
 Stores:
 
@@ -1138,7 +1052,7 @@ Stores:
 
 ---
 
-## Notifications Collection
+### Notifications Collection
 
 Stores:
 
@@ -1150,29 +1064,22 @@ Stores:
 
 ---
 
-# 📈 Database Relationships
+## 📈 Database Relationships
 
 ```mermaid
 erDiagram
-
-USER ||--o{ COMPANY : owns
-
-COMPANY ||--o{ JOB : publishes
-
-JOB ||--o{ APPLICATION : receives
-
-USER ||--o{ APPLICATION : submits
-
-USER ||--o{ NOTIFICATION : receives
-
-CATEGORY ||--o{ JOB : categorizes
-
-BLOG }o--|| USER : author
+    USER ||--o{ COMPANY : owns
+    COMPANY ||--o{ JOB : publishes
+    JOB ||--o{ APPLICATION : receives
+    USER ||--o{ APPLICATION : submits
+    USER ||--o{ NOTIFICATION : receives
+    CATEGORY ||--o{ JOB : categorizes
+    BLOG }o--|| USER : author
 ```
 
 ---
 
-# 🚀 API Overview
+## 🚀 API Overview
 
 The backend exposes versioned REST APIs.
 
@@ -1182,7 +1089,7 @@ The backend exposes versioned REST APIs.
 
 ---
 
-## Authentication APIs
+### Authentication APIs
 
 ```text
 POST /users/sync
@@ -1192,7 +1099,7 @@ GET /users/me
 
 ---
 
-## User APIs
+### User APIs
 
 ```text
 GET /users
@@ -1206,7 +1113,7 @@ DELETE /users/:id
 
 ---
 
-## Company APIs
+### Company APIs
 
 ```text
 GET /companies
@@ -1220,7 +1127,7 @@ PATCH /companies/:id
 
 ---
 
-## Job APIs
+### Job APIs
 
 ```text
 GET /jobs
@@ -1236,7 +1143,7 @@ DELETE /jobs/:id
 
 ---
 
-## Application APIs
+### Application APIs
 
 ```text
 GET /applications
@@ -1250,7 +1157,7 @@ DELETE /applications/:id
 
 ---
 
-## Category APIs
+### Category APIs
 
 ```text
 GET /categories
@@ -1262,7 +1169,7 @@ PATCH /categories/:id
 
 ---
 
-## Blog APIs
+### Blog APIs
 
 ```text
 GET /blogs
@@ -1276,7 +1183,7 @@ PATCH /blogs/:id
 
 ---
 
-## Notification APIs
+### Notification APIs
 
 ```text
 GET /notifications
@@ -1286,7 +1193,7 @@ PATCH /notifications/:id
 
 ---
 
-## Dashboard APIs
+### Dashboard APIs
 
 Protected dashboard APIs provide:
 
@@ -1298,161 +1205,72 @@ Protected dashboard APIs provide:
 
 ---
 
-# 🔄 Application Workflow
+## 🔄 Application Workflow
 
-## Employer Recruitment Workflow
+### Employer Recruitment Workflow
 
 ```mermaid
 flowchart TD
-
-Employer
-
--->
-
-Create Company
-
--->
-
-Post Job
-
--->
-
-Job Published
-
--->
-
-Applications Received
-
--->
-
-Review Applicants
-
--->
-
-Update Status
-
--->
-
-Interview
-
--->
-
-Offer
-
--->
-
-Hired
+    EMPLOYER[Employer] --> COMPANY[Create Company]
+    COMPANY --> POST[Post Job]
+    POST --> PUBLISHED[Job Published]
+    PUBLISHED --> RECEIVED[Applications Received]
+    RECEIVED --> REVIEW[Review Applicants]
+    REVIEW --> STATUS[Update Status]
+    STATUS --> INTERVIEW[Interview]
+    INTERVIEW --> OFFER[Offer]
+    OFFER --> HIRED[Hired]
 ```
 
 ---
 
-## Job Seeker Workflow
+### Job Seeker Workflow
 
 ```mermaid
 flowchart TD
-
-Register
-
--->
-
-Complete Profile
-
--->
-
-Upload Resume
-
--->
-
-Browse Jobs
-
--->
-
-Apply
-
--->
-
-Track Application
-
--->
-
-Interview
-
--->
-
-Offer
-
--->
-
-Employment
+    REGISTER[Register] --> PROFILE[Complete Profile]
+    PROFILE --> RESUME[Upload Resume]
+    RESUME --> BROWSE[Browse Jobs]
+    BROWSE --> APPLY[Apply]
+    APPLY --> TRACK[Track Application]
+    TRACK --> INTERVIEW[Interview]
+    INTERVIEW --> OFFER[Offer]
+    OFFER --> EMPLOYMENT[Employment]
 ```
 
 ---
 
-## Admin Workflow
+### Admin Workflow
 
 ```mermaid
 flowchart TD
-
-Login
-
--->
-
-Dashboard
-
--->
-
-Review Employers
-
--->
-
-Approve Jobs
-
--->
-
-Manage Categories
-
--->
-
-Monitor Reports
+    LOGIN[Login] --> DASHBOARD[Dashboard]
+    DASHBOARD --> EMPLOYERS[Review Employers]
+    EMPLOYERS --> JOBS[Approve Jobs]
+    JOBS --> CATEGORIES[Manage Categories]
+    CATEGORIES --> REPORTS[Monitor Reports]
 ```
 
 ---
 
-## Super Admin Workflow
+### Super Admin Workflow
 
 ```mermaid
 flowchart TD
-
-Login
-
--->
-
-Platform Dashboard
-
--->
-
-Manage Admins
-
--->
-
-System Settings
-
--->
-
-Platform Analytics
-
--->
-
-Workspace Management
+    LOGIN[Login] --> DASHBOARD[Platform Dashboard]
+    DASHBOARD --> ADMINS[Manage Admins]
+    ADMINS --> SETTINGS[System Settings]
+    SETTINGS --> ANALYTICS[Platform Analytics]
+    ANALYTICS --> WORKSPACE[Workspace Management]
 ```
 
 ---
 
-# 🎨 Theme Support
+## 🎨 Theme Support
 
 CareerBridge supports a complete application-wide theme system.
 
-## Available Themes
+### Available Themes
 
 - ☀️ Light Mode
 - 🌙 Dark Mode
@@ -1460,7 +1278,7 @@ CareerBridge supports a complete application-wide theme system.
 
 ---
 
-## Theme Features
+### Theme Features
 
 - Persistent theme preference
 - Instant theme switching
@@ -1472,7 +1290,7 @@ CareerBridge supports a complete application-wide theme system.
 
 ---
 
-## Theme Coverage
+### Theme Coverage
 
 The selected theme applies to:
 
@@ -1494,45 +1312,26 @@ The selected theme applies to:
 
 ---
 
-## Theme Architecture
+### Theme Architecture
 
 ```mermaid
 flowchart LR
-
-Theme Provider
-
--->
-
-Layouts
-
--->
-
-Pages
-
--->
-
-Components
-
--->
-
-Tailwind CSS
-
--->
-
-UI
+    PROVIDER[Theme Provider] --> LAYOUTS[Layouts]
+    LAYOUTS --> PAGES[Pages]
+    PAGES --> COMPONENTS[Components]
+    COMPONENTS --> TAILWIND[Tailwind CSS]
+    TAILWIND --> UI[UI]
 ```
-
-
 
 ---
 
-# 👨‍💻 Development Guidelines
+## 👨‍💻 Development Guidelines
 
 CareerBridge follows a consistent, maintainable, and scalable development approach to ensure code quality across the entire project.
 
 ---
 
-## AGENTS.md
+### AGENTS.md
 
 The project includes an **AGENTS.md** file at the repository root.
 
@@ -1550,9 +1349,9 @@ Primary goals include:
 
 ---
 
-## Coding Standards
+### Coding Standards
 
-### General
+#### General
 
 - Use TypeScript for all new code.
 - Prefer functional React components.
@@ -1564,7 +1363,7 @@ Primary goals include:
 
 ---
 
-### Frontend Conventions
+#### Frontend Conventions
 
 Preferred data flow:
 
@@ -1590,7 +1389,7 @@ Guidelines:
 
 ---
 
-### Backend Conventions
+#### Backend Conventions
 
 Preferred request flow:
 
@@ -1612,7 +1411,7 @@ Business logic belongs inside the Service layer.
 
 ---
 
-### React Query Conventions
+#### React Query Conventions
 
 Recommended practices:
 
@@ -1624,7 +1423,7 @@ Recommended practices:
 
 ---
 
-### Tailwind CSS v4
+#### Tailwind CSS v4
 
 Guidelines:
 
@@ -1636,7 +1435,7 @@ Guidelines:
 
 ---
 
-### TypeScript
+#### TypeScript
 
 Recommended practices:
 
@@ -1648,7 +1447,7 @@ Recommended practices:
 
 ---
 
-# 🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome!
 
@@ -1656,7 +1455,7 @@ Please follow the workflow below.
 
 ---
 
-## Development Workflow
+### Development Workflow
 
 1. Fork the repository.
 2. Create a feature branch.
@@ -1666,7 +1465,7 @@ Please follow the workflow below.
 
 ---
 
-## Branch Naming
+### Branch Naming
 
 Recommended conventions:
 
@@ -1686,7 +1485,7 @@ refactor/job-service
 
 ---
 
-## Commit Message Convention
+### Commit Message Convention
 
 Examples:
 
@@ -1706,7 +1505,7 @@ chore: update dependencies
 
 ---
 
-## Pull Request Checklist
+### Pull Request Checklist
 
 Before submitting a Pull Request, verify:
 
@@ -1719,13 +1518,13 @@ Before submitting a Pull Request, verify:
 
 ---
 
-# 🗺️ Roadmap
+## 🗺️ Roadmap
 
 The roadmap reflects the current direction of the CareerBridge project.
 
 ---
 
-## ✅ Completed
+### ✅ Completed
 
 - Monorepo setup
 - Next.js App Router
@@ -1749,7 +1548,7 @@ The roadmap reflects the current direction of the CareerBridge project.
 
 ---
 
-## 🚧 In Progress
+### 🚧 In Progress
 
 - Production optimization
 - Performance improvements
@@ -1760,7 +1559,7 @@ The roadmap reflects the current direction of the CareerBridge project.
 
 ---
 
-## 🔮 Planned Features
+### 🔮 Planned Features
 
 Potential future enhancements:
 
@@ -1781,7 +1580,7 @@ Potential future enhancements:
 
 ---
 
-# ⚠️ Known Limitations
+## ⚠️ Known Limitations
 
 The following items should be reviewed before production release.
 
@@ -1795,7 +1594,7 @@ The following items should be reviewed before production release.
 
 ---
 
-# 📜 License
+## 📜 License
 
 This project is licensed under the **MIT License**.
 
@@ -1815,24 +1614,24 @@ Or simply include a dedicated `LICENSE` file at the repository root.
 
 ---
 
-# 📬 Contact
+## 📬 Contact
 
 Replace the placeholders below with your information.
 
 | Platform | Link |
 |----------|------|
-| GitHub | https://github.com/<YOUR_USERNAME> |
-| LinkedIn | https://linkedin.com/in/<YOUR_PROFILE> |
-| Portfolio | https://<YOUR_PORTFOLIO> |
-| Email | <YOUR_EMAIL> |
+| GitHub | `https://github.com/<YOUR_USERNAME>` |
+| LinkedIn | `https://linkedin.com/in/<YOUR_PROFILE>` |
+| Portfolio | `https://<YOUR_PORTFOLIO>` |
+| Email | `<YOUR_EMAIL>` |
 
 ---
 
-# 🙏 Acknowledgements
+## 🙏 Acknowledgements
 
 CareerBridge is built using the following open-source technologies and services.
 
-## Frontend
+### Frontend
 
 - Next.js
 - React
@@ -1845,7 +1644,7 @@ CareerBridge is built using the following open-source technologies and services.
 
 ---
 
-## Backend
+### Backend
 
 - Node.js
 - Express.js
@@ -1853,20 +1652,20 @@ CareerBridge is built using the following open-source technologies and services.
 
 ---
 
-## Authentication
+### Authentication
 
 - Firebase Authentication
 - Firebase Admin SDK
 
 ---
 
-## Database
+### Database
 
 - MongoDB Atlas
 
 ---
 
-## Cloud Services
+### Cloud Services
 
 - Cloudinary
 - Vercel
@@ -1874,7 +1673,7 @@ CareerBridge is built using the following open-source technologies and services.
 
 ---
 
-## Development Tools
+### Development Tools
 
 - pnpm Workspace
 - ESLint
@@ -1885,7 +1684,7 @@ CareerBridge is built using the following open-source technologies and services.
 
 ---
 
-# 🌟 Support
+## 🌟 Support
 
 If you find this project useful:
 
@@ -1899,7 +1698,7 @@ Your support helps improve CareerBridge for everyone.
 
 ---
 
-# 📈 Project Status
+## 📈 Project Status
 
 | Status | Value |
 |---------|-------|
@@ -1916,9 +1715,9 @@ Your support helps improve CareerBridge for everyone.
 
 <div align="center">
 
-## 🌉 CareerBridge
+### 🌉 CareerBridge
 
-### Building Better Careers. Connecting Better Opportunities.
+#### Building Better Careers. Connecting Better Opportunities.
 
 Made with ❤️ using Next.js, React, Express.js, MongoDB Atlas, Firebase, and TypeScript.
 
