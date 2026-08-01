@@ -3,9 +3,8 @@ import type { Metadata } from "next";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import FeaturedJobsBenefits from "@/components/featured-jobs/FeaturedJobsBenefits";
-import FeaturedJobsFilters from "@/components/featured-jobs/FeaturedJobsFilters";
 import FeaturedJobsHero from "@/components/featured-jobs/FeaturedJobsHero";
-import FeaturedJobsList from "@/components/featured-jobs/FeaturedJobsList";
+import JobsSearchResults from "@/components/jobs/JobsSearchResults";
 
 export const metadata: Metadata = {
   title: "Featured Jobs | CareerBridge",
@@ -20,15 +19,7 @@ export default function FeaturedJobsPage() {
       <main>
         <FeaturedJobsHero />
 
-        <section className="bg-background px-6 py-12">
-          <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
-            <FeaturedJobsFilters />
-
-            <div>
-              <FeaturedJobsList />
-            </div>
-          </div>
-        </section>
+        <JobsSearchResults featured showSearchBar={false} />
 
         <FeaturedJobsBenefits />
       </main>

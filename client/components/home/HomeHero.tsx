@@ -31,6 +31,7 @@ export default function HomeHero() {
           <form
             role="search"
             aria-label="Search jobs"
+            action="/jobs"
             className="mt-8 rounded-lg border border-slate-200 bg-white p-3 shadow-lg shadow-blue-900/10 dark:border-slate-700 dark:bg-slate-900"
           >
             <div className="grid gap-3 md:grid-cols-[1fr_0.8fr_auto]">

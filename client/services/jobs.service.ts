@@ -70,10 +70,16 @@ function unwrap<T>(response: { data: ApiEnvelope<T> | T }) {
   return payload as T;
 }
 
-function normalizeJob(job: Job): Job {
+export function normalizeJob(job: Job): Job {
+  const salaryMin = job.salaryMin ?? job.salary?.min;
+  const salaryMax = job.salaryMax ?? job.salary?.max;
+  const currency = job.currency ?? job.salary?.currency;
   return {
     ...job,
     id: job.id ?? job._id ?? "",
+    salaryMin,
+    salaryMax,
+    currency,
     workMode: job.workMode ?? job.workplaceType,
     applicationDeadline: job.applicationDeadline ?? job.deadline,
     openings: job.openings ?? job.vacancies,
@@ -126,8 +132,9 @@ const getCompanyTone = (id: string) => {
   return companyTones[charTotal % companyTones.length];
 };
 
-const formatSalary = (job: Job) => {
-  const currency = job.currency ?? "USD";
+export const formatSalary = (job: Job) => {
+  const currency = job.currency;
+  if (!currency) return job.salary?.negotiable ? "Salary negotiable" : "Salary not specified";
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
@@ -146,7 +153,7 @@ const formatSalary = (job: Job) => {
     return `Up to ${formatter.format(job.salaryMax)}`;
   }
 
-  return "Salary negotiable";
+  return job.salary?.negotiable ? "Salary negotiable" : "Salary not specified";
 };
 
 const formatDate = (date?: string) => {
@@ -177,7 +184,7 @@ const formatPostedAt = (date?: string) => {
 };
 
 const getPostedDate = (date?: string) => {
-  if (!date) return "Last 7 days";
+  if (!date) return "Date not specified";
 
   const diffMs = Date.now() - new Date(date).getTime();
   const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
@@ -189,7 +196,8 @@ const getPostedDate = (date?: string) => {
   return "Last 7 days";
 };
 
-const getExperienceLevel = (job: Job) => job.experienceLevel ?? "Mid level";
+const getExperienceLevel = (job: Job) =>
+  job.experienceLevel ?? "Experience not specified";
 
 const toBrowseJob = (job: Job): BrowseJob => {
   const id = getJobId(job);
@@ -203,7 +211,7 @@ const toBrowseJob = (job: Job): BrowseJob => {
     companyTone: getCompanyTone(id),
     category: job.category ?? "General",
     industry: job.category ?? "General",
-    location: job.location ?? "Remote",
+    location: job.location ?? "Location not specified",
     workMode: workModeLabels[job.workMode ?? job.workplaceType ?? ""] as BrowseJob["workMode"],
     jobType: jobTypeLabels[job.jobType] as BrowseJob["jobType"],
     salary: formatSalary(job),
@@ -251,7 +259,7 @@ const toHomeJobCard = (job: Job): JobCardProps => {
     id,
     title: job.title,
     companyName: getCompanyName(job),
-    location: job.location ?? "Remote",
+    location: job.location ?? "Location not specified",
     jobType: jobTypeLabels[job.jobType] ?? job.jobType,
     workMode: workModeLabels[job.workMode ?? job.workplaceType ?? ""] ?? "Flexible",
     salary: formatSalary(job),
@@ -330,27 +338,8 @@ const toJobDetails = (job: Job): JobDetails => {
 };
 
 export async function getJobById(id: string) {
-  try {
-    const response = await api.get<ApiEnvelope<Job> | Job>(`/jobs/${id}`);
-    return normalizeJob(unwrap<Job>(response));
-  } catch (error) {
-    const response = await api.get<ApiEnvelope<EmployerJobsResponse>>(
-      "/employer/jobs",
-      {
-        params: {
-          limit: 100,
-        },
-      },
-    );
-    const jobs = unwrap<EmployerJobsResponse>(response).jobs.map(normalizeJob);
-    const job = jobs.find((item) => item.id === id || item._id === id);
-
-    if (!job) {
-      throw error;
-    }
-
-    return job;
-  }
+  const response = await api.get<ApiEnvelope<Job> | Job>(`/jobs/${id}`);
+  return normalizeJob(unwrap<Job>(response));
 }
 
 export async function getPublicJobs(params: PublicJobsParams = {}) {
@@ -365,6 +354,7 @@ export async function getPublicJobs(params: PublicJobsParams = {}) {
     jobs,
     browseJobs: jobs.map(toBrowseJob),
     latestJobs: jobs.map(toLatestJob),
+    featuredJobs: jobs.map(toFeaturedJob),
     homeJobs: jobs.map(toHomeJobCard),
   };
 }
@@ -380,6 +370,8 @@ export async function getPublicFeaturedJobs(params: PublicJobsParams = {}) {
   return {
     ...payload,
     jobs,
+    browseJobs: jobs.map(toBrowseJob),
+    latestJobs: jobs.map(toLatestJob),
     featuredJobs: jobs.map(toFeaturedJob),
     homeJobs: jobs.map(toHomeJobCard),
   };

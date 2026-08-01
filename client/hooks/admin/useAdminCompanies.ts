@@ -18,6 +18,7 @@ import type {
   AdminCompanyUpdatePayload,
   AdminCompanyVerificationStatus,
 } from "@/types/admin-company.types";
+import { publicJobQueryKeys } from "@/services/jobs.service";
 
 export function useAdminCompanies(filters: AdminCompanyListParams) {
   return useQuery({
@@ -56,6 +57,7 @@ export function useAdminCompanyMutations(companyId?: string) {
         queryKey: adminCompanyQueryKeys.detail(companyId),
       });
     }
+    await queryClient.invalidateQueries({ queryKey: publicJobQueryKeys.all });
   };
 
   const updateMutation = useMutation({

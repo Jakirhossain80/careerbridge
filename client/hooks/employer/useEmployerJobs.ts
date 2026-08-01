@@ -6,6 +6,7 @@ import {
   createJob,
   employerJobQueryKeys,
   getEmployerJobs,
+  publicJobQueryKeys,
   type EmployerJobsParams,
 } from "@/services/jobs.service";
 import type { CreateJobPayload } from "@/types/job.types";
@@ -24,6 +25,7 @@ export function useEmployerJobMutations() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: employerJobQueryKeys.lists }),
       queryClient.invalidateQueries({ queryKey: employerJobQueryKeys.dashboard }),
+      queryClient.invalidateQueries({ queryKey: publicJobQueryKeys.all }),
     ]);
   };
 

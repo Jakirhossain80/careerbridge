@@ -1,6 +1,11 @@
 import { Sparkles } from "lucide-react";
 
-import { jobsHeroStats } from "@/lib/jobs-data";
+const jobsHeroStats = [
+  { label: "Company status", value: "Verified" },
+  { label: "Work options", value: "Flexible" },
+  { label: "Listings", value: "Current" },
+  { label: "Search", value: "Focused" },
+];
 
 export default function JobsHero() {
   return (
@@ -23,17 +28,13 @@ export default function JobsHero() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             {jobsHeroStats.map((stat) => {
-              const Icon = stat.icon;
-
               return (
                 <div
                   key={stat.label}
                   className="rounded-lg border border-slate-200 bg-background p-4 dark:border-slate-700"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-md bg-blue-50 text-primary">
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
+                    <span className="flex size-10 items-center justify-center rounded-md bg-blue-50 text-primary"><Sparkles className="size-5" aria-hidden="true" /></span>
                     <div>
                       <p className="text-xl font-bold text-foreground">
                         {stat.value}

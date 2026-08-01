@@ -32,6 +32,12 @@ export type Job = {
   salaryMin?: number;
   salaryMax?: number;
   currency?: string;
+  salary?: {
+    min?: number;
+    max?: number;
+    currency?: string;
+    negotiable?: boolean;
+  };
   experienceLevel?: string;
   educationLevel?: string;
   vacancies?: number;
@@ -67,9 +73,18 @@ export type PublicJobsParams = {
   keyword?: string;
   title?: string;
   company?: string;
+  companyId?: string;
   skill?: string;
   location?: string;
   category?: string;
+  industry?: string;
+  experienceLevel?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  currency?: string;
+  featured?: boolean;
+  createdFrom?: string;
+  createdTo?: string;
   jobType?: JobType;
   workMode?: WorkMode;
   sort?: string;

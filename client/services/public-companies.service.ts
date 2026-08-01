@@ -1,7 +1,6 @@
 import {
   type CompanyDetails,
   type CompanySocialLink,
-  getCompanyDetailsById,
 } from "@/lib/company-details-data";
 
 type ApiEnvelope<T> = {
@@ -78,44 +77,41 @@ function unwrap<T>(payload: ApiEnvelope<T> | T) {
 
 function normalizePublicCompany(
   company: PublicCompanyApiResponse,
-  fallback?: CompanyDetails,
 ): CompanyDetails {
   const name = company.companyName ?? company.name;
-  const website = company.website ?? fallback?.website ?? "";
-  const industry = company.industry ?? fallback?.industry ?? "";
+  const website = company.website ?? "";
+  const industry = company.industry ?? "";
   const headquarters =
-    company.headquarters ?? company.location ?? fallback?.headquarters ?? "";
-  const companySize = company.companySize ?? company.size ?? fallback?.companySize ?? "";
+    company.headquarters ?? company.location ?? "";
+  const companySize = company.companySize ?? company.size ?? "";
   const description = company.description?.trim();
   const tagline =
     company.tagline?.trim() ||
     description?.split(".").find((sentence) => sentence.trim())?.trim() ||
-    fallback?.tagline ||
-    `${name} is building its CareerBridge profile.`;
+    "Company tagline not available";
   const about = description
     ? description
         .split(/\n{2,}/)
         .map((paragraph) => paragraph.trim())
         .filter(Boolean)
-    : fallback?.about ?? [];
+    : [];
 
   return {
-    id: company.slug ?? company._id,
+    id: company._id,
     name,
     tagline,
     industry,
     companySize,
     headquarters,
     website,
-    founded: fallback?.founded ?? "N/A",
-    followers: fallback?.followers ?? "New",
-    openPositionsCount: fallback?.openPositionsCount ?? 0,
+    founded: "Not provided",
+    followers: "Not available",
+    openPositionsCount: 0,
     initials: getInitials(name),
     logoUrl: company.logoUrl ?? company.logo,
     bannerUrl: company.bannerUrl ?? company.banner,
-    logoTone: fallback?.logoTone ?? "bg-blue-50 text-primary ring-blue-100",
+    logoTone: "bg-blue-50 text-primary ring-blue-100",
     coverTone:
-      fallback?.coverTone ??
       "from-blue-950 via-blue-700 to-emerald-500 dark:from-slate-950 dark:via-blue-950 dark:to-emerald-700",
     about,
     information: [
@@ -134,19 +130,18 @@ function normalizePublicCompany(
       },
     ],
     socialLinks: mapSocialLinks(company.socialLinks),
-    talentPool: fallback?.talentPool ?? {
+    talentPool: {
       eyebrow: "Talent pool",
       title: `Interested in ${name}?`,
       description:
         "Join the company talent pool to get matched when new roles open.",
-      href: `/jobs?company=${company.slug ?? company._id}`,
+      href: `/jobs?companyId=${company._id}`,
     },
-    positions: fallback?.positions ?? [],
+    positions: [],
   };
 }
 
 export async function getPublicCompanyDetails(id: string) {
-  const fallback = getCompanyDetailsById(id);
   let response: Response;
 
   try {
@@ -154,15 +149,15 @@ export async function getPublicCompanyDetails(id: string) {
       next: { revalidate: 60 },
     });
   } catch {
-    return fallback;
+    return null;
   }
 
   if (response.status === 404) {
-    return fallback;
+    return null;
   }
 
   if (!response.ok) {
-    return fallback;
+    return null;
   }
 
   const payload = (await response.json()) as
@@ -170,5 +165,5 @@ export async function getPublicCompanyDetails(id: string) {
     | PublicCompanyApiResponse;
   const company = unwrap<PublicCompanyApiResponse>(payload);
 
-  return normalizePublicCompany(company, fallback);
+  return normalizePublicCompany(company);
 }

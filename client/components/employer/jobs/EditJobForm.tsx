@@ -15,7 +15,7 @@ import {
 } from "@/constants/currency-options";
 import { getApiErrorMessage } from "@/lib/api";
 import { jobFormSchema, type JobFormValues } from "@/lib/validations/job.schema";
-import { getJobById, updateJob } from "@/services/jobs.service";
+import { getJobById, publicJobQueryKeys, updateJob } from "@/services/jobs.service";
 import type { Job, JobStatus, UpdateJobPayload } from "@/types/job.types";
 
 type EditJobFormProps = {
@@ -216,6 +216,7 @@ export default function EditJobForm({ jobId }: EditJobFormProps) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["employer-jobs"] }),
         queryClient.invalidateQueries({ queryKey: ["job", jobId] }),
+        queryClient.invalidateQueries({ queryKey: publicJobQueryKeys.all }),
       ]);
       reset(getValues());
     },

@@ -19,6 +19,7 @@ import type {
   AdminJobStatus,
   AdminJobUpdatePayload,
 } from "@/types/admin-job.types";
+import { publicJobQueryKeys } from "@/services/jobs.service";
 
 export function useAdminJobs(filters: AdminJobListParams) {
   return useQuery({
@@ -57,6 +58,7 @@ export function useAdminJobMutations(jobId?: string) {
         queryKey: adminJobQueryKeys.detail(jobId),
       });
     }
+    await queryClient.invalidateQueries({ queryKey: publicJobQueryKeys.all });
   };
 
   const updateMutation = useMutation({

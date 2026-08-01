@@ -3,11 +3,8 @@ import type { Metadata } from "next";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import RemoteJobsBenefits from "@/components/remote-jobs/RemoteJobsBenefits";
-import RemoteJobsEmptyState from "@/components/remote-jobs/RemoteJobsEmptyState";
-import RemoteJobsFilters from "@/components/remote-jobs/RemoteJobsFilters";
 import RemoteJobsHero from "@/components/remote-jobs/RemoteJobsHero";
-import RemoteJobsList from "@/components/remote-jobs/RemoteJobsList";
-import RemoteJobsLoadingSkeleton from "@/components/remote-jobs/RemoteJobsLoadingSkeleton";
+import JobsSearchResults from "@/components/jobs/JobsSearchResults";
 
 export const metadata: Metadata = {
   title: "Remote Jobs | CareerBridge",
@@ -22,20 +19,7 @@ export default function RemoteJobsPage() {
       <main>
         <RemoteJobsHero />
 
-        <section className="bg-background px-6 py-12">
-          <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
-            <RemoteJobsFilters />
-
-            <div>
-              <RemoteJobsList />
-
-              <div className="mt-8 grid gap-6">
-                <RemoteJobsEmptyState />
-                <RemoteJobsLoadingSkeleton />
-              </div>
-            </div>
-          </div>
-        </section>
+        <JobsSearchResults fixedParams={{ workMode: "remote" }} showSearchBar={false} />
 
         <RemoteJobsBenefits />
       </main>

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
 import LatestJobsBenefits from "@/components/latest-jobs/LatestJobsBenefits";
-import LatestJobsFilters from "@/components/latest-jobs/LatestJobsFilters";
 import LatestJobsHero from "@/components/latest-jobs/LatestJobsHero";
-import LatestJobsList from "@/components/latest-jobs/LatestJobsList";
+import JobsSearchResults from "@/components/jobs/JobsSearchResults";
 import PublicFooter from "@/components/layout/PublicFooter";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 
@@ -20,15 +19,7 @@ export default function LatestJobsPage() {
       <main>
         <LatestJobsHero />
 
-        <section className="bg-background px-6 py-12">
-          <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
-            <LatestJobsFilters />
-
-            <div>
-              <LatestJobsList />
-            </div>
-          </div>
-        </section>
+        <JobsSearchResults fixedParams={{ sort: "-createdAt" }} showSearchBar={false} />
 
         <LatestJobsBenefits />
       </main>

@@ -17,6 +17,7 @@ import type {
   FeatureJobPayload,
   UpdateFeaturedJobPayload,
 } from "@/types/admin-featured-job";
+import { publicJobQueryKeys } from "@/services/jobs.service";
 
 export function useAdminFeaturedJobs(filters: AdminFeaturedJobListParams) {
   return useQuery({
@@ -48,6 +49,7 @@ export function useAdminFeaturedJobMutations() {
         queryClient.invalidateQueries({ queryKey }),
       ),
     );
+    await queryClient.invalidateQueries({ queryKey: publicJobQueryKeys.all });
   };
 
   const featureMutation = useMutation({
