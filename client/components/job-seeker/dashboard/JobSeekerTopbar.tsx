@@ -4,19 +4,15 @@ import Link from "next/link";
 import { Bell, Menu, Upload } from "lucide-react";
 
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
-import { SearchBar } from "@/components/ui";
+import DashboardGlobalSearch from "@/components/dashboard/DashboardGlobalSearch";
 
 type JobSeekerTopbarProps = {
-  search: string;
-  onSearchChange: (value: string) => void;
   onMenuClick: () => void;
   isMenuOpen?: boolean;
   menuControlsId?: string;
 };
 
 export default function JobSeekerTopbar({
-  search,
-  onSearchChange,
   onMenuClick,
   isMenuOpen = false,
   menuControlsId,
@@ -42,11 +38,9 @@ export default function JobSeekerTopbar({
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <SearchBar
-            value={search}
-            onChange={onSearchChange}
+          <DashboardGlobalSearch
             placeholder="Search jobs or companies"
-            label="Search dashboard"
+            variant="full"
             className="w-full sm:w-80"
           />
           <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 
+import DashboardGlobalSearch from "@/components/dashboard/DashboardGlobalSearch";
 import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
 type DashboardTopbarProps = {
@@ -38,15 +39,10 @@ export default function DashboardTopbar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden h-10 w-full max-w-xs items-center gap-2 rounded-md border border-slate-200 bg-background px-3 text-muted sm:flex dark:border-slate-700">
-            <Search size={17} aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate text-sm">
-              {searchPlaceholder}
-            </span>
-            <kbd className="rounded border border-slate-200 bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted dark:border-slate-700">
-              Ctrl K
-            </kbd>
-          </div>
+          <DashboardGlobalSearch
+            placeholder={searchPlaceholder}
+            className="hidden w-80 max-w-xs sm:block"
+          />
           <ThemeSwitcher />
         </div>
       </div>

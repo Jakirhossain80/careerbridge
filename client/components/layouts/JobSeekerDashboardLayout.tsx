@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import JobSeekerSidebar from "@/components/job-seeker/dashboard/JobSeekerSidebar";
@@ -15,7 +15,6 @@ export default function JobSeekerDashboardLayout({
   children,
 }: JobSeekerDashboardLayoutProps) {
   const { isOpen, closeSidebar, openSidebar } = useMobileSidebar();
-  const [search, setSearch] = useState("");
   const sidebarId = "job-seeker-sidebar";
 
   return (
@@ -28,8 +27,6 @@ export default function JobSeekerDashboardLayout({
         />
         <div className="min-w-0 flex-1">
           <JobSeekerTopbar
-            search={search}
-            onSearchChange={setSearch}
             isMenuOpen={isOpen}
             menuControlsId={sidebarId}
             onMenuClick={openSidebar}

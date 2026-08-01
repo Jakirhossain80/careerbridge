@@ -4,6 +4,7 @@ import authTestRoutes from "./authTest.routes.js";
 import adminRoutes from "./admin.routes.js";
 import applicationRoutes from "./application.routes.js";
 import companyRoutes from "./company.routes.js";
+import dashboardSearchRoutes from "./dashboardSearch.routes.js";
 import employerRoutes from "./employer.routes.js";
 import healthRoutes from "./health.routes.js";
 import jobRoutes from "./job.routes.js";
@@ -22,6 +23,7 @@ export const createApiRouter = (nodeEnv = env.nodeEnv) => {
   router.use("/admin", adminRoutes);
   router.use("/applications", applicationRoutes);
   router.use("/companies", companyRoutes);
+  router.use("/dashboard", dashboardSearchRoutes);
   router.use("/employer", employerRoutes);
   router.use("/health", healthRoutes);
   router.use("/jobs", jobRoutes);

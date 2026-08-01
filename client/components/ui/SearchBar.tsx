@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type FormEvent } from "react";
+import { useId, type FormEvent, type Ref } from "react";
 import { Search, X } from "lucide-react";
 
 import Button from "./Button";
@@ -13,6 +13,7 @@ type SearchBarProps = {
   label?: string;
   className?: string;
   disabled?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -27,6 +28,7 @@ export default function SearchBar({
   label = "Search",
   className,
   disabled = false,
+  inputRef,
 }: SearchBarProps) {
   const searchId = useId();
 
@@ -50,6 +52,7 @@ export default function SearchBar({
           aria-hidden="true"
         />
         <input
+          ref={inputRef}
           id={searchId}
           type="search"
           value={value}
